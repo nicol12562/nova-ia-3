@@ -123,8 +123,8 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
                   ))}
                 </div>
                 <p className="prefs-hint">
-                  <Icon name="pulse" size={12} /> Breve responde más rápido: limita la salida a
-                  {LARGOS.find((l) => l.id === "breve").maxTokens} tokens.
+                  <Icon name="pulse" size={12} />
+                  {` Breve responde más rápido: limita la salida a ${LARGOS.find((l) => l.id === "breve").maxTokens} tokens.`}
                 </p>
               </div>
 
