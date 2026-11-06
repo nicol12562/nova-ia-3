@@ -62,8 +62,8 @@ export const TAREAS = [
   },
 ];
 
-// Salidas cortas: la demo compara estilo, no se paga una respuesta larga.
-export const MAX_TOKENS_DEMO = 420;
+// Salidas cortas pero completas: con 420 el código quedaba partido a mitad de bloque.
+export const MAX_TOKENS_DEMO = 700;
 export const DEMO_POR_DIA = 3;
 
 export function tareaPorId(id) {

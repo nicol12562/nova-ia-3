@@ -246,10 +246,10 @@ button { font-family: inherit; }
   cursor: pointer;
   font-size: 13.5px;
   font-weight: 500;
-  color: var(--border-strong);
+  color: var(--muted);
   width: 100%;
 }
-.side-item:hover { background: var(--surface)X; }
+.side-item:hover { background: var(--surface); }
 .side-item.active { background: var(--surface); color: var(--text); font-weight: 600; }
 body.dark .side-item:hover { background: var(--surface); }
 body.dark .side-item.active { background: var(--surface); }
@@ -502,7 +502,7 @@ body.dark .btn-ghost:hover { border-color: var(--border-strong); }
   font-size: 11px;
   font-weight: 600;
   color: var(--muted);
-  background: var(--surface)X;
+  background: var(--surface);
   border-radius: 999px;
   padding: 4px 10px;
 }
@@ -837,7 +837,7 @@ body.dark .lock-box { border-color: var(--border-strong); }
 .tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: var(--surface)X;
+  background: var(--surface);
   border-radius: var(--radius-xl);
   padding: 4px;
   margin-bottom: 22px;
@@ -861,7 +861,7 @@ body.dark .tabs { background: var(--surface); }
   border-radius: var(--radius-xl);
   padding: 13px 14px;
   font-size: 14px;
-  background: var(--surface)X;
+  background: var(--surface);
   font-family: inherit;
   color: var(--text);
 }
@@ -1510,7 +1510,7 @@ body.dark .tab.active { background: var(--border); }
 /* ---------- Estados de agente bloqueado y selector de modelo ---------- */
 .agent-card.locked { cursor: pointer; }
 .agent-card.locked .agent-ico { background: var(--surface); color: var(--muted); }
-.agent-card.locked .agent-sample { color: var(--border-strong); }
+.agent-card.locked .agent-sample { color: var(--muted); }
 .agent-card.locked .agent-go { color: var(--muted); }
 .agent-card.locked:hover { border-color: var(--border-strong); transform: none; box-shadow: none; }
 .agent-card.locked:hover .agent-sample { color: var(--muted); }

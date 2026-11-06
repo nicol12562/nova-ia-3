@@ -355,7 +355,7 @@ body.dark .plan-bar {
 
 /* Sidebar legible en dark (la base usa grises pensados para light) */
 body.dark .side-item {
-  color: var(--border-strong);
+  color: var(--muted);
 }
 body.dark .side-item .icon {
   color: var(--muted);
@@ -750,7 +750,7 @@ table.comparison th.col-current {
   border-radius: var(--radius-md);
 }
 body.dark .md-ic {
-  color: var(--accent-soft);
+  color: var(--text);
   background: color-mix(in srgb, var(--accent) 16%, transparent);
   border-color: color-mix(in srgb, var(--accent) 30%, transparent);
 }
@@ -813,7 +813,7 @@ body.dark .md-ic {
 .md-code-head button {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--border-strong);
+  color: var(--muted);
   font-size: 11px;
   font-weight: 600;
   border-radius: var(--radius);
@@ -831,10 +831,10 @@ body.dark .md-ic {
   overflow-x: auto;
 }
 .md-code code {
+  color: var(--text);
   font-family: var(--mono);
   font-size: 12.75px;
   line-height: 1.6;
-  color: var(--border);
   white-space: pre;
 }
 
