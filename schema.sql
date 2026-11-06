@@ -44,3 +44,18 @@ CREATE TABLE IF NOT EXISTS sessions (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   expires_at TEXT NOT NULL
 );
+
+-- Configuración editable desde el panel (hoy: 'model' = modelo global forzado)
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Mensajes de visitantes sin sesión, por IP y día (tope GUEST_LIMIT en chat.js)
+CREATE TABLE IF NOT EXISTS guest_usage (
+  ip TEXT NOT NULL,
+  day TEXT NOT NULL,
+  n INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (ip, day)
+);

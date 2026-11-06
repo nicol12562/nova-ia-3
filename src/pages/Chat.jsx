@@ -1,7 +1,28 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../icons.jsx";
 import Md from "../md.jsx";
-import { copyText, showToast, spotlight } from "../ui.jsx";
+import { copyText, showToast, spotlight, Modal } from "../ui.jsx";
+
+// Visitantes: 3 mensajes por día. El contador del navegador es la señal visible;
+// el servidor corta por IP, así que limpiar el storage ya no alcanza.
+const GUEST_KEY = "novaia_guest_msgs";
+export const GUEST_LIMIT = 3;
+const hoy = () => new Date().toISOString().slice(0, 10);
+const leerGuest = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(GUEST_KEY) || "null");
+    return raw && raw.day === hoy() ? raw : { day: hoy(), n: 0 };
+  } catch {
+    return { day: hoy(), n: 0 };
+  }
+};
+const escribirGuest = (n) => {
+  try {
+    localStorage.setItem(GUEST_KEY, JSON.stringify({ day: hoy(), n }));
+  } catch {
+    /* sin storage disponible */
+  }
+};
 
 const SUGGESTIONS = [
   { i: "doc", t: "Escribí algo", d: "Ayudame a escribir un texto claro y convincente" },
@@ -22,6 +43,8 @@ export default function Chat({ auth, convId, go }) {
   const [busy, setBusy] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [conv, setConv] = useState(convId ? Number(convId) : null);
+  const [guest, setGuest] = useState(leerGuest);
+  const [loginPrompt, setLoginPrompt] = useState(false);
   const [model, setModel] = useState(() => {
     if (auth?.plan === "plus") return "Nova Pro 3.1";
     if (auth?.plan === "pro") return "Nova Pro";
@@ -109,6 +132,12 @@ export default function Chat({ auth, convId, go }) {
   async function send(text) {
     const content = text.trim();
     if (!content || busy) return;
+
+    if (!auth && guest.n >= GUEST_LIMIT) {
+      setLoginPrompt(true);
+      return;
+    }
+
     const history = [...msgs, { role: "user", content }];
     setMsgs(history);
     setInput("");
@@ -123,7 +152,19 @@ export default function Chat({ auth, convId, go }) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        if (res.status === 402 && data.limite) {
+          setGuest({ day: hoy(), n: GUEST_LIMIT });
+          escribirGuest(GUEST_LIMIT);
+          setMsgs(msgs); // devolvemos el mensaje que no llegó a procesarse
+          setLoginPrompt(true);
+          return;
+        }
         throw new Error(data.error || "El backend respondió " + res.status);
+      }
+      if (!auth) {
+        const n = Math.min(GUEST_LIMIT, guest.n + 1);
+        setGuest({ day: hoy(), n });
+        escribirGuest(n);
       }
       // OpenRouter con stream:true responde SSE. Acumulamos por frames para que fluya suave.
       setMsgs([...history, { role: "assistant", content: "" }]);
@@ -260,6 +301,25 @@ export default function Chat({ auth, convId, go }) {
         {msgs.length > 0 && <div ref={endRef} />}
       </div>
 
+      {!auth && (
+        <div className={"guest-bar" + (guest.n >= GUEST_LIMIT ? " out" : "")}>
+          <span className="tag">SIN SESIÓN</span>
+          <span className="txt">
+            {guest.n >= GUEST_LIMIT ? (
+              <>Se acabaron los <b>{GUEST_LIMIT}</b> mensajes gratis de hoy.</>
+            ) : (
+              <>
+                Te quedan <b>{GUEST_LIMIT - guest.n}</b>{" "}
+                {GUEST_LIMIT - guest.n === 1 ? "mensaje" : "mensajes"} gratis hoy.
+              </>
+            )}
+          </span>
+          <button className="btn btn-primary btn-sm" onClick={() => go("login")}>
+            Iniciar sesión
+          </button>
+        </div>
+      )}
+
       <div className="composer">
         <textarea
           ref={taRef}
@@ -308,6 +368,30 @@ export default function Chat({ auth, convId, go }) {
         </div>
       </div>
       <p className="chat-note">Nova IA puede equivocarse. Revisá la información importante.</p>
+
+      <Modal
+        open={loginPrompt}
+        onClose={() => setLoginPrompt(false)}
+        eyebrow="LÍMITE DE INVITADO"
+        title="Tus 3 mensajes gratis se agotaron"
+      >
+        <p style={{ margin: "0 0 4px" }}>
+          Así probamos Nova sin pedir datos. Con una cuenta tenés historial guardado, 1.000.000 de
+          tokens por mes y mensajes ilimitados.
+        </p>
+        <div className="modal-links">
+          <button onClick={() => { setLoginPrompt(false); go("login"); }}>
+            <Icon name="arrowUpRight" size={16} /> Iniciar sesión o crear cuenta <span>1 min</span>
+          </button>
+          <button onClick={() => { setLoginPrompt(false); go("planes"); }}>
+            <Icon name="crown" size={16} /> Ver los planes
+            <Icon name="arrowUpRight" size={14} style={{ marginLeft: "auto" }} />
+          </button>
+        </div>
+        <p className="modal-note">
+          El conteo se reinicia cada día. Si ya tenés cuenta, iniciá sesión y seguís al instante.
+        </p>
+      </Modal>
     </section>
   );
 }

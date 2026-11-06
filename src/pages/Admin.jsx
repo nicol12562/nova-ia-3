@@ -20,6 +20,10 @@ export default function Admin({ auth, go }) {
   const [filtro, setFiltro] = useState("todos");
   const [q, setQ] = useState("");
   const [saving, setSaving] = useState(null);
+  const [modelo, setModelo] = useState(null);
+  const [opciones, setOpciones] = useState([]);
+  const [modeloDraft, setModeloDraft] = useState("");
+  const [guardandoModelo, setGuardandoModelo] = useState(false);
 
   async function cargar(clave, persist = recordar) {
     setLoading(true);
@@ -34,6 +38,14 @@ export default function Admin({ auth, go }) {
       localStorage.removeItem(ADMIN_STORE);
       (persist ? localStorage : sessionStorage).setItem(ADMIN_STORE, clave);
       setKey(clave);
+
+      const mr = await fetch("/api/admin/model", { headers: { "x-admin-key": clave } });
+      if (mr.ok) {
+        const md = await mr.json();
+        setModelo(md.model || null);
+        setOpciones(md.opciones || []);
+        setModeloDraft(md.model || "");
+      }
     } catch (e) {
       setError(e.msg || "No se pudo cargar el listado.");
       setData(null);
@@ -50,6 +62,26 @@ export default function Admin({ auth, go }) {
     setGate(false);
     setData(null);
     setError(null);
+  }
+
+  async function guardarModelo(nuevo) {
+    setGuardandoModelo(true);
+    try {
+      const res = await fetch("/api/admin/model", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-key": key },
+        body: JSON.stringify({ model: nuevo }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error || "No se pudo guardar el modelo.");
+      setModelo(out.model || null);
+      setModeloDraft(out.model || "");
+      showToast(out.model ? `Modelo global: ${out.model}` : "Volvió a la escalera por plan.");
+    } catch (e) {
+      showToast(e.message, { tone: "error" });
+    } finally {
+      setGuardandoModelo(false);
+    }
   }
 
   async function cambiarPlan(usuario, planNuevo) {
@@ -205,6 +237,52 @@ export default function Admin({ auth, go }) {
                 </strong>
                 <p>de alta en los últimos 7 días</p>
               </span>
+            </div>
+          </div>
+
+          <div className="model-card">
+            <div className="mc-head">
+              <span className="mono-label" style={{ marginBottom: 0 }}>MODELO GLOBAL</span>
+              <span className={modelo ? "mc-state on" : "mc-state"}>
+                {modelo ? "fijo" : "escalera por plan"}
+              </span>
+            </div>
+            <p className="mc-note">
+              {modelo
+                ? "Todos los planes usan este modelo, sin importar la escalera de Gratis/Pro/Plus."
+                : "Sin modelo fijo: cada plan usa su escalera y pasa al siguiente si uno falla."}
+            </p>
+            <div className="mc-row">
+              <input
+                value={modeloDraft}
+                onChange={(e) => setModeloDraft(e.target.value)}
+                placeholder="ej. openrouter/auto"
+                aria-label="ID del modelo de OpenRouter"
+              />
+              <button
+                className="btn btn-primary"
+                disabled={guardandoModelo || modeloDraft.trim() === (modelo || "")}
+                onClick={() => guardarModelo(modeloDraft.trim())}
+              >
+                {guardandoModelo ? (<><span className="spinner" /> Guardando…</>) : ("Aplicar")}
+              </button>
+              {modelo && (
+                <button className="chip-inline" disabled={guardandoModelo} onClick={() => guardarModelo("")}>
+                  Volver a la escalera
+                </button>
+              )}
+            </div>
+            <div className="mc-chips">
+              {opciones.map((o) => (
+                <button
+                  key={o}
+                  className={"filter-pill" + (modeloDraft === o ? " on" : "")}
+                  onClick={() => setModeloDraft(o)}
+                  disabled={guardandoModelo}
+                >
+                  {o}
+                </button>
+              ))}
             </div>
           </div>
 

@@ -18,6 +18,9 @@ const MODELS = {
 // Techo de salida por plan: controla costo en modelos pago y evita errores de crédito (402).
 const MAX_TOKENS = { gratis: 2048, pro: 4096, plus: 8192 };
 
+// Mensajes gratis por día para un visitante sin sesión, contados por IP.
+const GUEST_LIMIT = 3;
+
 // Retenemos los primeros caracteres antes de enviarlos al cliente. Si la
 // respuesta termina siendo basura (artefactos de algunos modelos gratis,
 // salidas vacías o de seguridad), el cliente todavía no vio nada y podemos
@@ -50,7 +53,38 @@ export async function onRequestPost(context) {
     const row = await env.DB.prepare("SELECT plan FROM users WHERE id = ?").bind(userId).first();
     if (row && MODELS[row.plan]) plan = row.plan;
   }
-  const chain = MODELS[plan];
+
+  // Visitante sin sesión: tope diario por IP antes de gastar una llamada arriba.
+  if (!userId && env.DB) {
+    const ip = request.headers.get("cf-connecting-ip") || "sin-ip";
+    const day = new Date().toISOString().slice(0, 10);
+    const usado = await env.DB
+      .prepare("SELECT n FROM guest_usage WHERE ip = ? AND day = ?")
+      .bind(ip, day)
+      .first();
+    if ((usado?.n || 0) >= GUEST_LIMIT) {
+      return json(
+        { error: "Ya usaste los 3 mensajes gratis de hoy. Inicia sesión para seguir conversando.", limite: true },
+        402
+      );
+    }
+    waitUntil(
+      env.DB.prepare(
+        `INSERT INTO guest_usage (ip, day, n) VALUES (?, ?, 1)
+         ON CONFLICT(ip, day) DO UPDATE SET n = n + 1`
+      )
+        .bind(ip, day)
+        .run()
+        .catch(() => {})
+    );
+  }
+
+  // El admin puede forzar un modelo único para todos; sin eso, la escalera del plan.
+  let chain = MODELS[plan];
+  if (env.DB) {
+    const fijo = await env.DB.prepare("SELECT value FROM settings WHERE key = 'model'").first();
+    if (fijo?.value) chain = [fijo.value];
+  }
 
   const apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) {
