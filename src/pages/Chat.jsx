@@ -61,6 +61,7 @@ export default function Chat({ auth, convId, go }) {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState(leerBorrador);
   const [busy, setBusy] = useState(false);
+  const [waiting, setWaiting] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [conv, setConv] = useState(convId ? Number(convId) : null);
   const [guest, setGuest] = useState(leerGuest);
@@ -176,9 +177,12 @@ export default function Chat({ auth, convId, go }) {
     }
 
     const history = [...msgs, { role: "user", content }];
-    setMsgs(history);
+    // La burbuja vacia se pinta ANTES de pedir: el backend tarda entre 3 y 14
+    // segundos en el primer token, y sin esto el usuario mira una pantalla quieta.
+    setMsgs([...history, { role: "assistant", content: "" }]);
     setInput("");
     setBusy(true);
+    setWaiting(true);
     setCopiedIdx(null);
     try {
       const currentConv = await save("user", content);
@@ -218,7 +222,6 @@ export default function Chat({ auth, convId, go }) {
         escribirGuest(n);
       }
       // OpenRouter con stream:true responde SSE. Acumulamos por frames para que fluya suave.
-      setMsgs([...history, { role: "assistant", content: "" }]);
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acc = "";
@@ -237,6 +240,7 @@ export default function Chat({ auth, convId, go }) {
           try {
             const delta = JSON.parse(payload).choices?.[0]?.delta?.content ?? "";
             if (delta) {
+              if (waiting) setWaiting(false);
               acc += delta;
               pushDelta(delta);
             }
@@ -258,6 +262,7 @@ export default function Chat({ auth, convId, go }) {
       showToast("No pudimos obtener la respuesta. Probá de nuevo.", { tone: "error" });
     } finally {
       setBusy(false);
+      setWaiting(false);
       cargarModelos();
     }
   }
@@ -275,7 +280,7 @@ export default function Chat({ auth, convId, go }) {
   const conversando = msgs.length > 0;
 
   return (
-    <section>
+    <section className="chat">
       {conversando && (
         <div className="chat-topline">
           <span>Conversación</span>
@@ -332,8 +337,11 @@ export default function Chat({ auth, convId, go }) {
                 {isUser ? (
                   <span className="msg-text">{m.content}</span>
                 ) : streaming && !m.content ? (
-                  <span className="typing" aria-label="Nova está escribiendo">
-                    <i /><i /><i />
+                  <span className={"typing" + (waiting ? " thinking" : "")}>
+                    <span className="dots" aria-hidden="true"><i /><i /><i /></span>
+                    <span className="typing-label" aria-live="polite">
+                      {waiting ? "Nova está pensando…" : "Escribiendo…"}
+                    </span>
                   </span>
                 ) : (
                   <Md text={m.content} streaming={streaming} />
