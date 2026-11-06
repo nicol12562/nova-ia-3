@@ -401,7 +401,7 @@ body.dark .side-item.active {
   z-index: 65;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-2xl);
   box-shadow: 0 24px 48px -18px rgba(10, 10, 20, 0.4);
   padding: 6px;
   animation: userMenuIn var(--dur-2) var(--ease-out) both;
@@ -425,7 +425,7 @@ body.dark .side-item.active {
   font-weight: 500;
   color: var(--text);
   padding: 10px 12px;
-  border-radius: 9px;
+  border-radius: var(--radius);
   cursor: pointer;
 }
 .user-menu button:hover {
@@ -513,7 +513,7 @@ body.dark .user-menu button.danger:hover {
 .card {
   overflow: hidden;
   padding: 20px;
-  border-radius: 16px;
+  border-radius: var(--radius-2xl);
 }
 .grid-cards {
   gap: 16px;
@@ -583,7 +583,7 @@ body.dark .user-menu button.danger:hover {
   color: var(--muted);
   cursor: pointer;
   padding: 7px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   display: inline-flex;
 }
 .search-clear:hover {
@@ -682,7 +682,7 @@ table.comparison th.col-current {
 .msg-ava {
   width: 30px;
   height: 30px;
-  border-radius: 9px;
+  border-radius: var(--radius);
   background: var(--accent);
   color: #fff;
   display: inline-flex;
@@ -700,7 +700,7 @@ table.comparison th.col-current {
   background: var(--accent);
   color: #fff;
   padding: 12px 16px;
-  border-radius: 18px 18px 6px 18px;
+  border-radius: var(--radius-2xl) var(--radius-2xl) var(--radius-md) var(--radius-2xl);
   box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 .bubble-user .msg-text {
@@ -758,7 +758,7 @@ table.comparison th.col-current {
   border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
   color: var(--accent-deep);
   padding: 1.5px 6px;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
 }
 body.dark .md-ic {
   color: var(--accent-soft);
@@ -778,7 +778,7 @@ body.dark .md-ic {
 .md-table {
   overflow-x: auto;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   margin: 10px 0 14px;
 }
 .md-table table {
@@ -801,7 +801,7 @@ body.dark .md-ic {
 
 /* --- Bloques de código --- */
 .md-code {
-  border-radius: 14px;
+  border-radius: var(--radius-2xl);
   overflow: hidden;
   border: 1px solid var(--surface);
   background: var(--panel);
@@ -827,7 +827,7 @@ body.dark .md-ic {
   color: var(--border-strong);
   font-size: 11px;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 4px 10px;
   cursor: pointer;
   font-family: inherit;
@@ -885,7 +885,7 @@ body.dark .md-ic {
   width: 9px;
   height: 16px;
   margin-left: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: var(--accent);
   vertical-align: -2px;
   animation: blink 1s steps(2) infinite;
@@ -979,7 +979,7 @@ body.dark .md-ic {
 .hi-sq {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--accent-soft);
   color: var(--accent);
   display: inline-flex;
@@ -1014,7 +1014,7 @@ body.dark .md-ic {
 }
 .skeleton {
   height: 64px;
-  border-radius: 13px;
+  border-radius: var(--radius-xl);
   background: linear-gradient(100deg, var(--surface) 30%, var(--panel) 50%, var(--surface) 70%);
   background-size: 220% 100%;
   animation: skeletonShimmer 1.4s linear infinite;
@@ -1037,7 +1037,7 @@ body.dark .skeleton {
   grid-template-columns: 1fr 1fr;
   position: relative;
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 4px;
   min-width: 190px;
 }
@@ -1058,7 +1058,7 @@ body.dark .seg-thumb {
   bottom: 4px;
   left: 4px;
   width: calc(50% - 4px);
-  border-radius: 9px;
+  border-radius: var(--radius);
   background: var(--panel);
   box-shadow: 0 2px 8px rgba(20, 20, 30, 0.09);
   transition: transform var(--dur-3) var(--ease-out);
@@ -1072,7 +1072,7 @@ body.dark .seg-thumb {
   border: none;
   background: none;
   padding: 9px 12px;
-  border-radius: 9px;
+  border-radius: var(--radius);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -1247,7 +1247,7 @@ body.dark .seg-thumb {
   color: var(--muted);
   cursor: pointer;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   display: inline-flex;
 }
 .pass-toggle:hover {
@@ -1317,7 +1317,7 @@ body.dark .seg-thumb {
   right: 16px;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--muted);
@@ -1350,7 +1350,7 @@ body.dark .seg-thumb {
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 12px 14px;
   font-family: inherit;
   font-size: 13.5px;
@@ -1366,7 +1366,7 @@ body.dark .seg-thumb {
   font-size: 11px;
   color: var(--muted);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 1px 6px;
 }
 .modal-note {
@@ -1474,7 +1474,7 @@ body.dark .toast {
 .gf-error-icon {
   width: 52px;
   height: 52px;
-  border-radius: 15px;
+  border-radius: var(--radius-2xl);
   background: var(--surface);
   color: var(--danger);
   display: inline-flex;
@@ -1592,7 +1592,7 @@ body.dark .toast {
   }
   .composer {
     padding: 14px 14px 10px;
-    border-radius: 18px;
+    border-radius: var(--radius-2xl);
   }
   .composer textarea {
     min-height: 48px;
