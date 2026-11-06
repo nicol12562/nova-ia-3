@@ -62,6 +62,14 @@ CREATE TABLE IF NOT EXISTS model_usage (
   PRIMARY KEY (user_id, model, month)
 );
 
+-- Pruebas de la demo comparativa, por usuario y día (tope 3 en /api/demo)
+CREATE TABLE IF NOT EXISTS demo_usage (
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  day TEXT NOT NULL,
+  n INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, day)
+);
+
 -- Mensajes de visitantes sin sesión, por IP y día (tope GUEST_LIMIT en chat.js)
 CREATE TABLE IF NOT EXISTS guest_usage (
   ip TEXT NOT NULL,

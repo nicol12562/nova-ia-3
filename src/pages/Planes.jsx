@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Icon } from "../icons.jsx";
+import Md from "../md.jsx";
 import { plans, comparison, notes } from "../data/plans.js";
 import { showToast, spotlight } from "../ui.jsx";
 
@@ -21,6 +22,36 @@ const whatsappLink = (p, email) => {
 export default function Planes({ go, auth }) {
   const planIndex = auth?.plan === "plus" ? 3 : auth?.plan === "pro" ? 2 : 1;
   const [techos, setTechos] = useState(null);
+  const [demo, setDemo] = useState({ tareas: [], restantes: 3, elegida: null, resultado: null, cargando: false, error: null });
+
+  useEffect(() => {
+    if (!auth?.id) return;
+    fetch(`/api/demo?user_id=${auth.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d || !Array.isArray(d.tareas)) return;
+        setDemo((prev) => ({ ...prev, tareas: d.tareas, restantes: d.restantes, elegida: prev.elegida || d.tareas[0].id }));
+      })
+      .catch(() => {});
+  }, [auth?.id]);
+
+  async function correrDemo() {
+    if (!auth?.id || !demo.elegida) return;
+    setDemo((d) => ({ ...d, cargando: true, error: null }));
+    try {
+      const res = await fetch("/api/demo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: auth.id, tarea: demo.elegida }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "No se pudo correr la comparación.");
+      setDemo((d) => ({ ...d, cargando: false, resultado: data, restantes: data.restantes }));
+    } catch (e) {
+      setDemo((d) => ({ ...d, cargando: false, error: e.message, resultado: null }));
+      showToast(e.message, { tone: "error" });
+    }
+  }
 
   // Los números de la comparativa salen del catálogo del servidor, del mismo
   // lugar que ya alimenta el saldo del chat: así no se desincronizan.
@@ -37,8 +68,6 @@ export default function Planes({ go, auth }) {
   }, []);
 
   const porPlan = Object.fromEntries((techos?.planes || []).map((p) => [p.plan, p]));
-  const etiquetas = Object.fromEntries((techos?.modelos || []).map((m) => [m.key, m.label]));
-  const claves = (techos?.modelos || []).map((m) => m.key);
 
   return (
     <section>
@@ -188,43 +217,90 @@ export default function Planes({ go, auth }) {
             })}
           </div>
 
-          <div className="table-wrap" style={{ marginTop: 22 }}>
-            <table className="comparison">
-              <thead>
-                <tr>
-                  <th scope="col">Quién gana en</th>
-                  {["gratis", "pro", "plus"].map((p) => (
-                    <th key={p} scope="col">{NOMBRE[p]}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Cupón total del mes</strong></td>
-                  {["gratis", "pro", "plus"].map((p) => {
-                    const v = porPlan[p]?.cuota || 0;
-                    const max = Math.max(...["gratis", "pro", "plus"].map((x) => porPlan[x]?.cuota || 0));
-                    return <td key={p} className={v === max ? "col-current" : ""}>{fmt(v)}</td>;
-                  })}
-                </tr>
-                {claves.map((k) => (
-                  <tr key={k}>
-                    <td><strong>{etiquetas[k]}</strong></td>
-                    {["gratis", "pro", "plus"].map((p) => {
-                      const v = porPlan[p]?.techos?.[k] || 0;
-                      const max = Math.max(...["gratis", "pro", "plus"].map((x) => porPlan[x]?.techos?.[k] || 0));
-                      return <td key={p} className={v === max ? "col-current" : ""}>{fmt(v)}</td>;
-                    })}
-                  </tr>
-                ))}
-                <tr>
-                  <td><strong>Mini agentes propios</strong></td>
-                  {["gratis", "pro", "plus"].map((p) => (
-                    <td key={p} className={p !== "gratis" ? "col-current" : ""}>{p === "gratis" ? "No" : "Sí"}</td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
+          <div className="demo-box">
+            <div className="demo-head">
+              <div>
+                <strong>Elegí una tarea y compará las tres respuestas</strong>
+                <p>
+                  Es el mismo prompt, corriendo en paralelo por Nova Flash, Nova Pro y Nova Pro 3.1.
+                  No consume tu cupo del plan, pero sí gasta tokens reales: 3 pruebas por día.
+                </p>
+              </div>
+              {auth && <span className="chip-inline">{demo.restantes ?? 3} de 3 disponibles hoy</span>}
+            </div>
+
+            <div className="demo-tasks" role="tablist" aria-label="Tipo de tarea">
+              {(demo.tareas || []).map((t) => (
+                <button
+                  key={t.id}
+                  role="tab"
+                  aria-selected={demo.elegida === t.id}
+                  className={"filter-pill" + (demo.elegida === t.id ? " on" : "")}
+                  onClick={() => setDemo((d) => ({ ...d, elegida: t.id }))}
+                >
+                  <Icon name={t.icon} size={13} /> {t.label}
+                </button>
+              ))}
+            </div>
+
+            {!auth ? (
+              <div className="demo-cta">
+                <span className="sq"><Icon name="lock" size={17} /></span>
+                <p>Iniciá sesión para correr la comparación. Crear la cuenta toma un minuto.</p>
+                <button className="btn btn-primary" onClick={() => go("login")}>
+                  Iniciar sesión <Icon name="arrowUpRight" size={13} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  className="btn btn-ghost demo-run"
+                  disabled={demo.cargando || !demo.elegida || (demo.restantes ?? 0) <= 0}
+                  onClick={correrDemo}
+                >
+                  {demo.cargando ? (
+                    <>
+                      <span className="spinner" /> Corriendo los 3 modelos…
+                    </>
+                  ) : demo.resultado ? (
+                    <>
+                      <Icon name="pulse" size={14} /> Probar de nuevo
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="wand" size={14} /> Correr la comparación
+                    </>
+                  )}
+                </button>
+
+                {demo.error && <p className="admin-error">{demo.error}</p>}
+
+                {demo.resultado && (
+                  <>
+                    <p className="demo-criterio">
+                      <Icon name="search" size={13} /> {demo.resultado.tarea.criterio}
+                    </p>
+                    <div className="demo-grid">
+                      {demo.resultado.resultados.map((r) => (
+                        <div key={r.key} className={"demo-col" + (r.ok ? "" : " fail")}>
+                          <div className="dc-head">
+                            <strong>{r.label}</strong>
+                            <span className="dc-meta">
+                              {r.ok ? `${(r.ms / 1000).toFixed(1)}s · ${fmt(r.tokens)} tok` : "falló"}
+                            </span>
+                          </div>
+                          {r.ok ? (
+                            <div className="dc-body"><Md text={r.texto} /></div>
+                          ) : (
+                            <p className="dc-error">{r.error}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </>
       )}

@@ -15,10 +15,13 @@ export const SLOTS = [
     key: "pro",
     label: "Nova Pro",
     desc: "Mejor calidad para texto largo y código.",
+    // Ojo: meta-llama/llama-3.3-70b-instruct:free ya NO existe en OpenRouter
+    // (verificado contra /api/v1/models, 458 modelos). El router gratuito
+    // también suele caerse a este. Si se cambia, probar contra la API antes.
     upstream: {
-      gratis: "meta-llama/llama-3.3-70b-instruct:free",
-      pro: "meta-llama/llama-3.3-70b-instruct:free",
-      plus: "meta-llama/llama-3.3-70b-instruct:free",
+      gratis: "nvidia/nemotron-3-ultra-550b-a55b:free",
+      pro: "nvidia/nemotron-3-ultra-550b-a55b:free",
+      plus: "nvidia/nemotron-3-ultra-550b-a55b:free",
     },
     techo: { gratis: 100_000, pro: 1_500_000, plus: 4_000_000 },
   },
