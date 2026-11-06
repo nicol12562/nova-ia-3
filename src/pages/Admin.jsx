@@ -6,17 +6,21 @@ const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
 const PLAN_LABEL = { gratis: "Gratis", pro: "Pro", plus: "Plus" };
 const FILTROS = ["todos", "gratis", "pro", "plus"];
 
+const ADMIN_STORE = "novaia_admin_key";
+const readStoredKey = () => localStorage.getItem(ADMIN_STORE) || sessionStorage.getItem(ADMIN_STORE) || "";
+
 export default function Admin({ auth, go }) {
-  const [key, setKey] = useState(() => sessionStorage.getItem("novaia_admin_key") || "");
-  const [gate, setGate] = useState(() => !!sessionStorage.getItem("novaia_admin_key"));
+  const [key, setKey] = useState(readStoredKey);
+  const [gate, setGate] = useState(() => !!readStoredKey());
   const [draft, setDraft] = useState("");
+  const [recordar, setRecordar] = useState(() => !!localStorage.getItem(ADMIN_STORE));
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filtro, setFiltro] = useState("todos");
   const [q, setQ] = useState("");
 
-  async function cargar(clave) {
+  async function cargar(clave, persist = recordar) {
     setLoading(true);
     setError(null);
     try {
@@ -25,7 +29,9 @@ export default function Admin({ auth, go }) {
       if (!res.ok) throw { msg: "El servidor respondió " + res.status + "." };
       setData(await res.json());
       setGate(true);
-      sessionStorage.setItem("novaia_admin_key", clave);
+      sessionStorage.removeItem(ADMIN_STORE);
+      localStorage.removeItem(ADMIN_STORE);
+      (persist ? localStorage : sessionStorage).setItem(ADMIN_STORE, clave);
       setKey(clave);
     } catch (e) {
       setError(e.msg || "No se pudo cargar el listado.");
@@ -33,6 +39,16 @@ export default function Admin({ auth, go }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function salir() {
+    localStorage.removeItem(ADMIN_STORE);
+    sessionStorage.removeItem(ADMIN_STORE);
+    setKey("");
+    setDraft("");
+    setGate(false);
+    setData(null);
+    setError(null);
   }
 
   useEffect(() => {
@@ -83,12 +99,18 @@ export default function Admin({ auth, go }) {
               onChange={(e) => setDraft(e.target.value)}
             />
             {error && <p className="admin-error">{error}</p>}
+            <label className="admin-remember">
+              <input type="checkbox" checked={recordar} onChange={(e) => setRecordar(e.target.checked)} />
+              Recordar en este navegador
+            </label>
             <button className="btn btn-primary" disabled={loading}>
               {loading ? (<><span className="spinner" /> Verificando…</>) : ("Entrar al panel")}
             </button>
           </form>
           <p className="mono-note">
-            La clave se guarda solo en esta pestaña y se envía como cabecera en cada pedido.
+            {recordar
+              ? "La clave queda guardada en este navegador: entrás directo las próximas veces."
+              : "La clave se guarda solo mientras esta pestaña esté abierta."}
           </p>
         </div>
       </section>
@@ -103,7 +125,7 @@ export default function Admin({ auth, go }) {
           <h1 className="hero">Usuarios registrados</h1>
           <p className="lede">Planes, consumo de tokens y actividad, leído directo de la base.</p>
         </div>
-        <div style={{ paddingTop: 26 }}>
+        <div style={{ paddingTop: 26, display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button
             className="chip-inline"
             onClick={() => {
@@ -113,6 +135,9 @@ export default function Admin({ auth, go }) {
             }}
           >
             <Icon name="pulse" size={13} /> Actualizar
+          </button>
+          <button className="chip-inline" onClick={salir} title="Olvidar la clave guardada en este navegador">
+            <Icon name="logout" size={13} /> Olvidar clave
           </button>
         </div>
       </div>
