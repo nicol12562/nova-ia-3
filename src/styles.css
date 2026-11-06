@@ -1056,14 +1056,44 @@ body.dark .plan-tag.p-gratis { color: var(--text); }
 .btn-whats:hover { color: #fff; filter: brightness(1.06); }
 
 /* ---------- Chat: columna legible y adaptable ---------- */
-/* Sin esto el chat heredaba los 1220px de .main: lineas de ~1130px, ilegibles. */
-.chat { width: 100%; max-width: 780px; margin: 0 auto; }
-.chat .chat-log { display: flex; flex-direction: column; gap: 16px; margin: 24px 0; }
+/* Shell de app: el chat ocupa la ventana y SOLO hace scroll interno cuando la
+   conversación desborda. Con pocas mensajes no hay barra de scroll ni footer. */
+.main-chat {
+  height: calc(100dvh - 60px);
+  padding: 0 24px;
+  display: flex;
+  overflow: hidden;
+}
+.main-chat + .footer { display: none; }
+.chat {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+}
+/* sin conversación, el hero se centra en la columna (Firefox 121+, Chrome 105+) */
+.chat:not(:has(.chat-log)) { justify-content: center; }
+.chat .chat-log {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-top: 22px;
+}
+.chat .chat-topline { flex: none; }
+.chat .agent-chip, .chat .guest-bar { flex: none; }
+.chat .composer { flex: none; margin-top: 14px; }
+.chat .chat-note { flex: none; }
+
+.chat .chat-log { display: flex; flex-direction: column; gap: 16px; margin: 0 0 4px; }
 .chat .msg-row { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
 .chat .msg-bubble { min-width: 0; overflow-wrap: anywhere; }
 .chat .bubble-ai { max-width: calc(100% - 34px); }
 .chat .bubble-user { max-width: 88%; }
-.chat .composer { position: sticky; bottom: 0; z-index: 20; }
 
 /* Indicador de "escribiendo" */
 .typing {
@@ -1093,10 +1123,9 @@ body.dark .plan-tag.p-gratis { color: var(--text); }
   .chat .msg-bubble { max-width: 92%; }
 }
 @media (max-width: 640px) {
-  .chat .chat-log { gap: 12px; margin: 16px 0; }
+  .chat .chat-log { gap: 12px; margin: 0 0 4px; padding-top: 16px; }
   .chat .msg-bubble { max-width: 94%; font-size: 14px; }
   .chat .composer {
-    bottom: 0;
     padding: 12px 12px calc(10px + env(safe-area-inset-bottom, 0px));
     border-radius: var(--radius-2xl) var(--radius-2xl) var(--radius-xl) var(--radius-xl);
   }

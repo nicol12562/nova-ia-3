@@ -363,7 +363,7 @@ export default function App() {
       )}
 
       <div className="content">
-        <main className="main">
+        <main className={"main" + (base === "chat" ? " main-chat" : "")}>
           <ErrorBoundary key={base + "/" + (param || "")}>
             {base === "chat" ? (
               <Chat key={param || "nuevo"} go={go} auth={auth} setAuth={setAuth} convId={param || null} />
