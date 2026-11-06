@@ -141,8 +141,9 @@ button { font-family: inherit; }
 .nav-right .user-menu {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0;
+  bottom: auto;   /* sin esto heredaba el bottom de .user-menu y la caja se estiraba, pintando el fondo a medias */
   left: auto;
+  right: 0;
   width: 288px;
   z-index: 70;
 }
