@@ -1,15 +1,16 @@
-/* Paleta derivada de medir 30 capturas de la galería de sitios IA de Figma
-   (2,09 M de píxeles): campo 47% blanco, acentos concentrados en tono 220–260°. */
+/* Paleta "jade": modo oscuro medido sobre la captura de referencia (767x389,
+   tono concentrado en 160°, superficies #060A08→#1A3629, acento #68F8C7).
+   El modo claro es un hermano del mismo tono, porque la referencia es oscura. */
 :root {
-  --bg: #ffffff;
+  --bg: #f4f9f6;
   --panel: #ffffff;
-  --surface: #f2f4fa;
-  --border: #e2e5f0;
-  --border-strong: #c8cddd;
-  --text: #171a2e;
-  --muted: #666d86;
-  --accent: #4b4fc9;
-  --accent-soft: #eaebf9;
+  --surface: #e9f2ec;
+  --border: #d5e3da;
+  --border-strong: #b3c8bc;
+  --text: #0e1a15;
+  --muted: #56705f;
+  --accent: #0b7d5e;
+  --accent-soft: #dcefe6;
   --danger: #b3453a;
   --radius: 14px;
   --serif: "Fraunces", Georgia, serif;
@@ -35,15 +36,15 @@ body {
   line-height: 1.5;
 }
 body.dark {
-  --bg: #0e1120;
-  --panel: #151a2c;
-  --surface: #1c2237;
-  --border: #262d44;
-  --border-strong: #38415e;
-  --text: #eef0fa;
-  --muted: #9aa2bd;
-  --accent: #7d82f0;
-  --accent-soft: #232a4d;
+  --bg: #060a08;
+  --panel: #0e1c14;
+  --surface: #14261d;
+  --border: #1f3a2c;
+  --border-strong: #2a4a38;
+  --text: #e8f5ef;
+  --muted: #728e83;
+  --accent: #68f8c7;
+  --accent-soft: #123329;
   --danger: #e08a80;
 }
 button { font-family: inherit; }
@@ -410,7 +411,7 @@ body.dark .btn-ghost:hover { border-color: var(--border-strong); }
   padding: 24px;
   position: relative;
 }
-.plan-box.current { border-color: var(--accent); border-top-width: 4px; box-shadow: 0 14px 40px rgba(108, 92, 245, 0.12); }
+.plan-box.current { border-color: var(--accent); border-top-width: 4px; box-shadow: 0 14px 40px color-mix(in srgb, var(--accent) 12%, transparent); }
 .plan-box .top { display: flex; align-items: flex-start; gap: 8px; }
 .plan-box .crown-lg {
   width: 46px;
