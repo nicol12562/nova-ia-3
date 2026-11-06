@@ -40,7 +40,16 @@ export async function onRequestPost(context) {
 
   const messages = Array.isArray(body?.messages) ? body.messages.slice(-20) : [];
   if (messages.length === 0) return json({ error: "Falta el historial de mensajes" }, 400);
-  const plan = MODELS[body.plan] ? body.plan : "gratis";
+
+  const userId = Number(body.user_id) || null;
+
+  // El plan se lee de la base para que un cambio hecho en el panel surta en el
+  // mensaje siguiente, sin depender de lo que el cliente tenga guardado.
+  let plan = MODELS[body.plan] ? body.plan : "gratis";
+  if (userId && env.DB) {
+    const row = await env.DB.prepare("SELECT plan FROM users WHERE id = ?").bind(userId).first();
+    if (row && MODELS[row.plan]) plan = row.plan;
+  }
   const chain = MODELS[plan];
 
   const apiKey = env.OPENROUTER_API_KEY;
@@ -51,8 +60,6 @@ export async function onRequestPost(context) {
         "Cuando esté listo, acá vas a ver las respuestas en vivo."
     );
   }
-
-  const userId = Number(body.user_id) || null;
 
   // ---- Stream compuesto con reintento silencioso entre modelos ----
   const decoder = new TextDecoder();

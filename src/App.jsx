@@ -11,7 +11,7 @@ import Uso from "./pages/Uso.jsx";
 import Ajustes from "./pages/Ajustes.jsx";
 import Admin from "./pages/Admin.jsx";
 import { Icon } from "./icons.jsx";
-import { Modal, Toaster } from "./ui.jsx";
+import { Modal, Toaster, showToast } from "./ui.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 
 const VIEWS = [
@@ -114,6 +114,48 @@ export default function App() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setUsed(d.total))
       .catch(() => {});
+  }, [auth?.id]);
+
+  // La cuenta se lee del servidor: si el admin cambia un plan, se ve sin recargar.
+  useEffect(() => {
+    if (!auth?.id) return;
+    const id = auth.id;
+    let alive = true;
+
+    const refresh = async () => {
+      try {
+        const r = await fetch(`/api/me?user_id=${id}`);
+        if (!r.ok) return;
+        const { user } = await r.json();
+        if (!alive || !user) return;
+        setAuth((prev) => {
+          if (!prev || prev.id !== id) return prev;
+          if (prev.plan === user.plan && prev.role === user.role && prev.name === user.name) return prev;
+          const next = { ...prev, ...user };
+          localStorage.setItem("novaia_user", JSON.stringify(next));
+          if (prev.plan !== user.plan) {
+            showToast(`Tu plan ahora es ${user.plan === "plus" ? "Plus" : user.plan === "pro" ? "Pro" : "Gratis"}.`);
+          }
+          return next;
+        });
+      } catch {
+        /* sin respuesta, seguimos con lo que hay */
+      }
+    };
+
+    refresh();
+    const timer = setInterval(refresh, 30000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
   }, [auth?.id]);
 
   const go = (r) => {
