@@ -364,7 +364,6 @@ body.dark .btn-ghost:hover { border-color: var(--border-strong); }
 .btn-block { width: 100%; justify-content: center; }
 
 /* ===== Home ===== */
-@media (max-width: 980px) { .hero-card { grid-template-columns: 1fr; padding: 36px 28px; } }
 .hero-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; margin-top: 28px; }
 
 
