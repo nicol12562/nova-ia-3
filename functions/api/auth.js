@@ -26,7 +26,7 @@ export async function onRequestPost({ request, env }) {
 
   const db = env.DB;
   const existing = await db
-    .prepare("SELECT id, email, name, plan, password_hash, salt FROM users WHERE email = ?")
+    .prepare("SELECT id, email, name, plan, role, password_hash, salt FROM users WHERE email = ?")
     .bind(email)
     .first();
 
@@ -39,7 +39,7 @@ export async function onRequestPost({ request, env }) {
       .prepare("INSERT INTO users (email, name, password_hash, salt, plan) VALUES (?, ?, ?, ?, 'gratis')")
       .bind(email, name, hash, salt)
       .run();
-    return json({ user: { id: created.meta.last_row_id, email, name, plan: "gratis" } });
+    return json({ user: { id: created.meta.last_row_id, email, name, plan: "gratis", role: "user" } });
   }
 
   if (!existing || !existing.password_hash) {
@@ -48,7 +48,7 @@ export async function onRequestPost({ request, env }) {
   }
   const hash = await hashPassword(password, existing.salt || "");
   if (hash !== existing.password_hash) return json({ error: "Email o contraseña incorrectos." }, 401);
-  return json({ user: { id: existing.id, email: existing.email, name: existing.name, plan: existing.plan } });
+  return json({ user: { id: existing.id, email: existing.email, name: existing.name, plan: existing.plan, role: existing.role } });
 }
 
 function json(data, status = 200) {

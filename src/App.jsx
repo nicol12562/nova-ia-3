@@ -9,6 +9,7 @@ import Historial from "./pages/Historial.jsx";
 import Agentes from "./pages/Agentes.jsx";
 import Uso from "./pages/Uso.jsx";
 import Ajustes from "./pages/Ajustes.jsx";
+import Admin from "./pages/Admin.jsx";
 import { Icon } from "./icons.jsx";
 import { Modal, Toaster } from "./ui.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
@@ -21,6 +22,7 @@ const VIEWS = [
   { key: "uso-tokens", title: "Uso y tokens", Comp: Uso },
   { key: "ajustes", title: "Ajustes", Comp: Ajustes },
   { key: "chat", title: "Chat", Comp: Chat },
+  { key: "admin", title: "Panel de control", Comp: Admin },
 ];
 
 const QUOTA = { gratis: 1000000, pro: 2500000, plus: 5000000 };
@@ -210,6 +212,11 @@ export default function App() {
           <button className={"side-item" + (base === "ajustes" ? " active" : "")} onClick={() => go("ajustes")}>
             <span className="icon"><Icon name="sliders" size={17} /></span> Ajustes
           </button>
+          {auth?.role === "admin" && (
+            <button className={"side-item" + (base === "admin" ? " active" : "")} onClick={() => go("admin")}>
+              <span className="icon"><Icon name="lock" size={17} /></span> Panel de control
+            </button>
+          )}
         </nav>
 
         <div className="plan-card">

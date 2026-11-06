@@ -15,7 +15,7 @@ export async function onRequestGet({ request, env }) {
   await env.DB.prepare("DELETE FROM sessions WHERE id = ?").bind(row.id).run();
 
   const user = await env.DB
-    .prepare("SELECT id, email, name, plan FROM users WHERE id = ?")
+    .prepare("SELECT id, email, name, plan, role FROM users WHERE id = ?")
     .bind(row.user_id)
     .first();
   if (!user) return json({ error: "No encontramos tu cuenta." }, 404);

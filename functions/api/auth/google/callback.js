@@ -55,7 +55,7 @@ export async function onRequestGet({ request, env }) {
 
   // Creamos el usuario si es nuevo (o recuperamos el existente)
   let user = await env.DB
-    .prepare("SELECT id, email, name, plan FROM users WHERE email = ?")
+    .prepare("SELECT id, email, name, plan, role FROM users WHERE email = ?")
     .bind(email)
     .first();
   if (!user) {
@@ -63,7 +63,7 @@ export async function onRequestGet({ request, env }) {
       .prepare("INSERT INTO users (email, name, plan) VALUES (?, ?, 'gratis')")
       .bind(email, name)
       .run();
-    user = { id: created.meta.last_row_id, email, name, plan: "gratis" };
+    user = { id: created.meta.last_row_id, email, name, plan: "gratis", role: "user" };
   }
 
   // Ticket de un solo uso para que el frontend tome la sesión
