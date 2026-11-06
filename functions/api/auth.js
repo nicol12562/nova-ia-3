@@ -1,6 +1,10 @@
 // POST /api/auth  { action: "login" | "register", name?, email, password }
-// MVP: devuelve el usuario y el frontend lo guarda en localStorage.
-// TODO (hardening): sesión con cookie HttpOnly en vez de localStorage.
+// La contraseña se verifica con PBKDF2 y la sesión queda en una cookie HttpOnly
+// (tabla sessions). El frente guarda una copia de {id,email,name,plan,role} sólo
+// para pintar, pero la autoridad es la cookie.
+
+import { crearSesion, conSesion } from "../_lib/session.js";
+import { limitar, ipDe } from "../_lib/rate.js";
 
 const PBKDF2_ITERATIONS = 100000;
 
@@ -24,6 +28,17 @@ export async function onRequestPost({ request, env }) {
   if (!email.includes("@")) return json({ error: "Ingresá un email válido." }, 400);
   if (password.length < 6) return json({ error: "La contraseña necesita al menos 6 caracteres." }, 400);
 
+  // 8 intentos de acceso cada 15 minutos y 4 cuentas nuevas por hora, por IP.
+  const tope = await limitar(env, `auth:${action}:${ipDe(request)}`, action === "register" ? 4 : 8, action === "register" ? 60 : 15);
+  if (!tope.ok) {
+    return json(
+      { error: action === "register"
+          ? "Creaste muchas cuentas desde esta red. Probá más tarde."
+          : "Demasiados intentos seguidos. Esperá unos minutos y volvé a probar." },
+      429
+    );
+  }
+
   const db = env.DB;
   const existing = await db
     .prepare("SELECT id, email, name, plan, role, password_hash, salt FROM users WHERE email = ?")
@@ -39,7 +54,8 @@ export async function onRequestPost({ request, env }) {
       .prepare("INSERT INTO users (email, name, password_hash, salt, plan) VALUES (?, ?, ?, ?, 'gratis')")
       .bind(email, name, hash, salt)
       .run();
-    return json({ user: { id: created.meta.last_row_id, email, name, plan: "gratis", role: "user" } });
+    const user = { id: created.meta.last_row_id, email, name, plan: "gratis", role: "user" };
+    return conSesion(await crearSesion(env, user.id, request), { user });
   }
 
   if (!existing || !existing.password_hash) {
@@ -48,7 +64,8 @@ export async function onRequestPost({ request, env }) {
   }
   const hash = await hashPassword(password, existing.salt || "");
   if (hash !== existing.password_hash) return json({ error: "Email o contraseña incorrectos." }, 401);
-  return json({ user: { id: existing.id, email: existing.email, name: existing.name, plan: existing.plan, role: existing.role } });
+  const user = { id: existing.id, email: existing.email, name: existing.name, plan: existing.plan, role: existing.role };
+  return conSesion(await crearSesion(env, user.id, request), { user });
 }
 
 function json(data, status = 200) {

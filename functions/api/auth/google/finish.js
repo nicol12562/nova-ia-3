@@ -1,5 +1,8 @@
 // GET /api/auth/google/finish?t=<ticket>
-// Canjea el ticket de un solo uso por la sesión del usuario (el frontend lo guarda en localStorage).
+// Canjea el ticket de un solo uso por la sesión (cookie HttpOnly). El frente
+// guarda una copia del usuario en localStorage sólo para pintar.
+
+import { crearSesion, conSesion } from "../../../_lib/session.js";
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
@@ -20,7 +23,7 @@ export async function onRequestGet({ request, env }) {
     .first();
   if (!user) return json({ error: "No encontramos tu cuenta." }, 404);
 
-  return json({ user });
+  return conSesion(await crearSesion(env, user.id, request), { user });
 }
 
 function json(data, status = 200) {

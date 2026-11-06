@@ -22,7 +22,7 @@ export default function Uso({ auth, go }) {
   async function consultar() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/usage?user_id=${auth.id}&from=${from}&to=${to}`);
+      const res = await fetch(`/api/usage?from=${from}&to=${to}`);
       if (!res.ok) throw new Error("respuesta inválida");
       setData(await res.json());
       setConsultado(true);

@@ -20,7 +20,7 @@ export default function Historial({ go, auth }) {
     if (!auth) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/history?user_id=${auth.id}`);
+      const res = await fetch(`/api/history`);
       setItems(res.ok ? await res.json() : []);
     } catch {
       setItems([]);
@@ -34,14 +34,14 @@ export default function Historial({ go, auth }) {
   }, [load]);
 
   async function removeOne(id) {
-    await fetch(`/api/history?user_id=${auth.id}&id=${id}`, { method: "DELETE" });
+    await fetch(`/api/history?id=${id}`, { method: "DELETE" });
     showToast("Conversación eliminada.");
     load();
   }
 
   async function removeAll() {
     if (!confirm("¿Seguro que querés eliminar todo tu historial? Esta acción no se puede deshacer.")) return;
-    await fetch(`/api/history?user_id=${auth.id}`, { method: "DELETE" });
+    await fetch(`/api/history`, { method: "DELETE" });
     showToast("Historial eliminado.");
     load();
   }

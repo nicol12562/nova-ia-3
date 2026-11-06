@@ -26,7 +26,7 @@ export default function Planes({ go, auth }) {
 
   useEffect(() => {
     if (!auth?.id) return;
-    fetch(`/api/demo?user_id=${auth.id}`)
+    fetch(`/api/demo`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d || !Array.isArray(d.tareas)) return;
@@ -42,7 +42,7 @@ export default function Planes({ go, auth }) {
       const res = await fetch("/api/demo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: auth.id, tarea: demo.elegida }),
+        body: JSON.stringify({ tarea: demo.elegida }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "No se pudo correr la comparación.");

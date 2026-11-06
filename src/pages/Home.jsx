@@ -8,6 +8,7 @@ const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
 export default function Home({ go, auth }) {
   const [q, setQ] = useState("");
   const [modelos, setModelos] = useState([]);
+  const [racha, setRacha] = useState(0);
   const pago = !!auth && (auth.plan === "pro" || auth.plan === "plus");
 
   // Los techos los sirve el backend; así el Inicio no duplica números que pueden desactualizarse.
@@ -15,7 +16,11 @@ export default function Home({ go, auth }) {
     const hoy = new Date().toISOString().slice(0, 10);
     fetch(`/api/usage?from=${hoy.slice(0, 8)}01&to=${hoy}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && Array.isArray(d.modelos) && setModelos(d.modelos))
+      .then((d) => {
+        if (!d) return;
+        if (Array.isArray(d.modelos)) setModelos(d.modelos);
+        setRacha(d.racha || 0);
+      })
       .catch(() => {});
   }, []);
 
@@ -36,7 +41,15 @@ export default function Home({ go, auth }) {
     <section className="home">
       <div className="home-hero">
         <p className="eyebrow">Nova IA</p>
-        <h1 className="hero hero-title">Preguntá algo y empezá.</h1>
+        <h1 className="hero hero-title">
+          {auth && racha >= 2 ? `Otro día, ${racha} seguidos.` : "Preguntá algo y empezá."}
+        </h1>
+        {auth && racha >= 2 && (
+          <p className="home-racha">
+            <Icon name="pulse" size={13} />
+            Venís usando Nova {racha} días seguidos. La memoria hace que cada charla arranque más atrás.
+          </p>
+        )}
         <p className="lede">
           Escribí, aprendé, programá. Nova te responde en español, sin registro previo y con
           historial guardado cuando iniciás sesión.

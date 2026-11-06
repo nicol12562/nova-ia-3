@@ -63,6 +63,8 @@ export default function Chat({ auth, convId, go }) {
   const [busy, setBusy] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
+  const [recordando, setRecordando] = useState(null);
+  const [recordado, setRecordado] = useState(null);
   const [conv, setConv] = useState(convId ? Number(convId) : null);
   const [guest, setGuest] = useState(leerGuest);
   const [loginPrompt, setLoginPrompt] = useState(false);
@@ -81,7 +83,7 @@ export default function Chat({ auth, convId, go }) {
   const cargarModelos = React.useCallback(async () => {
     const hoy = new Date().toISOString().slice(0, 10);
     try {
-      const r = await fetch(`/api/usage?user_id=${auth?.id || ""}&from=${hoy.slice(0, 8)}01&to=${hoy}`);
+      const r = await fetch(`/api/usage?from=${hoy.slice(0, 8)}01&to=${hoy}`);
       if (!r.ok) return;
       const d = await r.json();
       if (Array.isArray(d.modelos)) setModelos(d.modelos);
@@ -108,7 +110,7 @@ export default function Chat({ auth, convId, go }) {
     loadedRef.current = true;
     (async () => {
       try {
-        const res = await fetch(`/api/history?user_id=${auth.id}&conv_id=${convId}`);
+        const res = await fetch(`/api/history?conv_id=${convId}`);
         if (!res.ok) return;
         const data = await res.json();
         setConv(data.conversation.id);
@@ -133,7 +135,7 @@ export default function Chat({ auth, convId, go }) {
       const res = await fetch("/api/history", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: auth.id, conv_id: target, role, content }),
+        body: JSON.stringify({ conv_id: target, role, content }),
       });
       const data = res.ok ? await res.json() : null;
       if (data?.conversation_id) setConv(data.conversation_id);
@@ -191,8 +193,6 @@ export default function Chat({ auth, convId, go }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: history,
-          plan: auth?.plan ?? "gratis",
-          user_id: auth?.id,
           agent: agent?.id,
           model: modelKey,
           prefs: { idioma: prefs.idioma, largo: prefs.largo },
@@ -277,6 +277,31 @@ export default function Chat({ auth, convId, go }) {
     }
   }
 
+  // Guarda el mensaje del usuario en la memoria de Nova. Sin esto, la única
+  // forma de alimentar la memoria sería escribir a mano en Ajustes.
+  async function handleRecord(text, i) {
+    setRecordando(i);
+    try {
+      const r = await fetch("/api/memories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: text }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        showToast(d.error || "No lo pude guardar.", { tone: "error" });
+        return;
+      }
+      setRecordado(i);
+      setTimeout(() => setRecordado(null), 1800);
+      showToast("Nova va a recordar esto en todas las charlas.");
+    } catch {
+      showToast("Se cayó la conexión. Probá de nuevo.", { tone: "error" });
+    } finally {
+      setRecordando(null);
+    }
+  }
+
   const conversando = msgs.length > 0;
 
   return (
@@ -352,6 +377,19 @@ export default function Chat({ auth, convId, go }) {
                   <button className="msg-act" onClick={() => handleCopy(m.content, i)}>
                     <Icon name={copiedIdx === i ? "check" : "copy"} size={13} />
                     {copiedIdx === i ? "Copiado" : "Copiar"}
+                  </button>
+                </div>
+              )}
+              {isUser && !streaming && auth?.id && (
+                <div className="msg-actions">
+                  <button
+                    className="msg-act"
+                    onClick={() => handleRecord(m.content, i)}
+                    disabled={recordando === i}
+                    title="Nova va a usar esto en todas tus próximas charlas"
+                  >
+                    <Icon name={recordado === i ? "check" : "knot"} size={13} />
+                    {recordado === i ? "Recordado" : recordando === i ? "Guardando…" : "Que Nova lo recuerde"}
                   </button>
                 </div>
               )}

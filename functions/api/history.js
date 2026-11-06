@@ -1,21 +1,30 @@
-// Conversaciones y mensajes
-// GET    /api/history?user_id=1              → lista de conversaciones
-// GET    /api/history?user_id=1&conv_id=5    → una conversación con sus mensajes
-// POST   /api/history { user_id, conv_id?, role, content } → agrega mensaje (crea la conversación si falta)
-// DELETE /api/history?user_id=1&id=5         → elimina una conversación
-// DELETE /api/history?user_id=1              → elimina todo el historial
+// Conversaciones y mensajes. La identidad sale de la cookie de sesión.
+//
+//   GET    /api/history                → lista de mis conversaciones
+//   GET    /api/history?conv_id=5      → una mía, con sus mensajes
+//   GET    /api/history?q=texto        → búsqueda en mis mensajes
+//   POST   /api/history { conv_id?, role, content, pinned? }
+//   DELETE /api/history?id=5           → borra una mía
+//   DELETE /api/history                → borra todo mi historial
+//
+// Antes el user_id venía en el body/query: cualquiera leía o BORRABA la
+// conversación de otro simplemente cambiando un número.
+
+import { leerSesion, mismoOrigen } from "../_lib/session.js";
 
 export async function onRequestGet({ request, env }) {
+  const user = await leerSesion(request, env);
+  if (!user) return json({ error: "Iniciá sesión para ver tu historial." }, 401);
+
   const url = new URL(request.url);
-  const userId = Number(url.searchParams.get("user_id"));
   const convId = Number(url.searchParams.get("conv_id"));
-  if (!userId) return json({ error: "Falta user_id" }, 400);
+  const q = (url.searchParams.get("q") || "").trim().slice(0, 80);
   const db = env.DB;
 
   if (convId) {
     const conv = await db
-      .prepare("SELECT id, title, created_at FROM conversations WHERE id = ? AND user_id = ?")
-      .bind(convId, userId)
+      .prepare("SELECT id, title, pinned, created_at FROM conversations WHERE id = ? AND user_id = ?")
+      .bind(convId, user.id)
       .first();
     if (!conv) return json({ error: "Conversación no encontrada" }, 404);
     const { results } = await db
@@ -25,31 +34,62 @@ export async function onRequestGet({ request, env }) {
     return json({ conversation: conv, messages: results });
   }
 
+  // Búsqueda: sólo sobre las conversaciones de esta cuenta.
+  if (q) {
+    const { results } = await db
+      .prepare(
+        `SELECT DISTINCT c.id, c.title, c.pinned, c.created_at,
+                substr(m.content, 1, 160) AS extracto
+         FROM conversations c
+         JOIN messages m ON m.conversation_id = c.id
+         WHERE c.user_id = ? AND m.content LIKE ?
+         ORDER BY c.id DESC LIMIT 30`
+      )
+      .bind(user.id, `%${q.replace(/[%_]/g, "")}%`)
+      .all();
+    return json({ busqueda: q, resultados: results });
+  }
+
   const { results } = await db
     .prepare(
-      `SELECT c.id, c.title, c.created_at, COUNT(m.id) AS mensajes
+      `SELECT c.id, c.title, c.pinned, c.created_at, COUNT(m.id) AS mensajes
        FROM conversations c LEFT JOIN messages m ON m.conversation_id = c.id
        WHERE c.user_id = ?
-       GROUP BY c.id ORDER BY c.id DESC`
+       GROUP BY c.id
+       ORDER BY c.pinned DESC, c.id DESC`
     )
-    .bind(userId)
+    .bind(user.id)
     .all();
   return json(results);
 }
 
 export async function onRequestPost({ request, env }) {
+  const user = await leerSesion(request, env);
+  if (!user) return json({ error: "Iniciá sesión para guardar el chat." }, 401);
+  if (!mismoOrigen(request)) return json({ error: "Origen no permitido." }, 403);
+
   const b = await request.json().catch(() => null);
-  const userId = Number(b?.user_id);
   const role = b?.role === "assistant" ? "assistant" : "user";
   const content = String(b?.content || "").slice(0, 20000);
-  if (!userId || !content) return json({ error: "Datos incompletos" }, 400);
+  if (!content) return json({ error: "Falta el contenido." }, 400);
   const db = env.DB;
+
+  // Fijar/soltar desde la lista del sidebar.
+  if (b?.accion === "fijar") {
+    const convId = Number(b?.conv_id);
+    if (!convId) return json({ error: "Falta conv_id." }, 400);
+    await db
+      .prepare("UPDATE conversations SET pinned = 1 - pinned WHERE id = ? AND user_id = ?")
+      .bind(convId, user.id)
+      .run();
+    return json({ ok: true });
+  }
 
   let convId = Number(b?.conv_id) || null;
   if (convId) {
     const owned = await db
       .prepare("SELECT id FROM conversations WHERE id = ? AND user_id = ?")
-      .bind(convId, userId)
+      .bind(convId, user.id)
       .first();
     if (!owned) convId = null; // no es suya → arranca una nueva
   }
@@ -57,7 +97,7 @@ export async function onRequestPost({ request, env }) {
     const title = content.slice(0, 60) + (content.length > 60 ? "…" : "");
     const created = await db
       .prepare("INSERT INTO conversations (user_id, title) VALUES (?, ?)")
-      .bind(userId, title)
+      .bind(user.id, title)
       .run();
     convId = created.meta.last_row_id;
   }
@@ -70,28 +110,37 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env }) {
+  const user = await leerSesion(request, env);
+  if (!user) return json({ error: "Iniciá sesión para borrar." }, 401);
+  if (!mismoOrigen(request)) return json({ error: "Origen no permitido." }, 403);
+
   const url = new URL(request.url);
-  const userId = Number(url.searchParams.get("user_id"));
   const convId = Number(url.searchParams.get("id"));
-  if (!userId) return json({ error: "Falta user_id" }, 400);
   const db = env.DB;
 
   if (convId) {
+    // Borramos la conversación si es de esta cuenta; antes borraba los mensajes
+    // primero sin verificar la propiedad.
+    const owned = await db
+      .prepare("SELECT id FROM conversations WHERE id = ? AND user_id = ?")
+      .bind(convId, user.id)
+      .first();
+    if (!owned) return json({ error: "Conversación no encontrada" }, 404);
     await db.prepare("DELETE FROM messages WHERE conversation_id = ?").bind(convId).run();
-    await db
-      .prepare("DELETE FROM conversations WHERE id = ? AND user_id = ?")
-      .bind(convId, userId)
-      .run();
+    await db.prepare("DELETE FROM conversations WHERE id = ?").bind(convId).run();
   } else {
     await db
       .prepare("DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE user_id = ?)")
-      .bind(userId)
+      .bind(user.id)
       .run();
-    await db.prepare("DELETE FROM conversations WHERE user_id = ?").bind(userId).run();
+    await db.prepare("DELETE FROM conversations WHERE user_id = ?").bind(user.id).run();
   }
   return json({ ok: true });
 }
 
 function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+  });
 }

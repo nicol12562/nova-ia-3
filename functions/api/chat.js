@@ -1,6 +1,7 @@
-// POST /api/chat  { messages, model?, agent?, user_id? }
+// POST /api/chat  { messages, model?, agent?, prefs? }
 // Proxy con streaming SSE a OpenRouter. La key vive SOLO como secreto de entorno.
-// El plan y los saldos por modelo se leen de D1: el cliente no puede inflarse el techo.
+// La cuenta, el plan y los saldos por modelo salen de D1 vía la cookie de
+// sesión: el cliente no puede inflarse el techo ni gastarle tokens a otro.
 
 import {
   SLOTS,
@@ -10,6 +11,8 @@ import {
   upstreamDe,
   ordenAlternativas,
 } from "../_lib/models.js";
+import { leerSesion } from "../_lib/session.js";
+import { notasDe, promptMemoria } from "../_lib/memoria.js";
 
 // Base común a todas las respuestas. El idioma y el largo vienen de las
 // preferencias del usuario (más abajo), no de acá.
@@ -105,14 +108,13 @@ export async function onRequestPost(context) {
     );
   }
 
-  const userId = Number(body.user_id) || null;
+  // La identidad sale de la cookie, no del body: con user_id cualquiera podía
+  // gastar el saldo de otra cuenta.
+  const user = await leerSesion(request, env);
+  const userId = user?.id || null;
 
   // ---- plan: manda la base, nunca el cliente ----
-  let plan = "gratis";
-  if (userId && env.DB) {
-    const row = await env.DB.prepare("SELECT plan FROM users WHERE id = ?").bind(userId).first();
-    if (row && MAX_TOKENS[row.plan]) plan = row.plan;
-  }
+  const plan = user && MAX_TOKENS[user.plan] ? user.plan : "gratis";
 
   // ---- visitantes: tope diario por IP ----
   if (!userId && env.DB) {
@@ -153,12 +155,16 @@ export async function onRequestPost(context) {
   const idioma = IDIOMAS[body?.prefs?.idioma] ? body.prefs.idioma : "ar";
   const largo = LARGOS[body?.prefs?.largo] ? body.prefs.largo : "breve";
 
+  // Memoria de largo plazo: lo que esta persona pidió que Nova recuerde.
+  const notas = await notasDe(env, userId);
+
   const systemPrompt = [
     SYSTEM_PROMPT,
     IDIOMAS[idioma],
     SPEED_PROMPT,
     LARGOS[largo].extra,
     agent ? AGENT_PROMPTS[agent] : null,
+    promptMemoria(notas),
   ]
     .filter(Boolean)
     .join("\n\n");

@@ -6,6 +6,7 @@
 
 import { SLOTS, upstreamDe } from "../_lib/models.js";
 import { TAREAS, MAX_TOKENS_DEMO, tareaPorId } from "../_lib/demos.js";
+import { leerSesion } from "../_lib/session.js";
 
 const ROL_BASE =
   "Sos Nova. Respondés en español rioplatense, directo, con markdown prolijo. " +
@@ -22,14 +23,9 @@ export async function onRequest(context) {
   let cuerpo = {};
   if (!esGet) cuerpo = await request.json().catch(() => ({}));
 
-  // GET lo pasa por query; POST viene en el body y se contrasta abajo.
-  const userId = Number(esGet ? url.searchParams.get("user_id") : cuerpo.user_id);
-  if (!Number.isInteger(userId) || userId <= 0) {
-    return json({ error: "Iniciá sesión para probar los modelos.", login: true }, 401);
-  }
-
-  const user = await env.DB.prepare("SELECT id, plan, role FROM users WHERE id = ?").bind(userId).first();
-  if (!user) return json({ error: "Cuenta no encontrada." }, 404);
+  const user = await leerSesion(request, env);
+  if (!user) return json({ error: "Iniciá sesión para probar los modelos.", login: true }, 401);
+  const userId = user.id;
   const plan = user.role === "admin" ? "plus" : user.plan; // el admin ve el techo completo
 
   const day = new Date().toISOString().slice(0, 10);
@@ -56,7 +52,6 @@ export async function onRequest(context) {
   const body = cuerpo;
   const tarea = tareaPorId(body?.tarea);
   if (!tarea) return json({ error: "Esa tarea no existe." }, 400);
-  if (Number(body?.user_id) !== userId) return json({ error: "Usuario no coincide." }, 400);
 
   const resultados = await Promise.all(
     SLOTS.map(async (s) => {

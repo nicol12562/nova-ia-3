@@ -2,12 +2,12 @@
 // POST /api/admin/model  { model }  → fija el modelo global
 // Puerta igual que el resto del panel: cabecera x-admin-key contra ADMIN_KEY.
 
-const OPCIONES = [
-  "openrouter/free",
-  "meta-llama/llama-3.3-70b-instruct:free",
-  "deepseek/deepseek-v4-flash",
-  "google/gemini-3.8-flash",
-];
+import { SLOTS } from "../../_lib/models.js";
+
+// La lista de opciones se deriva de SLOTS. Mantener una lista a mano fue cómo
+// apareció "meta-llama/llama-3.3-70b-instruct:free" acá, que ya no existe en
+// OpenRouter: el panel lo ofrecía y al elegirlo se rompía todo el chat.
+const OPCIONES = [...new Set(SLOTS.flatMap((s) => Object.values(s.upstream)))];
 
 export async function onRequest(context) {
   const { request, env } = context;

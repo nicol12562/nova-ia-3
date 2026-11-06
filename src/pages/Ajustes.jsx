@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Icon } from "../icons.jsx";
 import { showToast } from "../ui.jsx";
 import { IDIOMAS, LARGOS, leerPrefs, escribirPrefs } from "../data/prefs.js";
@@ -17,6 +17,8 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
   function logout() {
     localStorage.removeItem("novaia_user");
     setAuth(null);
+    // La sesión real está en una cookie HttpOnly: hay que pedirle al server que la tire.
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     go("");
   }
 
@@ -160,6 +162,8 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
           )}
         </div>
 
+        <Memoria auth={auth} go={go} />
+
         <div className="settings-card">
           <div className="head">
             <span className="sq"><Icon name="sun" size={19} /></span>
@@ -187,5 +191,134 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
         </div>
       </div>
     </section>
+  );
+}
+
+// Lo que Nova sabe de vos entre conversaciones. Es la parte del producto que
+// mejora con el uso: el mismo modelo de OpenRouter, pero ya enterado de tu
+// contexto. Se guarda en D1 y entra al system prompt de cada mensaje.
+function Memoria({ auth, go }) {
+  const [notas, setNotas] = useState(null);
+  const [limite, setLimite] = useState(40);
+  const [texto, setTexto] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  function cargar() {
+    return fetch("/api/memories")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d) return;
+        setNotas(d.notas || []);
+        if (d.limite) setLimite(d.limite);
+      })
+      .catch(() => setNotas([]));
+  }
+
+  useEffect(() => {
+    if (auth?.id) cargar();
+    else setNotas(null);
+  }, [auth?.id]);
+
+  async function guardar(e) {
+    e.preventDefault();
+    const t = texto.trim();
+    if (!t || busy) return;
+    setBusy(true);
+    try {
+      const r = await fetch("/api/memories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: t }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        showToast(d.error || "No lo pude guardar.");
+        return;
+      }
+      setTexto("");
+      showToast("Listo, Nova va a recordar esto.");
+      await cargar();
+    } catch {
+      showToast("Se cayó la conexión. Probá de nuevo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function borrar(id) {
+    setNotas((ns) => (ns || []).filter((n) => n.id !== id));
+    try {
+      await fetch(`/api/memories?id=${id}`, { method: "DELETE" });
+      await cargar();
+    } catch {
+      await cargar();
+    }
+  }
+
+  return (
+    <div className="settings-card">
+      <div className="head">
+        <span className="sq"><Icon name="knot" size={19} /></span>
+        <div>
+          <h3>Memoria de Nova</h3>
+          <p>Datos que Nova usa en todas tus conversaciones, sin que se los repitas.</p>
+        </div>
+      </div>
+
+      {!auth ? (
+        <div className="settings-row">
+          <div>
+            <strong>Iniciá sesión para activarla</strong>
+            <p>La memoria se guarda en tu cuenta y queda entre tus chats.</p>
+          </div>
+          <button className="btn btn-ghost" onClick={() => go("login")}>
+            Entrar <Icon name="arrowUpRight" size={12} />
+          </button>
+        </div>
+      ) : (
+        <>
+          <form className="mem-form" onSubmit={guardar}>
+            <input
+              type="text"
+              value={texto}
+              maxLength={220}
+              placeholder="Ej: vendo repuestos en Rosario y escribo para clientes, no para técnicos."
+              onChange={(e) => setTexto(e.target.value)}
+              aria-label="Nueva nota para la memoria"
+            />
+            <button className="btn btn-primary" type="submit" disabled={busy || !texto.trim()}>
+              Guardar
+            </button>
+          </form>
+
+          {notas === null ? (
+            <p className="mem-vacio">Cargando…</p>
+          ) : notas.length === 0 ? (
+            <p className="mem-vacio">
+              Todavía no guardaste nada. Probá con a qué te dedicás, cómo te gusta que te
+              respondan o un dato que cansa repetir.
+            </p>
+          ) : (
+            <ul className="mem-lista">
+              {notas.map((n) => (
+                <li key={n.id}>
+                  <span>{n.note}</span>
+                  <button type="button" onClick={() => borrar(n.id)} aria-label="Olvidar esta nota">
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {notas && (
+            <p className="prefs-hint">
+              <Icon name="pulse" size={12} />
+              {` ${notas.length} de ${limite} notas. Entran al inicio de cada mensaje que mandás.`}
+            </p>
+          )}
+        </>
+      )}
+    </div>
   );
 }

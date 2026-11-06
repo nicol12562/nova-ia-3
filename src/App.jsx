@@ -56,6 +56,7 @@ export default function App() {
   });
   const [used, setUsed] = useState(null);
   const [cuota, setCuota] = useState(null);
+  const [racha, setRacha] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
@@ -113,22 +114,24 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Consumo del mes actual (para la tarjeta del plan)
+  // Consumo del mes actual (para la tarjeta del plan) y racha de días seguidos.
   useEffect(() => {
     if (!auth) {
       setUsed(null);
+      setRacha(0);
       return;
     }
     const today = new Date().toISOString().slice(0, 10);
-    fetch(`/api/usage?user_id=${auth.id}&from=${today.slice(0, 8)}01&to=${today}`)
+    fetch(`/api/usage?from=${today.slice(0, 8)}01&to=${today}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d) return;
         setUsed(d.total);
+        setRacha(d.racha || 0);
         if (d.cuota) setCuota(d.cuota);
       })
       .catch(() => {});
-  }, [auth?.id]);
+  }, [auth?.id, auth?.plan]);
 
   // La cuenta se lee del servidor: si el admin cambia un plan, se ve sin recargar.
   useEffect(() => {
@@ -149,10 +152,21 @@ export default function App() {
 
     const refresh = async () => {
       try {
-        const r = await fetch(`/api/me?user_id=${id}`);
+        // Sin user_id: /api/me responde según la cookie de sesión.
+        const r = await fetch(`/api/me`, { credentials: "same-origin" });
         if (!r.ok) return;
         const { user } = await r.json();
-        if (alive) aplicar(user);
+        if (!alive) return;
+        if (!user) {
+          // La cookie expiró o se cerró en otra pestaña: la copia de localStorage
+          // ya no autoriza nada, así que se va.
+          localStorage.removeItem("novaia_user");
+          setAuth(null);
+          setUsed(null);
+          setRacha(0);
+          return;
+        }
+        aplicar(user);
       } catch {
         /* sin respuesta, seguimos con lo que hay */
       }
@@ -199,6 +213,9 @@ export default function App() {
     localStorage.removeItem("novaia_user");
     setAuth(null);
     setUsed(null);
+    setRacha(0);
+    // Borrar la copia local no cierra nada: la sesión vive en la cookie HttpOnly.
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     go("");
   };
 

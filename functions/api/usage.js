@@ -1,17 +1,22 @@
-// GET /api/usage?user_id=1&from=2026-10-01&to=2026-10-31
-// Consumo por día y totales del período, más el saldo de cada modelo del plan.
+// GET /api/usage?from=YYYY-MM-DD&to=YYYY-MM-DD
+// Consumo por día y totales del período, el saldo de cada modelo del plan y la
+// racha de uso. Los datos personales salen de la cookie de sesión, no de un
+// ?user_id= que cualquiera puede escribir.
 
 import { SLOTS, techoDe, CUOTA } from "../_lib/models.js";
+import { leerSesion } from "../_lib/session.js";
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
-  const userId = Number(url.searchParams.get("user_id"));
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
   if (!from || !to) return json({ error: "Faltan parámetros" }, 400);
 
-  // Sin user_id devolvemos solo los techos del plan Gratis (datos ya publicados),
-  // para que el selector de modelo funcione igual en un visitante.
+  const user = await leerSesion(request, env);
+  const userId = user?.id || null;
+
+  // Sin sesión devolvemos sólo los techos del plan Gratis (datos publicados),
+  // para que el selector de modelo y la página de planes funcionen igual.
   const rows = userId
     ? (await env.DB
         .prepare(
@@ -24,8 +29,6 @@ export async function onRequestGet({ request, env }) {
   const totalIn = rows.reduce((a, r) => a + (r.tokens_in || 0), 0);
   const totalOut = rows.reduce((a, r) => a + (r.tokens_out || 0), 0);
 
-  // El techo depende del plan real de la cuenta, no de lo que pida el frente.
-  const user = userId ? await env.DB.prepare("SELECT plan FROM users WHERE id = ?").bind(userId).first() : null;
   const plan = user?.plan || "gratis";
   const month = from.slice(0, 7) + "-01";
   let usados = {};
@@ -53,8 +56,9 @@ export async function onRequestGet({ request, env }) {
   });
 
   return json({
-    days: rows, totalIn, totalOut, total: totalIn + totalOut, plan,
+    dias: rows, totalIn, totalOut, total: totalIn + totalOut, plan,
     cuota: CUOTA[plan] ?? CUOTA.gratis, modelos,
+    racha: userId ? await racha(env, userId) : 0,
     // Techos de los 3 planes, para que la tabla comparativa no duplique números.
     planes: Object.keys(CUOTA).map((p) => ({
       plan: p,
@@ -64,6 +68,30 @@ export async function onRequestGet({ request, env }) {
   });
 }
 
+// Días consecutivos con actividad, contando hacia atrás desde hoy. Si hoy aún
+// no usó Nova, la racha arranca ayer (no se la cortamos por no haber vuelto
+// todavía en el día).
+async function racha(env, userId) {
+  const { results } = await env.DB
+    .prepare("SELECT DISTINCT day FROM usage_daily WHERE user_id = ? ORDER BY day DESC LIMIT 120")
+    .bind(userId)
+    .all();
+  const dias = new Set((results || []).map((r) => r.day));
+  if (!dias.size) return 0;
+  const d = new Date();
+  const fmtDate = (x) => x.toISOString().slice(0, 10);
+  if (!dias.has(fmtDate(d))) d.setUTCDate(d.getUTCDate() - 1);
+  let n = 0;
+  while (dias.has(fmtDate(d))) {
+    n += 1;
+    d.setUTCDate(d.getUTCDate() - 1);
+  }
+  return n;
+}
+
 function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+  });
 }

@@ -1,20 +1,17 @@
-// GET /api/me?user_id=1  → estado actual de la cuenta desde D1.
-// Sirve para que un cambio de plan hecho en el panel se refleje sin recargar.
+// GET /api/me  → la cuenta dueña de la cookie de sesión.
+//
+// Antes tomaba ?user_id= del querystring, así que cualquier persona podía
+// recorrer ids y leer emails ajenos. Ahora el id NO se acepta como parámetro:
+// o venís con tu cookie, o te devolvemos user:null.
+//
+// También es lo que hace que un cambio de plan desde el panel se vea al toque:
+// el frente compara esto contra su copia en localStorage.
 
-export async function onRequestGet(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const userId = Number(url.searchParams.get("user_id"));
+import { leerSesion } from "../_lib/session.js";
 
-  if (!Number.isInteger(userId) || userId <= 0) return json({ error: "Usuario inválido." }, 400);
-
-  const user = await env.DB
-    .prepare("SELECT id, email, name, plan, role FROM users WHERE id = ?")
-    .bind(userId)
-    .first();
-
-  if (!user) return json({ error: "No encontramos esa cuenta." }, 404);
-  return json({ user });
+export async function onRequestGet({ request, env }) {
+  const user = await leerSesion(request, env);
+  return json({ user: user || null });
 }
 
 function json(data, status = 200) {

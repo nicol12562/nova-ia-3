@@ -77,3 +77,25 @@ CREATE TABLE IF NOT EXISTS guest_usage (
   n INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (ip, day)
 );
+
+-- Notas de largo plazo que el usuario guarda y entran al system prompt de cada
+-- conversación. Es lo que hace que volver a Nova sirva más que pagar la API.
+CREATE TABLE IF NOT EXISTS memories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  note TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_memories_user ON memories(user_id);
+
+-- Contador de intentos por IP y ventana (login/registro). Sin esto se podían
+-- probar contraseñas al infinito.
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT NOT NULL,
+  ventana INTEGER NOT NULL,
+  n INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (key, ventana)
+);
+
+-- Conversaciones fijadas arriba del sidebar.
+ALTER TABLE conversations ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0;
