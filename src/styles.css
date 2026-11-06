@@ -515,10 +515,19 @@ body.dark .chip { background: var(--surface); color: var(--muted); }
 .plan-box hr { border: none; border-top: 1px solid var(--border); margin: 0 0 14px; }
 .plan-box .mi-title { font-size: 13.5px; font-weight: 700; margin-bottom: 10px; }
 .plan-box ul { padding: 0; list-style: none; margin: 0 0 20px; display: flex; flex-direction: column; gap: 8px; }
-.plan-box li { font-size: 13px; color: var(--border-strong); display: flex; gap: 8px; align-items: baseline; }
-body.dark .plan-box li { color: var(--border-strong); }
+.plan-box li {
+  font-size: 13.5px;
+  color: var(--text);
+  display: flex;
+  gap: 9px;
+  align-items: baseline;
+}
+body.dark .plan-box li { color: var(--text); }
 .plan-box li .check { color: var(--accent); font-weight: 700; flex-shrink: 0; }
+.plan-box li .modelo { font-weight: 600; }
+.plan-box li .lim { color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; text-align: right; }
 .plan-box li.no { color: var(--muted); }
+.plan-box li.no .check { color: var(--danger); }
 .plan-box .foot-note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
 
 table.comparison {
@@ -1523,6 +1532,28 @@ body.dark .tab.active { background: var(--border); }
 }
 .model-chip select:disabled { cursor: default; opacity: .6; }
 .model-chip .mc-warn { color: var(--danger); display: inline-flex; }
+
+/* ---------- Comparativa: en qué destaca cada plan ---------- */
+.edge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+.edge-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  background: var(--panel);
+  padding: 18px 20px;
+}
+.edge-card.featured { border-color: var(--accent); box-shadow: var(--ring); }
+.edge-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.edge-head strong { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; }
+.edge-card ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.edge-card li { display: grid; grid-template-columns: 18px 1fr; column-gap: 9px; align-items: baseline; }
+.edge-card li .check { color: var(--accent); font-weight: 700; }
+.edge-card li .e-t { font-size: 13.5px; font-weight: 650; }
+.edge-card li p { grid-column: 2; margin: 3px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
 
 /* ---------- Saldo por modelo ---------- */
 .model-budgets {

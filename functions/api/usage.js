@@ -52,7 +52,16 @@ export async function onRequestGet({ request, env }) {
     };
   });
 
-  return json({ days: rows, totalIn, totalOut, total: totalIn + totalOut, plan, cuota: CUOTA[plan] ?? CUOTA.gratis, modelos });
+  return json({
+    days: rows, totalIn, totalOut, total: totalIn + totalOut, plan,
+    cuota: CUOTA[plan] ?? CUOTA.gratis, modelos,
+    // Techos de los 3 planes, para que la tabla comparativa no duplique números.
+    planes: Object.keys(CUOTA).map((p) => ({
+      plan: p,
+      cuota: CUOTA[p],
+      techos: Object.fromEntries(SLOTS.map((s) => [s.key, s.techo[p]])),
+    })),
+  });
 }
 
 function json(data, status = 200) {
