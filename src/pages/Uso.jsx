@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Icon } from "../icons.jsx";
 import { showToast, spotlight, useCountUp } from "../ui.jsx";
 
-const QUOTA = { gratis: 1000000, pro: 2500000, plus: 5000000 };
+const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
 
 export default function Uso({ auth, go }) {
   const today = new Date().toISOString().slice(0, 10);
@@ -15,8 +15,9 @@ export default function Uso({ auth, go }) {
   const total = useCountUp(data?.total ?? 0);
   const totalIn = useCountUp(data?.totalIn ?? 0);
   const totalOut = useCountUp(data?.totalOut ?? 0);
-  const quota = QUOTA[auth?.plan] ?? QUOTA.gratis;
-  const pct = data ? Math.min(100, Math.round((data.total / quota) * 100)) : 0;
+  // La cuota la define el servidor según el plan real de la cuenta.
+  const quota = data?.cuota ?? 0;
+  const pct = data && quota ? Math.min(100, Math.round((data.total / quota) * 100)) : 0;
 
   async function consultar() {
     setLoading(true);
@@ -109,6 +110,30 @@ export default function Uso({ auth, go }) {
                   </span>
                 </div>
               </div>
+
+              {data.modelos?.length > 0 && (
+                <div className="model-budgets">
+                  <div className="mb-head">
+                    <span className="mono-label" style={{ margin: 0 }}>SALDO POR MODELO · {data.plan.toUpperCase()}</span>
+                    <span className="mono-sub">cada modelo consume su propia bolsa mensual</span>
+                  </div>
+                  {data.modelos.map((m) => (
+                    <div key={m.key} className={"mb-row" + (m.agotado ? " out" : "")}>
+                      <div className="mb-top">
+                        <strong>{m.label}</strong>
+                        <span className="mb-nums">
+                          {fmt(m.usado)} / {fmt(m.techo)}
+                          {m.agotado && <em>agotado</em>}
+                        </span>
+                      </div>
+                      <div className="plan-bar mini" aria-hidden="true">
+                        <span style={{ width: m.pct + "%" }} />
+                      </div>
+                      <p className="mb-desc">{m.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {data.days.length > 0 && (
                 <div className="table-wrap" style={{ marginTop: 20 }}>

@@ -1339,3 +1339,85 @@ body.dark .tab.active { background: var(--border); }
   transition: border-color .16s, color .16s;
 }
 .home-links button:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- Estados de agente bloqueado y selector de modelo ---------- */
+.agent-card.locked { cursor: pointer; }
+.agent-card.locked .agent-ico { background: var(--surface); color: var(--muted); }
+.agent-card.locked .agent-sample { color: var(--border-strong); }
+.agent-card.locked .agent-go { color: var(--muted); }
+.agent-card.locked:hover { border-color: var(--border-strong); transform: none; box-shadow: none; }
+.agent-card.locked:hover .agent-sample { color: var(--muted); }
+
+.chip-inline.ok { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+
+.model-chip { display: inline-flex; align-items: center; gap: 6px; }
+.model-chip select {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  padding: 2px 4px;
+  max-width: 260px;
+}
+.model-chip select:disabled { cursor: default; opacity: .6; }
+.model-chip .mc-warn { color: var(--danger); display: inline-flex; }
+
+/* ---------- Saldo por modelo ---------- */
+.model-budgets {
+  margin-top: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+}
+.mb-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.mb-row { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.mb-row:last-child { border-bottom: none; }
+.mb-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.mb-top strong { font-size: 14px; font-weight: 650; }
+.mb-nums { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.mb-nums em {
+  font-style: normal;
+  margin-left: 8px;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 99px;
+  padding: 1px 8px;
+  font-size: 10.5px;
+}
+.mb-row .plan-bar.mini { max-width: none; height: 6px; margin: 9px 0 7px; }
+.mb-row.out .plan-bar.mini > span { background: var(--danger); }
+.mb-desc { margin: 0; font-size: 12.5px; color: var(--muted); }
+
+/* ---------- Grilla de modelos en el Inicio ---------- */
+.home-models {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.hm-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 16px 18px;
+}
+.hm-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.hm-top strong { font-size: 14px; font-weight: 650; }
+.hm-pct { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.hm-card .plan-bar.mini { max-width: none; margin: 10px 0 12px; }
+.hm-nums { display: flex; flex-direction: column; gap: 1px; }
+.hm-nums b { font-size: 17px; font-weight: 650; letter-spacing: -0.02em; }
+.hm-nums span { font-size: 11.5px; color: var(--muted); }
+.hm-desc { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }

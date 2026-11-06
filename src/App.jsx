@@ -25,7 +25,7 @@ const VIEWS = [
   { key: "admin", title: "Panel de control", Comp: Admin },
 ];
 
-const QUOTA = { gratis: 1000000, pro: 2500000, plus: 5000000 };
+const QUOTA_FALLBACK = 1000000; // solo mientras responde el backend
 const fmt = (n) => Math.round(n).toLocaleString("es-AR");
 
 export default function App() {
@@ -46,6 +46,7 @@ export default function App() {
     }
   });
   const [used, setUsed] = useState(null);
+  const [cuota, setCuota] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
@@ -112,7 +113,11 @@ export default function App() {
     const today = new Date().toISOString().slice(0, 10);
     fetch(`/api/usage?user_id=${auth.id}&from=${today.slice(0, 8)}01&to=${today}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setUsed(d.total))
+      .then((d) => {
+        if (!d) return;
+        setUsed(d.total);
+        if (d.cuota) setCuota(d.cuota);
+      })
       .catch(() => {});
   }, [auth?.id]);
 
@@ -208,7 +213,7 @@ export default function App() {
 
   const { title, Comp: View } = VIEWS.find((v) => v.key === base) ?? VIEWS[0];
 
-  const quota = auth ? QUOTA[auth.plan] ?? QUOTA.gratis : QUOTA.gratis;
+  const quota = cuota ?? QUOTA_FALLBACK;
   const pct = auth && used != null && quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
   const restantes = auth ? fmt(Math.max(0, quota - (used ?? 0))) : fmt(quota);
 

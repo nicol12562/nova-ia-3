@@ -1,6 +1,15 @@
-// POST /api/chat  { messages, plan, user_id? }
-// Proxy con streaming SSE a OpenRouter. La key vive SOLO como secreto de entorno
-// (npx wrangler pages secret put OPENROUTER_API_KEY) — nunca hardcodeada acá.
+// POST /api/chat  { messages, model?, agent?, user_id? }
+// Proxy con streaming SSE a OpenRouter. La key vive SOLO como secreto de entorno.
+// El plan y los saldos por modelo se leen de D1: el cliente no puede inflarse el techo.
+
+import {
+  SLOTS,
+  MAX_TOKENS,
+  slotByKey,
+  techoDe,
+  upstreamDe,
+  ordenAlternativas,
+} from "../_lib/models.js";
 
 const SYSTEM_PROMPT =
   "Sos Nova, una asistente de IA amable y directa. Respondés siempre en español rioplatense: usá el voseo en las " +
@@ -33,23 +42,13 @@ const AGENT_PROMPTS = {
     "calcos, y después una nota breve si hay un modismo que cambió de sentido. No traduzcas literal si suena raro.",
 };
 
-// Escalera de modelos según el plan. Si el primero falla, se prueba el siguiente.
-const MODELS = {
-  gratis: ["openrouter/free", "meta-llama/llama-3.3-70b-instruct:free"],
-  pro: ["deepseek/deepseek-v4-flash", "meta-llama/llama-3.3-70b-instruct:free"],
-  plus: ["google/gemini-3.8-flash", "deepseek/deepseek-v4-flash"],
-};
-
-// Techo de salida por plan: controla costo en modelos pago y evita errores de crédito (402).
-const MAX_TOKENS = { gratis: 2048, pro: 4096, plus: 8192 };
-
 // Mensajes gratis por día para un visitante sin sesión, contados por IP.
 const GUEST_LIMIT = 3;
 
 // Retenemos los primeros caracteres antes de enviarlos al cliente. Si la
 // respuesta termina siendo basura (artefactos de algunos modelos gratis,
 // salidas vacías o de seguridad), el cliente todavía no vio nada y podemos
-// reintentar con el siguiente modelo de la escalera sin que se note.
+// reintentar con el siguiente candidato sin que se note.
 const BUFFER_THRESHOLD = 80;
 
 function isDegenerateOutput(text) {
@@ -69,17 +68,24 @@ export async function onRequestPost(context) {
   const messages = Array.isArray(body?.messages) ? body.messages.slice(-20) : [];
   if (messages.length === 0) return json({ error: "Falta el historial de mensajes" }, 400);
 
-  const userId = Number(body.user_id) || null;
-
-  // El plan se lee de la base para que un cambio hecho en el panel surta en el
-  // mensaje siguiente, sin depender de lo que el cliente tenga guardado.
-  let plan = MODELS[body.plan] ? body.plan : "gratis";
-  if (userId && env.DB) {
-    const row = await env.DB.prepare("SELECT plan FROM users WHERE id = ?").bind(userId).first();
-    if (row && MODELS[row.plan]) plan = row.plan;
+  const apiKey = env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    return ssePlaceholder(
+      "Nova está en modo pruebas: falta configurar el secreto OPENROUTER_API_KEY en Cloudflare. " +
+        "Cuando esté listo, acá vas a ver las respuestas en vivo."
+    );
   }
 
-  // Visitante sin sesión: tope diario por IP antes de gastar una llamada arriba.
+  const userId = Number(body.user_id) || null;
+
+  // ---- plan: manda la base, nunca el cliente ----
+  let plan = "gratis";
+  if (userId && env.DB) {
+    const row = await env.DB.prepare("SELECT plan FROM users WHERE id = ?").bind(userId).first();
+    if (row && MAX_TOKENS[row.plan]) plan = row.plan;
+  }
+
+  // ---- visitantes: tope diario por IP ----
   if (!userId && env.DB) {
     const ip = request.headers.get("cf-connecting-ip") || "sin-ip";
     const day = new Date().toISOString().slice(0, 10);
@@ -94,50 +100,81 @@ export async function onRequestPost(context) {
       );
     }
     waitUntil(
-      env.DB.prepare(
-        `INSERT INTO guest_usage (ip, day, n) VALUES (?, ?, 1)
-         ON CONFLICT(ip, day) DO UPDATE SET n = n + 1`
-      )
+      env.DB
+        .prepare(
+          `INSERT INTO guest_usage (ip, day, n) VALUES (?, ?, 1)
+           ON CONFLICT(ip, day) DO UPDATE SET n = n + 1`
+        )
         .bind(ip, day)
         .run()
         .catch(() => {})
     );
   }
 
-  // El admin puede forzar un modelo único para todos; sin eso, la escalera del plan.
-  let chain = MODELS[plan];
-  if (env.DB) {
-    const fijo = await env.DB.prepare("SELECT value FROM settings WHERE key = 'model'").first();
-    if (fijo?.value) chain = [fijo.value];
+  // ---- los mini agentes son de plan pago ----
+  const agent = String(body?.agent || "");
+  if (agent && !AGENT_PROMPTS[agent]) return json({ error: "Ese agente no existe." }, 400);
+  if (agent && plan === "gratis") {
+    return json(
+      { error: "Los mini agentes son de Pro o Plus. Elegí un plan para desbloquearlos.", agentes: true },
+      403
+    );
+  }
+  const systemPrompt = SYSTEM_PROMPT + (agent ? "\n\n" + AGENT_PROMPTS[agent] : "");
+
+  // ---- saldo por modelo en el mes corriente ----
+  const month = new Date().toISOString().slice(0, 7) + "-01";
+  const pedidos = slotByKey(body.model) ? body.model : "flash";
+  let usados = {};
+  if (userId && env.DB) {
+    const r = await env.DB
+      .prepare("SELECT model, tokens FROM model_usage WHERE user_id = ? AND month = ?")
+      .bind(userId, month)
+      .all();
+    usados = Object.fromEntries((r.results || []).map((x) => [x.model, x.tokens]));
   }
 
-  const agent = String(body?.agent || "");
-  const systemPrompt = SYSTEM_PROMPT + (AGENT_PROMPTS[agent] ? "\n\n" + AGENT_PROMPTS[agent] : "");
+  // El admin puede forzar un upstream único; se sigue cobrando contra el slot elegido.
+  let forzado = null;
+  if (env.DB) {
+    const fijo = await env.DB.prepare("SELECT value FROM settings WHERE key = 'model'").first();
+    if (fijo?.value) forzado = fijo.value;
+  }
 
-  const apiKey = env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    // Sin secreto configurado: respuesta placeholder para que la app no se rompa.
+  const restantes = (key) => Math.max(0, techoDe(plan, key) - (usados[key] || 0));
+  const orden = ordenAlternativas(plan, pedidos).filter((k) => slotByKey(k));
+  const candidatos = orden.filter((k) => !userId || restantes(k) > 0);
+
+  if (candidatos.length === 0) {
+    const agotado = orden.map((k) => `${slotByKey(k).label}: ${fmt(restantes(k))} restantes`).join(" · ");
     return ssePlaceholder(
-      "Nova está en modo pruebas: falta configurar el secreto OPENROUTER_API_KEY en Cloudflare. " +
-        "Cuando esté listo, acá vas a ver las respuestas en vivo."
+      `Te quedaste sin saldo de modelos este mes en el plan ${plan}. ${agotado}. ` +
+        "Cambiá de plan o esperá a la renovación."
     );
   }
 
-  // ---- Stream compuesto con reintento silencioso entre modelos ----
+  const maxTokens = MAX_TOKENS[plan];
+
+  // ---- stream compuesto con reintento entre candidatos ----
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
   let outChars = 0;
-  let finished;
-  const finishedPromise = new Promise((r) => (finished = r));
+  let usedSlot = null;
+  let usedTokens = 0;
+  let marcarListo = () => {};
+  const finished = new Promise((resolve) => { marcarListo = resolve; });
 
   const composite = new ReadableStream({
     async start(controller) {
-      let usedModel = null;
       try {
-        for (const model of chain) {
-          let upstream;
+        for (const key of candidatos) {
+          const slot = slotByKey(key);
+          const upstream = forzado || upstreamDe(plan, key, null);
+          if (!upstream) continue;
+
+          let res;
           try {
-            upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
               method: "POST",
               headers: {
                 Authorization: `Bearer ${apiKey}`,
@@ -145,22 +182,24 @@ export async function onRequestPost(context) {
                 "X-Title": "Nova IA",
               },
               body: JSON.stringify({
-                model,
+                model: upstream,
                 messages: [{ role: "system", content: systemPrompt }, ...messages],
                 stream: true,
-                max_tokens: MAX_TOKENS[plan],
+                max_tokens: maxTokens,
               }),
             });
           } catch {
-            continue; // sin conexión con este modelo: probamos el siguiente
+            continue;
           }
-          if (!upstream.ok || !upstream.body) continue;
+          if (!res.ok || !res.body) continue;
 
-          const reader = upstream.body.getReader();
-          let emitted = false; // ¿ya le mandamos algo al cliente con este modelo?
-          let buffered = ""; // texto del modelo retenido a la espera del umbral
-          let heldRaw = ""; // líneas SSE crudas retenidas mientras no emitimos
-          let tail = ""; // línea incompleta del último chunk
+          const reader = res.body.getReader();
+          let emitted = false;
+          let buffered = "";
+          let heldRaw = "";
+          let tail = "";
+          let promptTokens = 0;
+          let completionTokens = 0;
 
           while (true) {
             const { done, value } = await reader.read();
@@ -175,12 +214,18 @@ export async function onRequestPost(context) {
               const payload = t.slice(5).trim();
               if (payload === "[DONE]") continue;
               try {
-                const delta = JSON.parse(payload).choices?.[0]?.delta?.content ?? "";
-                if (!delta) continue;
-                if (emitted) outChars += delta.length;
-                else buffered += delta;
+                const j = JSON.parse(payload);
+                if (j.usage) {
+                  promptTokens = j.usage.prompt_tokens || promptTokens;
+                  completionTokens = j.usage.completion_tokens || completionTokens;
+                }
+                const delta = j.choices?.[0]?.delta?.content ?? "";
+                if (delta) {
+                  if (emitted) outChars += delta.length;
+                  else buffered += delta;
+                }
               } catch {
-                /* línea parcial o no-JSON: se ignora */
+                /* línea parcial o no-JSON */
               }
             }
 
@@ -197,18 +242,11 @@ export async function onRequestPost(context) {
             }
           }
 
-          // El stream terminó. Si todavía no emitimos nada, decidimos:
           if (!emitted) {
             if (isDegenerateOutput(buffered)) {
-              // Basura sin haber avisado nada al cliente: siguiente modelo.
-              try {
-                await reader.cancel();
-              } catch {
-                /* noop */
-              }
+              try { await reader.cancel(); } catch { /* noop */ }
               continue;
             }
-            // Respuesta corta pero válida (p. ej. "¡Hola!"): la liberamos.
             emitted = true;
             outChars += buffered.length;
             controller.enqueue(encoder.encode(heldRaw + tail));
@@ -218,64 +256,77 @@ export async function onRequestPost(context) {
             tail = "";
           }
 
-          usedModel = model;
+          usedSlot = key;
+          usedTokens = promptTokens + completionTokens || Math.round((messagesCharLen(messages) + outChars) / 4);
+          controller.enqueue(
+            encoder.encode(`event: nova\ndata: ${JSON.stringify({ model: slot.label, key, tokens: usedTokens })}\n\n`)
+          );
           controller.close();
           break;
         }
 
-        if (!usedModel) {
-          // Ningún modelo respondió: mensaje claro en lugar de silencio.
+        if (!usedSlot) {
           const msg =
             "Ahora mismo no pude obtener una respuesta. Probá de nuevo en un rato: casi siempre se resuelve al reintentar.";
           controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ choices: [{ delta: { content: msg } }] })}\n\ndata: [DONE]\n\n`
-            )
+            encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: msg } }] })}\n\ndata: [DONE]\n\n`)
           );
         }
       } catch {
-        /* el cliente cerró la conexión o el upstream se cortó: cerramos prolijo */
+        /* el cliente cerró la conexión o el upstream se cortó */
       } finally {
-        try {
-          controller.close();
-        } catch {
-          /* ya cerrado */
-        }
-        finished({ outChars });
+        try { controller.close(); } catch { /* ya cerrado */ }
+        marcarListo({ outChars });
       }
     },
   });
 
-  // Registro de uso (solo contenido real enviado al cliente) para usuarios con sesión
+  // ---- registro de consumo: por modelo y acumulado diario ----
   if (userId && env.DB) {
-    const inputTokens = Math.round(messages.reduce((a, m) => a + (m.content || "").length, 0) / 4);
+    const inputTokens = Math.round(messagesCharLen(messages) / 4);
     const day = new Date().toISOString().slice(0, 10);
     waitUntil(
-      finishedPromise
-        .then(() =>
-          env.DB.prepare(
-            `INSERT INTO usage_daily (user_id, day, tokens_in, tokens_out)
-             VALUES (?, ?, ?, ?)
-             ON CONFLICT(user_id, day) DO UPDATE SET
-               tokens_in = tokens_in + excluded.tokens_in,
-               tokens_out = tokens_out + excluded.tokens_out`
-          )
+      finished
+        .then(async () => {
+          const total = usedTokens || Math.round((inputTokens + outChars) / 4);
+          if (!total) return;
+          if (usedSlot) {
+            await env.DB
+              .prepare(
+                `INSERT INTO model_usage (user_id, model, month, tokens) VALUES (?, ?, ?, ?)
+                 ON CONFLICT(user_id, model, month) DO UPDATE SET tokens = tokens + excluded.tokens`
+              )
+              .bind(userId, usedSlot, month, total)
+              .run();
+          }
+          return env.DB
+            .prepare(
+              `INSERT INTO usage_daily (user_id, day, tokens_in, tokens_out)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(user_id, day) DO UPDATE SET
+                 tokens_in = tokens_in + excluded.tokens_in,
+                 tokens_out = tokens_out + excluded.tokens_out`
+            )
             .bind(userId, day, inputTokens, Math.round(outChars / 4))
-            .run()
-            .catch(() => {})
-        )
+            .run();
+        })
+        .catch(() => {})
     );
   } else {
-    waitUntil(finishedPromise.catch(() => {}));
+    waitUntil(finished.then(() => {}).catch(() => {}));
   }
 
   return new Response(composite, {
     headers: {
       "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-cache",
+      "X-Nova-Model": usedSlot || "pending",
     },
   });
 }
+
+const messagesCharLen = (msgs) => msgs.reduce((a, m) => a + (m.content || "").length, 0);
+const fmt = (n) => Math.round(n).toLocaleString("es-AR");
 
 function ssePlaceholder(text) {
   const payload =
