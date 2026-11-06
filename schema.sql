@@ -52,6 +52,16 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Tokens consumidos por modelo dentro del mes. Es lo que hace cumplir los techos
+-- que se muestran en Planes y en el selector del chat.
+CREATE TABLE IF NOT EXISTS model_usage (
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  model TEXT NOT NULL,
+  month TEXT NOT NULL,
+  tokens INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, model, month)
+);
+
 -- Mensajes de visitantes sin sesión, por IP y día (tope GUEST_LIMIT en chat.js)
 CREATE TABLE IF NOT EXISTS guest_usage (
   ip TEXT NOT NULL,
