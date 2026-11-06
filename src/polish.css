@@ -198,7 +198,8 @@ body.dark::before {
   transform: scale(0.98);
 }
 .btn {
-  border-radius: 12px;
+  /* seguimos la escala medida en Launch UI: controles con radio 6px */
+  border-radius: var(--radius-md);
 }
 .btn-dark {
   background: linear-gradient(180deg, var(--surface), var(--panel));

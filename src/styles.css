@@ -23,7 +23,9 @@
   --display: "Inter", "Segoe UI", system-ui, sans-serif;  /* Launch UI no usa serif en titulares */
   --serif: "Fraunces", Georgia, serif;   /* solo para el monograma de la marca */
 
-  /* Alias históricos: apuntan al set reducido para no reescribir el CSS de detalle. */
+  /* Alias históricos: apuntan al set reducido para no reescribir el CSS de detalle.
+     Se vuelven a declarar en body.dark, porque un var() definido en :root resuelve
+     SIEMPRE contra :root y queda sordo al tema. */
   --cream: var(--surface);
   --dark: var(--text);
   --accent-deep: var(--accent);
@@ -54,6 +56,15 @@ body.dark {
   --accent: #4d8bff;
   --accent-soft: #16233f;
   --danger: #ff6b61;
+
+  /* los alias se re-declaran acá para que hereden del texto oscuro, no del claro */
+  --cream: var(--surface);
+  --dark: var(--text);
+  --accent-deep: var(--accent);
+  --green-bg: var(--accent-soft);
+  --green-text: var(--accent);
+  --orange-border: var(--border-strong);
+  --orange-text: var(--danger);
 }
 button { font-family: inherit; }
 
@@ -94,9 +105,9 @@ button { font-family: inherit; }
 .brand .logo-mark {
   width: 30px;
   height: 30px;
-  border-radius: 9px;
-  background: var(--dark);
-  color: #fff;
+  border-radius: var(--radius-md);
+  background: var(--text);
+  color: var(--bg);
   display: inline-flex;
   align-items: center;  justify-content: center;
   flex-shrink: 0;
