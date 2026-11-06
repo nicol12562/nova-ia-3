@@ -522,7 +522,6 @@ body.dark .chip { background: var(--surface); color: var(--muted); }
   gap: 9px;
   align-items: baseline;
 }
-body.dark .plan-box li { color: var(--text); }
 .plan-box li .check { color: var(--accent); font-weight: 700; flex-shrink: 0; }
 .plan-box li .modelo { font-weight: 600; }
 .plan-box li .lim { color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; text-align: right; }
