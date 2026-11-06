@@ -2,6 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../icons.jsx";
 import Md from "../md.jsx";
 import { copyText, showToast, spotlight, Modal } from "../ui.jsx";
+import { AGENTS, AGENT_KEY } from "../data/agents.js";
+
+const leerAgente = () => {
+  try {
+    const id = sessionStorage.getItem(AGENT_KEY);
+    return AGENTS.find((a) => a.id === id) || null;
+  } catch {
+    return null;
+  }
+};
 
 // Visitantes: 3 mensajes por día. El contador del navegador es la señal visible;
 // el servidor corta por IP, así que limpiar el storage ya no alcanza.
@@ -45,6 +55,7 @@ export default function Chat({ auth, convId, go }) {
   const [conv, setConv] = useState(convId ? Number(convId) : null);
   const [guest, setGuest] = useState(leerGuest);
   const [loginPrompt, setLoginPrompt] = useState(false);
+  const [agent, setAgent] = useState(leerAgente);
   const [model, setModel] = useState(() => {
     if (auth?.plan === "plus") return "Nova Pro 3.1";
     if (auth?.plan === "pro") return "Nova Pro";
@@ -148,7 +159,12 @@ export default function Chat({ auth, convId, go }) {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, plan: auth?.plan ?? "gratis", user_id: auth?.id }),
+        body: JSON.stringify({
+          messages: history,
+          plan: auth?.plan ?? "gratis",
+          user_id: auth?.id,
+          agent: agent?.id,
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -300,6 +316,24 @@ export default function Chat({ auth, convId, go }) {
         })}
         {msgs.length > 0 && <div ref={endRef} />}
       </div>
+
+      {agent && (
+        <div className="agent-chip">
+          <span className="ac-ico"><Icon name={agent.icon} size={13} /></span>
+          <span className="ac-name">{agent.name}</span>
+          <span className="ac-hint">instrucciones del agente activas</span>
+          <button
+            className="ac-x"
+            aria-label={`Quitar el agente ${agent.name}`}
+            onClick={() => {
+              try { sessionStorage.removeItem(AGENT_KEY); } catch { /* sin storage */ }
+              setAgent(null);
+            }}
+          >
+            <Icon name="x" size={13} />
+          </button>
+        </div>
+      )}
 
       {!auth && (
         <div className={"guest-bar" + (guest.n >= GUEST_LIMIT ? " out" : "")}>

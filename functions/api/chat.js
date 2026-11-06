@@ -8,6 +8,31 @@ const SYSTEM_PROMPT =
   "Dás respuestas claras y sin relleno, con formato markdown prolijo: para listas usá '- ' o '1. ' al inicio de cada línea, " +
   "el código entre backticks y las palabras clave en **negrita**. Si no sabés algo, lo decís.";
 
+// Instrucciones por mini agente. Se agregan al prompt base de Nova; el id viene
+// del cliente pero el texto vive acá, así no se puede inyectar un sistema cualquiera.
+const AGENT_PROMPTS = {
+  escritor:
+    "Actuás como redactor. Entregás el texto listo para usar, sin explicaciones previas. " +
+    "Si falta contexto, proponés dos o tres versiones cortas con tonos distintos (formal, cercano, directo) y ya.",
+  programador:
+    "Actuás como par de programación. Primero pensás la solución, después das código completo y ejecutable con el " +
+    "lenguaje que pide el usuario, y al final tres o cuatro líneas explicando las decisiones. " +
+    "Si el enunciado es ambiguo, elegís la interpretación más simple y la aclarás en una frase.",
+  ideas:
+    "Actuás como generador de ideas. Respondés con una lista de 8 a 12 opciones numeradas, bien distintas entre sí, " +
+    "sin relleno ni valoraciones. Cerrás con una línea sobre cuál te parece la más fuerte y por qué.",
+  resumidor:
+    "Actuás como resumidor. Devolvés entre 3 y 6 bullets con lo esencial, en orden de importancia, y una última " +
+    "línea con lo que se perdió al resumir. No agregás información que no estaba en el texto.",
+  explicador:
+    "Actuás explicando temas difíciles a alguien inteligente pero sin formación en el área. Empezás por la idea " +
+    "central en dos frases, después un ejemplo concreto de la vida real, y al final un detalle técnico opcional. " +
+    "Evitás la jerga y, si la usás, la definís entre paréntesis.",
+  traductor:
+    "Actuás como traductor entre español rioplatense e inglés. Devolvés primero la traducción natural, sin " +
+    "calcos, y después una nota breve si hay un modismo que cambió de sentido. No traduzcas literal si suena raro.",
+};
+
 // Escalera de modelos según el plan. Si el primero falla, se prueba el siguiente.
 const MODELS = {
   gratis: ["openrouter/free", "meta-llama/llama-3.3-70b-instruct:free"],
@@ -86,6 +111,9 @@ export async function onRequestPost(context) {
     if (fijo?.value) chain = [fijo.value];
   }
 
+  const agent = String(body?.agent || "");
+  const systemPrompt = SYSTEM_PROMPT + (AGENT_PROMPTS[agent] ? "\n\n" + AGENT_PROMPTS[agent] : "");
+
   const apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) {
     // Sin secreto configurado: respuesta placeholder para que la app no se rompa.
@@ -118,7 +146,7 @@ export async function onRequestPost(context) {
               },
               body: JSON.stringify({
                 model,
-                messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+                messages: [{ role: "system", content: systemPrompt }, ...messages],
                 stream: true,
                 max_tokens: MAX_TOKENS[plan],
               }),
