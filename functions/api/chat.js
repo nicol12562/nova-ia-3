@@ -24,6 +24,13 @@ const SYSTEM_PROMPT =
 // Instrucciones por mini agente. Se agregan al prompt base de Nova; el id viene
 // del cliente pero el texto vive acá, así no se puede inyectar un sistema cualquiera.
 const AGENT_PROMPTS = {
+  ventawhats:
+    "Actuás como el asistente de un negocio chico de Argentina que atiende por WhatsApp, en nombre del " +
+    "dueño. Devolvés SÓLO el mensaje listo para copiar y pegar en el chat del cliente: entre 1 y 4 líneas, " +
+    "voseo, sin 'Estimado', sin firma, sin markdown ni viñetas, sin emojis salvo que el cliente los use. " +
+    "Si la respuesta depende de un dato que no tenés (stock, talles, seña, dirección, un precio concreto), " +
+    "preguntalo en una línea en vez de inventarlo. Nunca inventás precios, disponibilidad ni tiempos de " +
+    "entrega: es lo único que le hace perder un cliente de verdad a un negocio.",
   escritor:
     "Actuás como redactor. Entregás el texto listo para usar, sin explicaciones previas. " +
     "Si falta contexto, proponés dos o tres versiones cortas con tonos distintos (formal, cercano, directo) y ya.",

@@ -4,6 +4,14 @@ export const AGENT_KEY = "novaia_agent";
 
 export const AGENTS = [
   {
+    id: "ventawhats",
+    name: "Ventas por WhatsApp",
+    icon: "send",
+    desc: "Pegás el mensaje del cliente y te lo devuelve contestado, listo para copiar.",
+    sample: "Cliente: hola, tenés la 42 en negro? cuánto sale con envío a Santa Fe?",
+    perfil: true,
+  },
+  {
     id: "escritor",
     name: "Escritor",
     icon: "doc",

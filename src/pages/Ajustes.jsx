@@ -162,6 +162,8 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
           )}
         </div>
 
+        <PerfilNegocio auth={auth} go={go} />
+
         <Memoria auth={auth} go={go} />
 
         <div className="settings-card">
@@ -191,6 +193,128 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
         </div>
       </div>
     </section>
+  );
+}
+
+// Perfil del negocio. Se guarda como notas de la memoria con un prefijo fijo, así
+// el agente de ventas ya sabe qué vendés y cómo respondés sin que el usuario tenga
+// que explicarlo en cada mensaje.
+const PERFIL = [
+  { prefijo: "Mi negocio:", label: "¿Qué vendés?", ph: "Repuestos para camiones, nuevos y usados, en Rosario" },
+  { prefijo: "Cómo atiendo:", label: "Tu forma de responder", ph: "Corto y cercano; precio recién cuando confirmo stock" },
+  { prefijo: "Precios y entrega:", label: "Seña, envío y tiempos", ph: "50% de seña; envío a cargo del cliente, 3 a 5 días" },
+  { prefijo: "Contacto:", label: "Datos del negocio", ph: "WhatsApp 341-XXXXXX, de lunes a viernes 9 a 18" },
+];
+
+function PerfilNegocio({ auth, go }) {
+  const [campos, setCampos] = useState(() => Object.fromEntries(PERFIL.map((p) => [p.prefijo, ""])));
+  const [orig, setOrig] = useState(() => Object.fromEntries(PERFIL.map((p) => [p.prefijo, ""])));
+  const [ids, setIds] = useState(() => Object.fromEntries(PERFIL.map((p) => [p.prefijo, null])));
+  const [listo, setListo] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+
+  useEffect(() => {
+    if (!auth?.id) return;
+    fetch("/api/memories")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d) return;
+        const nextCampos = { ...campos };
+        const nextIds = { ...ids };
+        for (const p of PERFIL) {
+          const nota = (d.notas || []).find((n) => (n.note || "").startsWith(p.prefijo));
+          nextCampos[p.prefijo] = nota ? nota.note.slice(p.prefijo.length + 1) : "";
+          nextIds[p.prefijo] = nota ? nota.id : null;
+        }
+        setCampos(nextCampos);
+        setOrig({ ...nextCampos });
+        setIds(nextIds);
+        setListo(true);
+      })
+      .catch(() => setListo(true));
+  }, [auth?.id]);
+
+  async function guardar() {
+    setGuardando(true);
+    const despues = { ...orig };
+    try {
+      for (const p of PERFIL) {
+        const texto = (campos[p.prefijo] || "").trim();
+        if (texto === (orig[p.prefijo] || "").trim()) continue; // no tocó este campo
+        const viejo = ids[p.prefijo];
+        if (!texto) {
+          await fetch(`/api/memories?id=${viejo}`, { method: "DELETE" });
+          setIds((v) => ({ ...v, [p.prefijo]: null }));
+          despues[p.prefijo] = "";
+          continue;
+        }
+        if (viejo) await fetch(`/api/memories?id=${viejo}`, { method: "DELETE" });
+        const r = await fetch("/api/memories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note: `${p.prefijo} ${texto}` }),
+        });
+        const d = await r.json().catch(() => ({}));
+        setIds((v) => ({ ...v, [p.prefijo]: d.id || null }));
+        despues[p.prefijo] = texto;
+      }
+      setOrig(despues);
+      showToast("Nova ya conoce tu negocio.");
+    } catch {
+      showToast("Se cortó la conexión; probá de nuevo.", { tone: "error" });
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  return (
+    <div className="settings-card">
+      <div className="head">
+        <span className="sq"><Icon name="send" size={19} /></span>
+        <div>
+          <h3>Perfil del negocio</h3>
+          <p>Para que el agente de WhatsApp responda como respondés vos.</p>
+        </div>
+      </div>
+
+      {!auth ? (
+        <div className="settings-row">
+          <div>
+            <strong>Iniciá sesión para cargarlo</strong>
+            <p>Se guarda en tu cuenta y se usa en todas las conversaciones.</p>
+          </div>
+          <button className="btn btn-ghost" onClick={() => go("login")}>
+            Entrar <Icon name="arrowUpRight" size={12} />
+          </button>
+        </div>
+      ) : (
+        <>
+          {!listo ? (
+            <p className="mem-vacio">Cargando…</p>
+          ) : (
+            <div className="perfil-grid">
+              {PERFIL.map((p) => (
+                <label key={p.prefijo} className="perfil-campo">
+                  <span>{p.label}</span>
+                  <textarea
+                    rows={2}
+                    maxLength={220}
+                    value={campos[p.prefijo]}
+                    placeholder={p.ph}
+                    onChange={(e) => setCampos((v) => ({ ...v, [p.prefijo]: e.target.value }))}
+                  />
+                </label>
+              ))}
+              <div className="perfil-foot">
+                <button className="btn btn-primary" onClick={guardar} disabled={guardando}>
+                  {guardando ? "Guardando…" : "Guardar perfil"}
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
