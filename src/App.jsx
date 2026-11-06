@@ -11,7 +11,7 @@ import Uso from "./pages/Uso.jsx";
 import Ajustes from "./pages/Ajustes.jsx";
 import Admin from "./pages/Admin.jsx";
 import { Icon } from "./icons.jsx";
-import { Modal, Toaster, showToast } from "./ui.jsx";
+import { Modal, Toaster } from "./ui.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 
 const VIEWS = [
@@ -122,39 +122,54 @@ export default function App() {
     const id = auth.id;
     let alive = true;
 
+    const aplicar = (user) => {
+      if (!user || user.id !== id) return;
+      setAuth((prev) => {
+        if (!prev) return prev;
+        if (prev.plan === user.plan && prev.role === user.role && prev.name === user.name) return prev;
+        const next = { ...prev, ...user };
+        localStorage.setItem("novaia_user", JSON.stringify(next));
+        return next;
+      });
+    };
+
     const refresh = async () => {
       try {
         const r = await fetch(`/api/me?user_id=${id}`);
         if (!r.ok) return;
         const { user } = await r.json();
-        if (!alive || !user) return;
-        setAuth((prev) => {
-          if (!prev || prev.id !== id) return prev;
-          if (prev.plan === user.plan && prev.role === user.role && prev.name === user.name) return prev;
-          const next = { ...prev, ...user };
-          localStorage.setItem("novaia_user", JSON.stringify(next));
-          if (prev.plan !== user.plan) {
-            showToast(`Tu plan ahora es ${user.plan === "plus" ? "Plus" : user.plan === "pro" ? "Pro" : "Gratis"}.`);
-          }
-          return next;
-        });
+        if (alive) aplicar(user);
       } catch {
         /* sin respuesta, seguimos con lo que hay */
       }
     };
 
+    // Otra pestaña (el panel) avisó un cambio: se aplica al toque.
+    let bc;
+    try {
+      bc = new BroadcastChannel("novaia");
+      bc.onmessage = (e) => {
+        if (e.data?.type === "plan") aplicar(e.data.user);
+      };
+    } catch {
+      /* navegadores sin BroadcastChannel: queda el polling */
+    }
+
     refresh();
-    const timer = setInterval(refresh, 30000);
+    const timer = setInterval(refresh, 15000);
     const onVisible = () => {
       if (document.visibilityState === "visible") refresh();
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
+    window.addEventListener("hashchange", refresh);
     return () => {
       alive = false;
       clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
+      window.removeEventListener("hashchange", refresh);
+      if (bc) bc.close();
     };
   }, [auth?.id]);
 

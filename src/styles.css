@@ -1098,4 +1098,49 @@ body.dark .guest-bar.out { background: #241a1c; }
 }
 .mc-row input:focus { outline: none; border-color: var(--accent); box-shadow: var(--ring); }
 .mc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+/* ---------- Modal de límite de invitado ---------- */
+.gm-meter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--cream);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.gm-dots { display: flex; gap: 6px; }
+.gm-dots span {
+  width: 26px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--border);
+}
+.gm-dots span.used { background: var(--accent); }
+.gm-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.gm-count b { color: var(--text); font-size: 12px; }
+.gm-copy { font-size: 14px; line-height: 1.55; margin: 0 0 16px; }
+.gm-list { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.gm-list li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+.gm-list .tick {
+  display: inline-grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--green-bg);
+  color: var(--green-text);
+  flex: none;
+}
+.gm-cta { display: flex; flex-direction: column; gap: 9px; margin-top: 20px; }
+.gm-cta .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+body.dark .gm-meter { background: #14141b; }
+body.dark .gm-list .tick { background: #16281f; }
 body.dark .tab.active { background: #2b2b38; }

@@ -373,23 +373,42 @@ export default function Chat({ auth, convId, go }) {
         open={loginPrompt}
         onClose={() => setLoginPrompt(false)}
         eyebrow="LÍMITE DE INVITADO"
-        title="Tus 3 mensajes gratis se agotaron"
+        title="Probaste los 3 mensajes gratis"
+        footer={
+          <div className="gm-cta">
+            <button className="btn btn-primary btn-block" onClick={() => { setLoginPrompt(false); go("login"); }}>
+              <Icon name="arrowUpRight" size={15} /> Crear mi cuenta gratis
+            </button>
+            <button className="btn btn-ghost btn-block" onClick={() => { setLoginPrompt(false); go("planes"); }}>
+              Comparar los planes
+            </button>
+          </div>
+        }
       >
-        <p style={{ margin: "0 0 4px" }}>
-          Así probamos Nova sin pedir datos. Con una cuenta tenés historial guardado, 1.000.000 de
-          tokens por mes y mensajes ilimitados.
-        </p>
-        <div className="modal-links">
-          <button onClick={() => { setLoginPrompt(false); go("login"); }}>
-            <Icon name="arrowUpRight" size={16} /> Iniciar sesión o crear cuenta <span>1 min</span>
-          </button>
-          <button onClick={() => { setLoginPrompt(false); go("planes"); }}>
-            <Icon name="crown" size={16} /> Ver los planes
-            <Icon name="arrowUpRight" size={14} style={{ marginLeft: "auto" }} />
-          </button>
+        <div className="gm-meter">
+          <div className="gm-dots" aria-hidden="true">
+            {Array.from({ length: GUEST_LIMIT }, (_, i) => (
+              <span key={i} className={i < guest.n ? "used" : ""} />
+            ))}
+          </div>
+          <span className="gm-count">
+            <b>{Math.min(guest.n, GUEST_LIMIT)}</b> / {GUEST_LIMIT} USADOS
+          </span>
         </div>
+
+        <p className="gm-copy">
+          Así es como Nova te deja probarla sin pedir datos. Con una cuenta el chat no se corta y
+          queda guardado en tu historial.
+        </p>
+
+        <ul className="gm-list">
+          <li><span className="tick"><Icon name="check" size={12} /></span> Mensajes ilimitados</li>
+          <li><span className="tick"><Icon name="check" size={12} /></span> 1.000.000 de tokens por mes</li>
+          <li><span className="tick"><Icon name="check" size={12} /></span> Historial en cualquier dispositivo</li>
+        </ul>
+
         <p className="modal-note">
-          El conteo se reinicia cada día. Si ya tenés cuenta, iniciá sesión y seguís al instante.
+          El cupo de invitado se renueva al cambiar el día. Si ya tenés cuenta, iniciá sesión y seguís ahora.
         </p>
       </Modal>
     </section>

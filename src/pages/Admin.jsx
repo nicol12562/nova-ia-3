@@ -9,7 +9,18 @@ const FILTROS = ["todos", "gratis", "pro", "plus"];
 const ADMIN_STORE = "novaia_admin_key";
 const readStoredKey = () => localStorage.getItem(ADMIN_STORE) || sessionStorage.getItem(ADMIN_STORE) || "";
 
-export default function Admin({ auth, go }) {
+// Avisa a otras pestañas de que un plan cambió, para que se refleje sin recargar.
+function avisarCambio(usuario) {
+  try {
+    const bc = new BroadcastChannel("novaia");
+    bc.postMessage({ type: "plan", user: usuario });
+    bc.close();
+  } catch {
+    /* navegadores sin BroadcastChannel: el polling de la app lo alcanza igual */
+  }
+}
+
+export default function Admin({ auth, setAuth, go }) {
   const [key, setKey] = useState(readStoredKey);
   const [gate, setGate] = useState(() => !!readStoredKey());
   const [draft, setDraft] = useState("");
@@ -95,6 +106,16 @@ export default function Admin({ auth, go }) {
       });
       const out = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(out.error || "No se pudo cambiar el plan.");
+      const nuevo = { id: usuario.id, email: usuario.email, name: usuario.name, plan: planNuevo, role: usuario.role };
+
+      // Si el cambio es sobre la cuenta que está logueada acá, se aplica al toque.
+      if (auth && usuario.id === auth.id) {
+        const nextAuth = { ...auth, plan: planNuevo };
+        localStorage.setItem("novaia_user", JSON.stringify(nextAuth));
+        setAuth(nextAuth);
+      }
+      avisarCambio(nuevo);
+
       setData((prev) => ({
         ...prev,
         usuarios: prev.usuarios.map((u) => (u.id === usuario.id ? { ...u, plan: planNuevo } : u)),
