@@ -53,7 +53,7 @@ export async function onRequest(context) {
     return json({ error: "Ya usaste las 3 pruebas de hoy. Volvé mañana.", limite: true }, 429);
   }
 
-  const body = await request.json().catch(() => null);
+  const body = cuerpo;
   const tarea = tareaPorId(body?.tarea);
   if (!tarea) return json({ error: "Esa tarea no existe." }, 400);
   if (Number(body?.user_id) !== userId) return json({ error: "Usuario no coincide." }, 400);
