@@ -1265,7 +1265,7 @@ body.dark .tab.active { background: var(--border); }
   padding: 8px 0;
   max-height: 140px;
 }
-.home-ask .btn { flex: none; display: inline-flex; align-items: center; gap: 7px; border-radius: 11px; }
+.home-ask .btn { flex: none; display: inline-flex; align-items: center; gap: 7px; border-radius: var(--radius-md); }
 
 .home-sug { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .home-sug .sug {
