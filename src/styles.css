@@ -1,20 +1,27 @@
-/* Paleta "jade": modo oscuro medido sobre la captura de referencia (767x389,
-   tono concentrado en 160°, superficies #060A08→#1A3629, acento #68F8C7).
-   El modo claro es un hermano del mismo tono, porque la referencia es oscura. */
+/* Paleta Launch UI, medida sobre el sitio publicado (escala zinc de Tailwind):
+   canvas #09090B, texto #FAFAFA, borde zinc-300 al 15-30% de alpha en oscuro,
+   radios 4/6/8/16 desde una base de 0.5rem, controles 14px/500, acento ultraviolet. */
 :root {
-  --bg: #f4f9f6;
+  --bg: #ffffff;
   --panel: #ffffff;
-  --surface: #e9f2ec;
-  --border: #d5e3da;
-  --border-strong: #b3c8bc;
-  --text: #0e1a15;
-  --muted: #56705f;
-  --accent: #0b7d5e;
-  --accent-soft: #dcefe6;
-  --danger: #b3453a;
-  --radius: 14px;
-  --serif: "Fraunces", Georgia, serif;
+  --surface: #f4f4f5;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text: #09090b;
+  --muted: #71717a;
+  --accent: #004de5;
+  --accent-soft: #e7eefd;
+  --danger: #b3261e;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius: 8px;        /* lg en la referencia: sigue siendo el radio de tarjeta */
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+
   --sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --display: "Inter", "Segoe UI", system-ui, sans-serif;  /* Launch UI no usa serif en titulares */
+  --serif: "Fraunces", Georgia, serif;   /* solo para el monograma de la marca */
 
   /* Alias históricos: apuntan al set reducido para no reescribir el CSS de detalle. */
   --cream: var(--surface);
@@ -32,20 +39,21 @@ body {
   font-family: var(--sans);
   background: var(--bg);
   color: var(--text);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 body.dark {
-  --bg: #060a08;
-  --panel: #0e1c14;
-  --surface: #14261d;
-  --border: #1f3a2c;
-  --border-strong: #2a4a38;
-  --text: #e8f5ef;
-  --muted: #728e83;
-  --accent: #68f8c7;
-  --accent-soft: #123329;
-  --danger: #e08a80;
+  --bg: #09090b;
+  --panel: #0c0c0e;
+  --surface: #18181b;
+  --border: #27272a;
+  --border-strong: #3f3f46;
+  --text: #fafafa;
+  --muted: #a1a1aa;
+  --accent: #4d8bff;
+  --accent-soft: #16233f;
+  --danger: #ff6b61;
 }
 button { font-family: inherit; }
 
@@ -316,12 +324,12 @@ body.dark .help-btn:hover { background: var(--surface); }
   font-weight: 700;
 }
 h1.hero {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-weight: 600;
-  font-size: clamp(34px, 4.5vw, 52px);
-  line-height: 1.08;
+  font-size: clamp(30px, 4vw, 40px);
+  line-height: 1.25;
   margin: 12px 0 0;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
 }
 h1.hero em { font-style: italic; color: var(--accent); font-weight: 500; }
 .lede { color: var(--muted); font-size: 15.5px; max-width: 620px; margin: 14px 0 0; }
@@ -332,10 +340,10 @@ h1.hero em { font-style: italic; color: var(--accent); font-weight: 500; }
   align-items: center;
   gap: 9px;
   border: none;
-  border-radius: 11px;
-  padding: 12px 20px;
-  font-size: 13.5px;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: 11px 18px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   text-decoration: none;
   transition: filter 0.15s;
@@ -435,7 +443,7 @@ body.dark .chip { background: var(--surface); color: var(--muted); }
 .chip-plan { background: var(--accent-soft); color: var(--accent); }
 .plan-box h2 { font-size: 25px; font-weight: 700; margin: 18px 0 8px; }
 .plan-box .desc { color: var(--muted); font-size: 13.5px; margin: 0 0 20px; min-height: 60px; }
-.price-big { font-family: var(--serif); font-size: 40px; font-weight: 600; letter-spacing: -0.5px; }
+.price-big { font-family: var(--display); font-size: 40px; font-weight: 600; letter-spacing: -0.5px; }
 .tokens-sub { color: var(--muted); font-size: 13px; margin: 2px 0 18px; }
 .plan-box hr { border: none; border-top: 1px solid var(--border); margin: 0 0 14px; }
 .plan-box .mi-title { font-size: 13.5px; font-weight: 700; margin-bottom: 10px; }
@@ -502,7 +510,7 @@ table.comparison tr:last-child td { border-bottom: none; }
 .composer {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   padding: 18px 18px 12px;
   box-shadow: 0 10px 30px rgba(20, 20, 30, 0.05);
   margin-top: 34px;
@@ -720,7 +728,7 @@ body.dark .lock-box { border-color: var(--border-strong); }
 .login-left .center { margin: auto 0; max-width: 460px; }
 .login-left .eyebrow { color: var(--muted); }
 .login-left h1 {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-weight: 600;
   font-size: clamp(34px, 3.6vw, 46px);
   line-height: 1.1;
@@ -749,7 +757,7 @@ body.dark .lock-box { border-color: var(--border-strong); }
 }
 .login-right .back:hover { color: var(--text); }
 .login-box { max-width: 400px; width: 100%; margin: 0 auto; padding-top: 7vh; }
-.login-box h2 { font-family: var(--serif); font-weight: 600; font-size: 34px; margin: 10px 0 6px; letter-spacing: -0.3px; }
+.login-box h2 { font-family: var(--display); font-weight: 600; font-size: 34px; margin: 10px 0 6px; letter-spacing: -0.3px; }
 .login-box .sub { color: var(--muted); font-size: 14px; margin: 0 0 22px; }
 .tabs {
   display: grid;
