@@ -90,8 +90,7 @@ button { font-family: inherit; }
   background: var(--dark);
   color: #fff;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center;  justify-content: center;
   flex-shrink: 0;
 }
 .brand b { font-weight: 700; }
@@ -1527,3 +1526,34 @@ body.dark .tab.active { background: var(--border); }
 @media (hover: none) and (pointer: coarse) {
   .msg-act, .chip-suggestion, .home-agent, .agent-card { -webkit-tap-highlight-color: transparent; }
 }
+
+/* ---------- Marca: monograma tipográfico ---------- */
+/* Sale de la estrellita genérica de IA y pasa a una "n" en la serif de la marca. */
+.logo-mark {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 19px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  justify-content: center;
+}
+.msg-ava.mono {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.model-chip .spark,
+.login-left .note .star,
+.footer .brand-foot .star {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+  flex: none;
+}
+.footer .brand-foot { display: inline-flex; align-items: center; gap: 9px; }

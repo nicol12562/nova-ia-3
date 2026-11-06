@@ -35,7 +35,7 @@ export default function Home({ go, auth }) {
   return (
     <section className="home">
       <div className="home-hero">
-        <p className="eyebrow"><Icon name="sparkle" size={14} /> Nova IA</p>
+        <p className="eyebrow">Nova IA</p>
         <h1 className="hero hero-title">Preguntá algo y empezá.</h1>
         <p className="lede">
           Escribí, aprendé, programá. Nova te responde en español, sin registro previo y con

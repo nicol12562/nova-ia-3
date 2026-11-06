@@ -39,8 +39,8 @@ export default function Login({ go, setAuth }) {
     <div className="login-page">
       <div className="login-left">
         <div className="brand">
-          <span className="logo-mark">
-            <Icon name="sparkle" size={16} />
+          <span className="logo-mark" aria-hidden="true">
+            n
           </span>
           <span className="wordmark">
             <b>nova</b>ia
@@ -75,7 +75,7 @@ export default function Login({ go, setAuth }) {
           </ul>
           <hr className="sep" />
           <p className="note">
-            <span className="star"><Icon name="sparkle" size={15} /></span>
+            <span className="star" aria-hidden="true" />
             <span>
               Menos ruido. Más claridad.
               <br />

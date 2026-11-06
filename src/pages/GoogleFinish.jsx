@@ -34,7 +34,7 @@ export default function GoogleFinish({ go, setAuth, ticket }) {
           <>
             <span className="spinner spinner-dark spinner-lg" aria-hidden="true" />
             <p className="eyebrow" style={{ justifyContent: "center" }}>
-              <Icon name="sparkle" size={14} /> CONECTANDO CON GOOGLE
+              CONECTANDO CON GOOGLE
             </p>
             <h1 className="hero" style={{ fontSize: 38, margin: "8px 0 0" }}>
               Un segundo…

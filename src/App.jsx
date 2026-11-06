@@ -227,8 +227,8 @@ export default function App() {
           <Icon name="x" size={18} />
         </button>
         <button className="brand" onClick={() => go("")}>
-          <span className="logo-mark">
-            <Icon name="sparkle" size={16} />
+          <span className="logo-mark" aria-hidden="true">
+            n
           </span>
           <span className="wordmark">
             <b>nova</b>ia
@@ -387,9 +387,7 @@ export default function App() {
         </main>
 
         <footer className="footer">
-          <span className="brand-foot">
-            <span className="star"><Icon name="sparkle" size={13} /></span> novaia
-          </span>
+          <span className="brand-foot">novaia</span>
           <span className="mid">
             Un poco más cerca de tus ideas.{" "}
             <a href="/privacidad.html">Privacidad</a> · <a href="/terminos.html">Términos</a>

@@ -288,7 +288,7 @@ export default function Chat({ auth, convId, go }) {
       {!conversando && (
         <div className="chat-hero">
           <p className="eyebrow">
-            <Icon name="sparkle" size={14} /> 07 · TU ASISTENTE, A TU MANERA
+            07 · TU ASISTENTE, A TU MANERA
           </p>
           <h1 className="hero">
             Un espacio para <em>pensar.</em>
@@ -324,8 +324,8 @@ export default function Chat({ auth, convId, go }) {
           return (
             <div key={i} className={"msg-row " + (isUser ? "row-user" : "row-ai") + (streaming ? " streaming" : "")}>
               {!isUser && (
-                <span className="msg-ava" aria-hidden="true">
-                  <Icon name="sparkle" size={14} />
+                <span className="msg-ava mono" aria-hidden="true">
+                  n
                 </span>
               )}
               <div className={"msg-bubble " + (isUser ? "bubble-user" : "bubble-ai")}>
@@ -405,7 +405,7 @@ export default function Chat({ auth, convId, go }) {
         />
         <div className="row">
           <div className="model-chip" title="Cada modelo consume su propia bolsa mensual">
-            <span className="spark"><Icon name="sparkle" size={14} /></span>
+            <span className="spark" aria-hidden="true" />
             <select
               value={modelKey}
               onChange={(e) => setModelKey(e.target.value)}
