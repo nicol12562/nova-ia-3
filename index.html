@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Nova IA: chat con modelos de última generación en español. Escribí, aprendé, programá y convertí tus ideas en algo concreto."
+    />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f6f4" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121218" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Nova IA — Un poco más cerca de tus ideas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Autocuración: si el bundle no llega (caché vieja + deploy nuevo),
+      // recargamos una sola vez con cache-busting en lugar de quedar en blanco.
+      (function () {
+        var KEY = "novaia_boot_retry";
+        try { sessionStorage.removeItem(KEY); } catch (e) {}
+        window.addEventListener(
+          "error",
+          function (e) {
+            var t = e.target;
+            if (t && (t.tagName === "SCRIPT" || t.tagName === "LINK")) {
+              try {
+                if (!sessionStorage.getItem(KEY)) {
+                  sessionStorage.setItem(KEY, "1");
+                  location.reload();
+                }
+              } catch (err) {}
+            }
+          },
+          true
+        );
+        setTimeout(function () {
+          var root = document.getElementById("root");
+          if (root && root.childElementCount === 0) {
+            try {
+              if (!sessionStorage.getItem(KEY)) {
+                sessionStorage.setItem(KEY, "1");
+                location.replace(location.pathname + "?r=" + Date.now() + location.hash);
+              }
+            } catch (err) {}
+          }
+        }, 3500);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <div style="font-family: system-ui, sans-serif; padding: 40px; text-align: center;">
+        Nova IA necesita JavaScript para funcionar. Activá JavaScript y volvé a cargar la página.
+      </div>
+    </noscript>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

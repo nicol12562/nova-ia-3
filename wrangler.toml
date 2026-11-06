@@ -1,0 +1,11 @@
+# Nova IA — Cloudflare Pages + Pages Functions + D1
+name = "novaia"
+compatibility_date = "2026-10-01"
+pages_build_output_dir = "dist"
+
+# Base de datos D1 (crear con: npx wrangler d1 create novaia-db
+# y pegar el database_id acá abajo)
+[[d1_databases]]
+binding = "DB"
+database_name = "novaia-db"
+database_id = "6961999f-bf17-47b6-8a5b-58175037af22"
