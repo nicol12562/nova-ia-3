@@ -4,6 +4,17 @@ import Md from "../md.jsx";
 import { copyText, showToast, spotlight, Modal } from "../ui.jsx";
 import { AGENTS, AGENT_KEY } from "../data/agents.js";
 
+const leerBorrador = () => {
+  try {
+    const t = sessionStorage.getItem("novaia_draft");
+    if (!t) return "";
+    sessionStorage.removeItem("novaia_draft");
+    return t;
+  } catch {
+    return "";
+  }
+};
+
 const leerAgente = () => {
   try {
     const id = sessionStorage.getItem(AGENT_KEY);
@@ -49,7 +60,7 @@ const MODELS_POR_PLAN = {
 
 export default function Chat({ auth, convId, go }) {
   const [msgs, setMsgs] = useState([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(leerBorrador);
   const [busy, setBusy] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [conv, setConv] = useState(convId ? Number(convId) : null);

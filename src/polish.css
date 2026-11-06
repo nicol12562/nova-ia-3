@@ -269,12 +269,6 @@ h1.hero {
 }
 
 /* ---------- Hero + revelado de palabras ---------- */
-.hero-card {
-  position: relative;
-  overflow: hidden;
-  background-color: var(--panel);
-  background-image: radial-gradient(120% 90% at 82% 0%, rgba(108, 92, 245, 0.1), transparent 56%);
-}
 .hero-title .line,
 .login-left h1 .line {
   display: block;
@@ -308,76 +302,8 @@ h1.hero {
 }
 
 /* Arte del hero: vida propia */
-.blob {
-  animation: blobFloat 9s ease-in-out infinite alternate;
-}
-@keyframes blobFloat {
-  from {
-    transform: translate(-50%, -50%) rotate(-8deg) translateY(0);
-  }
-  to {
-    transform: translate(-50%, -50%) rotate(-4deg) translateY(-12px);
-  }
-}
-.orbit {
-  --rot: -18deg;
-  animation: orbitSpin 30s linear infinite;
-}
-.orbit.o2 {
-  --rot: 24deg;
-  animation-duration: 40s;
-  animation-direction: reverse;
-}
-@keyframes orbitSpin {
-  from {
-    transform: translate(-50%, -50%) rotate(var(--rot));
-  }
-  to {
-    transform: translate(-50%, -50%) rotate(calc(var(--rot) + 360deg));
-  }
-}
-.float-chip {
-  animation: bob 6.5s ease-in-out infinite;
-}
-.float-chip.fc2 {
-  animation-delay: -3.2s;
-}
-@keyframes bob {
-  50% {
-    transform: translateY(-8px) rotate(3deg);
-  }
-}
 
 /* ---------- Franja de datos en el home ---------- */
-.home-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  margin-top: 40px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--panel);
-  padding: 22px 26px;
-}
-.home-strip > div {
-  padding-right: 20px;
-}
-.home-strip > div + div {
-  border-left: 1px solid var(--border);
-  padding-left: 24px;
-}
-.home-strip b {
-  display: block;
-  font-family: var(--serif);
-  font-size: 25px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-  margin-bottom: 3px;
-}
-.home-strip span {
-  color: var(--muted);
-  font-size: 12.5px;
-}
 
 /* ---------- Sidebar ---------- */
 .top-left {
@@ -1598,29 +1524,8 @@ body.dark .toast {
   .main {
     padding: 22px 16px 36px;
   }
-  .hero-card {
-    padding: 32px 22px;
-    gap: 24px;
-  }
-  .hero-art {
-    height: 240px;
-  }
   .plans-grid {
     grid-template-columns: 1fr;
-  }
-  .home-strip {
-    grid-template-columns: 1fr;
-    padding: 18px 20px;
-  }
-  .home-strip > div {
-    padding-right: 0;
-  }
-  .home-strip > div + div {
-    border-left: none;
-    padding-left: 0;
-    padding-top: 16px;
-    margin-top: 16px;
-    border-top: 1px solid var(--border);
   }
   .msg-bubble {
     max-width: 100%;
