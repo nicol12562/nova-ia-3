@@ -19,6 +19,7 @@ export default function Admin({ auth, go }) {
   const [error, setError] = useState(null);
   const [filtro, setFiltro] = useState("todos");
   const [q, setQ] = useState("");
+  const [saving, setSaving] = useState(null);
 
   async function cargar(clave, persist = recordar) {
     setLoading(true);
@@ -49,6 +50,38 @@ export default function Admin({ auth, go }) {
     setGate(false);
     setData(null);
     setError(null);
+  }
+
+  async function cambiarPlan(usuario, planNuevo) {
+    if (planNuevo === usuario.plan) return;
+    setSaving(usuario.id);
+    try {
+      const res = await fetch("/api/admin/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-key": key },
+        body: JSON.stringify({ user_id: usuario.id, plan: planNuevo }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error || "No se pudo cambiar el plan.");
+      setData((prev) => ({
+        ...prev,
+        usuarios: prev.usuarios.map((u) => (u.id === usuario.id ? { ...u, plan: planNuevo } : u)),
+        resumen: {
+          ...prev.resumen,
+          porPlan: Object.fromEntries(
+            ["gratis", "pro", "plus"].map((p) => [
+              p,
+              prev.usuarios.filter((u) => (u.id === usuario.id ? p === planNuevo : p === u.plan)).length,
+            ])
+          ),
+        },
+      }));
+      showToast(`${usuario.email}: ${PLAN_LABEL[usuario.plan]} → ${PLAN_LABEL[planNuevo]}`);
+    } catch (e) {
+      showToast(e.message, { tone: "error" });
+    } finally {
+      setSaving(null);
+    }
   }
 
   useEffect(() => {
@@ -228,7 +261,21 @@ export default function Admin({ auth, go }) {
                         {u.role === "admin" && <span className="chip-plan">admin</span>}
                       </div>
                     </td>
-                    <td><span className={"plan-tag p-" + u.plan}>{PLAN_LABEL[u.plan] || u.plan}</span></td>
+                    <td>
+                      <label className="plan-select">
+                        <select
+                          value={u.plan}
+                          disabled={saving === u.id}
+                          onChange={(e) => cambiarPlan(u, e.target.value)}
+                          aria-label={`Plan de ${u.email}`}
+                        >
+                          {["gratis", "pro", "plus"].map((p) => (
+                            <option key={p} value={p}>{PLAN_LABEL[p]}</option>
+                          ))}
+                        </select>
+                        {saving === u.id && <span className="spinner" />}
+                      </label>
+                    </td>
                     <td>
                       <div className="num">{fmt(u.mes)}</div>
                       <div className="plan-bar mini" aria-hidden="true"><span style={{ width: u.pct + "%" }} /></div>

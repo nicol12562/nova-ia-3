@@ -3,6 +3,17 @@ import { Icon } from "../icons.jsx";
 import { plans, comparison, notes } from "../data/plans.js";
 import { showToast, spotlight } from "../ui.jsx";
 
+// Venta manual por WhatsApp. Formato internacional argentino: 54 + 9 + área + línea.
+const WHATS = "5493416116096";
+
+const whatsappLink = (p, email) => {
+  const msg =
+    `Hola, quiero contratar el plan ${p.name} de Nova IA (${p.price}).` +
+    (email ? ` Mi cuenta: ${email}` : "") +
+    ` (${p.tokensPerMonth} tokens/mes).`;
+  return `https://wa.me/${WHATS}?text=${encodeURIComponent(msg)}`;
+};
+
 export default function Planes({ go, auth }) {
   const planIndex = auth?.plan === "plus" ? 3 : auth?.plan === "pro" ? 2 : 1;
 
@@ -51,19 +62,33 @@ export default function Planes({ go, auth }) {
                 );
               })}
             </ul>
-            <button
-              className={"btn btn-primary btn-block" + (p.id === "gratis" ? " btn-sheen" : "")}
-              onClick={() =>
-                p.id === "gratis"
-                  ? go("chat")
-                  : showToast(
-                      "Te contactamos para activar " + p.name + ". Próximamente: cobro automático con Mercado Pago."
-                    )
-              }
-            >
-              {p.cta}
-            </button>
-            <p className="foot-note">Activación: {p.activation}</p>
+            {p.id === "gratis" ? (
+              <button className="btn btn-primary btn-block btn-sheen" onClick={() => go("chat")}>
+                {p.cta}
+              </button>
+            ) : !auth ? (
+              <button
+                className="btn btn-primary btn-block"
+                onClick={() => {
+                  showToast("Iniciá sesión primero: así te identificamos al activarte el plan.");
+                  go("login");
+                }}
+              >
+                {p.cta}
+              </button>
+            ) : (
+              <a
+                className="btn btn-primary btn-block btn-whats"
+                href={whatsappLink(p, auth.email)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Icon name="chat" size={16} /> {p.cta} por WhatsApp
+              </a>
+            )}
+            <p className="foot-note">
+              {p.id === "gratis" ? `Activación: ${p.activation}` : "Activación: por WhatsApp, en el día"}
+            </p>
           </div>
         ))}
       </div>
