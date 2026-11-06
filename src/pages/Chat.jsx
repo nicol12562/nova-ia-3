@@ -3,6 +3,7 @@ import { Icon } from "../icons.jsx";
 import Md from "../md.jsx";
 import { copyText, showToast, spotlight, Modal } from "../ui.jsx";
 import { AGENTS, AGENT_KEY } from "../data/agents.js";
+import { leerPrefs } from "../data/prefs.js";
 
 const leerBorrador = () => {
   try {
@@ -67,7 +68,8 @@ export default function Chat({ auth, convId, go }) {
   const [agent, setAgent] = useState(leerAgente);
   const [agentBlock, setAgentBlock] = useState(false);
   const [modelos, setModelos] = useState([]);
-  const [modelKey, setModelKey] = useState("flash");
+  const [prefs] = useState(leerPrefs);
+  const [modelKey, setModelKey] = useState(prefs.modelo || "flash");
   const endRef = useRef(null);
   const taRef = useRef(null);
   const loadedRef = useRef(false);
@@ -189,6 +191,7 @@ export default function Chat({ auth, convId, go }) {
           user_id: auth?.id,
           agent: agent?.id,
           model: modelKey,
+          prefs: { idioma: prefs.idioma, largo: prefs.largo },
         }),
       });
       if (!res.ok) {

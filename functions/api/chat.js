@@ -11,9 +11,10 @@ import {
   ordenAlternativas,
 } from "../_lib/models.js";
 
+// Base común a todas las respuestas. El idioma y el largo vienen de las
+// preferencias del usuario (más abajo), no de acá.
 const SYSTEM_PROMPT =
-  "Sos Nova, una asistente de IA amable y directa. Respondés siempre en español rioplatense: usá el voseo en las " +
-  "conjugaciones (tenés, podés, hacé, querés) pero sin insertar la palabra 'vos' de más a mitad de la oración. " +
+  "Sos Nova, una asistente de IA amable y directa. " +
   "Dás respuestas claras y sin relleno, con formato markdown prolijo: para listas usá '- ' o '1. ' al inicio de cada línea, " +
   "el código entre backticks y las palabras clave en **negrita**. Si no sabés algo, lo decís.";
 
@@ -40,6 +41,34 @@ const AGENT_PROMPTS = {
   traductor:
     "Actuás como traductor entre español rioplatense e inglés. Devolvés primero la traducción natural, sin " +
     "calcos, y después una nota breve si hay un modismo que cambió de sentido. No traduzcas literal si suena raro.",
+};
+
+// Instrucciones de velocidad. Van siempre: el usuario pidió respuestas ágiles,
+// y acortar la salida es lo que más baja la latencia real de un modelo.
+const SPEED_PROMPT =
+  "Regla de oro: respondé rápido y al grano. No repitas la pregunta, no abras con " +
+  "\"claro\", \"buena pregunta\" ni ofertas de ayuda, no cierres resumiendo lo que ya dijiste. " +
+  "Primera línea = la respuesta. Si alcanza con una frase, dá una frase.";
+
+const IDIOMAS = {
+  ar: "Respondé en español rioplatense con voseo (tenés, podés, hacé).",
+  es: "Responde en español neutro, usando \"tú\" y sin modismos regionales.",
+  en: "Reply in plain US English.",
+};
+
+const LARGOS = {
+  breve: {
+    extra: "Máximo 4 líneas o 3 bullets. Sin encabezados. Código solo si lo piden.",
+    maxTokens: 700,
+  },
+  equilibrado: {
+    extra: "Una respuesta mediana: 1-2 párrafos o hasta 6 bullets, con markdown.",
+    maxTokens: 2048,
+  },
+  detallado: {
+    extra: "Podés extenderte con secciones, ejemplos y código comentado.",
+    maxTokens: 4096,
+  },
 };
 
 // Mensajes gratis por día para un visitante sin sesión, contados por IP.
@@ -120,7 +149,19 @@ export async function onRequestPost(context) {
       403
     );
   }
-  const systemPrompt = SYSTEM_PROMPT + (agent ? "\n\n" + AGENT_PROMPTS[agent] : "");
+  // Preferencias del dispositivo: se validan contra las listas del servidor.
+  const idioma = IDIOMAS[body?.prefs?.idioma] ? body.prefs.idioma : "ar";
+  const largo = LARGOS[body?.prefs?.largo] ? body.prefs.largo : "breve";
+
+  const systemPrompt = [
+    SYSTEM_PROMPT,
+    IDIOMAS[idioma],
+    SPEED_PROMPT,
+    LARGOS[largo].extra,
+    agent ? AGENT_PROMPTS[agent] : null,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
   // ---- saldo por modelo en el mes corriente ----
   const month = new Date().toISOString().slice(0, 7) + "-01";
@@ -153,7 +194,8 @@ export async function onRequestPost(context) {
     );
   }
 
-  const maxTokens = MAX_TOKENS[plan];
+  // El largo elegido manda, pero el plan pone el techo.
+  const maxTokens = Math.min(LARGOS[largo].maxTokens, MAX_TOKENS[plan]);
 
   // ---- stream compuesto con reintento entre candidatos ----
   const decoder = new TextDecoder();

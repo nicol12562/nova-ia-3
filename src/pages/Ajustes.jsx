@@ -1,9 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { Icon } from "../icons.jsx";
 import { showToast } from "../ui.jsx";
+import { IDIOMAS, LARGOS, leerPrefs, escribirPrefs } from "../data/prefs.js";
 
 export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
   const planName = auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis";
+  const [prefs, setPrefs] = useState(leerPrefs);
+  const [abierto, setAbierto] = useState(false);
+
+  function cambiar(parche) {
+    const next = { ...prefs, ...parche };
+    setPrefs(next);
+    escribirPrefs(next);
+  }
 
   function logout() {
     localStorage.removeItem("novaia_user");
@@ -64,18 +73,79 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
             </button>
           </div>
 
-          <div className="settings-row">
+          <div className="settings-row prefs-row">
             <div>
               <strong>Preferencias de respuesta</strong>
-              <p>Idioma y modelo preferido</p>
+              <p>
+                {IDIOMAS.find((i) => i.id === prefs.idioma)?.label} ·{" "}
+                {LARGOS.find((l) => l.id === prefs.largo)?.label}
+              </p>
             </div>
             <button
               className="btn btn-ghost"
-              onClick={() => showToast("Nova responde en Español (Argentina). Más preferencias en la próxima versión.")}
+              aria-expanded={abierto}
+              onClick={() => setAbierto((v) => !v)}
             >
-              Personalizar <Icon name="arrowUpRight" size={12} />
+              {abierto ? "Ocultar" : "Personalizar"} <Icon name={abierto ? "chevronDown" : "arrowUpRight"} size={12} />
             </button>
           </div>
+
+          {abierto && (
+            <div className="prefs-panel">
+              <div className="prefs-group">
+                <span className="mono-label">IDIOMA DE RESPUESTA</span>
+                <div className="opt-row">
+                  {IDIOMAS.map((i) => (
+                    <button
+                      key={i.id}
+                      className={"opt" + (prefs.idioma === i.id ? " on" : "")}
+                      onClick={() => cambiar({ idioma: i.id })}
+                    >
+                      <strong>{i.label}</strong>
+                      <span>{i.hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="prefs-group">
+                <span className="mono-label">LARGO DE LA RESPUESTA</span>
+                <div className="opt-row">
+                  {LARGOS.map((l) => (
+                    <button
+                      key={l.id}
+                      className={"opt" + (prefs.largo === l.id ? " on" : "")}
+                      onClick={() => cambiar({ largo: l.id })}
+                    >
+                      <strong>{l.label}</strong>
+                      <span>{l.hint}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="prefs-hint">
+                  <Icon name="pulse" size={12} /> Breve responde más rápido: limita la salida a
+                  {LARGOS.find((l) => l.id === "breve").maxTokens} tokens.
+                </p>
+              </div>
+
+              <div className="prefs-group">
+                <span className="mono-label" htmlFor="pref-modelo">MODELO PREFERIDO</span>
+                <select
+                  id="pref-modelo"
+                  className="prefs-select"
+                  value={prefs.modelo}
+                  onChange={(e) => cambiar({ modelo: e.target.value })}
+                >
+                  <option value="flash">Nova Flash · el más rápido</option>
+                  <option value="pro">Nova Pro · mejor texto largo</option>
+                  <option value="pro31">Nova Pro 3.1 · el más capaz</option>
+                </select>
+                <p className="prefs-hint">
+                  Se aplica al abrir el chat; igual lo podés cambiar desde el composer.
+                </p>
+              </div>
+            </div>
+          )}
 
           {auth && (
             <div className="settings-row">
