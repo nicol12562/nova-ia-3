@@ -35,6 +35,24 @@ export default function Admin({ auth, setAuth, go }) {
   const [opciones, setOpciones] = useState([]);
   const [modeloDraft, setModeloDraft] = useState("");
   const [guardandoModelo, setGuardandoModelo] = useState(false);
+  const [health, setHealth] = useState(null);
+  const [chequeando, setChequeando] = useState(false);
+
+  // Estado real de los upstreams de OpenRouter. Un id que deja de existir no
+  // tira un error claro en el chat: solo hace que Nova diga "no pude obtener
+  // una respuesta", así que conviene verlo acá.
+  async function revisarModelos(clave) {
+    setChequeando(true);
+    try {
+      const r = await fetch("/api/admin/health", { headers: { "x-admin-key": clave } });
+      if (r.ok) setHealth(await r.json());
+      else setHealth({ ok: false, error: "El health check respondió " + r.status + "." });
+    } catch {
+      setHealth({ ok: false, error: "No se pudo contactar a OpenRouter." });
+    } finally {
+      setChequeando(false);
+    }
+  }
 
   async function cargar(clave, persist = recordar) {
     setLoading(true);
@@ -57,6 +75,7 @@ export default function Admin({ auth, setAuth, go }) {
         setOpciones(md.opciones || []);
         setModeloDraft(md.model || "");
       }
+      revisarModelos(clave); // no bloquea la lista: pinta cuando termina
     } catch (e) {
       setError(e.msg || "No se pudo cargar el listado.");
       setData(null);
@@ -305,6 +324,34 @@ export default function Admin({ auth, setAuth, go }) {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="admin-health">
+            <div className="ah-head">
+              <strong>Estado de los modelos</strong>
+              <button className="chip-inline" onClick={() => revisarModelos(key)} disabled={chequeando}>
+                {chequeando ? "Revisando…" : "Revisar ahora"}
+              </button>
+            </div>
+            {!health && !chequeando && <p className="ah-vacio">Todavía no se revisó OpenRouter.</p>}
+            {health?.error && <p className="ah-malo">{health.error}</p>}
+            {health?.items && (
+              <>
+                <p className={"ah-resumen " + (health.ok ? "ok" : "malo")}>
+                  {health.totalUpstreams} upstreams ·{" "}
+                  {health.ok ? "todos existen en el catálogo" : `${health.rotos.length} caído(s)`}
+                </p>
+                <ul className="ah-lista">
+                  {health.items.map((it) => (
+                    <li key={it.id} className={it.enCatalogo === "vivo" ? "ok" : it.enCatalogo === "no esta" ? "malo" : ""}>
+                      <span className="ah-dot" aria-hidden="true" />
+                      <code>{it.id}</code>
+                      <em>{it.enCatalogo}{it.prueba ? ` · probe ${it.prueba}` : ""}</em>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
 
           <div className="admin-toolbar">

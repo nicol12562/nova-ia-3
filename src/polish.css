@@ -1672,3 +1672,98 @@ body.dark .toast {
   color: var(--muted);
 }
 .home-racha .icon { color: var(--accent); flex: none; }
+
+/* ---------- Panel: estado de los upstreams ---------- */
+.admin-health {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--panel);
+}
+.ah-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ah-head strong { font-size: 13.5px; color: var(--text); }
+.ah-vacio,
+.ah-resumen {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.ah-resumen.malo { color: var(--danger); font-weight: 600; }
+.ah-malo { margin: 8px 0 0; font-size: 12.5px; color: var(--danger); }
+.ah-lista {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ah-lista li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text);
+}
+.ah-lista li em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ah-lista code {
+  font-family: var(--mono);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.ah-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--muted);
+}
+.ah-lista li.ok .ah-dot { background: var(--accent); }
+.ah-lista li.malo .ah-dot { background: var(--danger); }
+.ah-lista li.malo code { color: var(--danger); }
+
+/* ---------- Historial: fijadas y resultados con texto del mensaje ---------- */
+.history-list .icon-btn {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 0 12px;
+  color: var(--muted);
+}
+.history-list .icon-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--surface);
+}
+.history-list .icon-btn.fijada {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.hi-pin {
+  color: var(--accent);
+  margin-right: 6px;
+  font-size: 12px;
+}
+.hi-extracto {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 3px;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--muted);
+}

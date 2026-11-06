@@ -70,11 +70,9 @@ export async function onRequestPost({ request, env }) {
 
   const b = await request.json().catch(() => null);
   const role = b?.role === "assistant" ? "assistant" : "user";
-  const content = String(b?.content || "").slice(0, 20000);
-  if (!content) return json({ error: "Falta el contenido." }, 400);
   const db = env.DB;
 
-  // Fijar/soltar desde la lista del sidebar.
+  // Fijar/soltar desde la lista: no trae contenido, va antes de la validación.
   if (b?.accion === "fijar") {
     const convId = Number(b?.conv_id);
     if (!convId) return json({ error: "Falta conv_id." }, 400);
@@ -84,6 +82,9 @@ export async function onRequestPost({ request, env }) {
       .run();
     return json({ ok: true });
   }
+
+  const content = String(b?.content || "").slice(0, 20000);
+  if (!content) return json({ error: "Falta el contenido." }, 400);
 
   let convId = Number(b?.conv_id) || null;
   if (convId) {

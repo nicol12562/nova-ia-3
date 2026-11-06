@@ -48,6 +48,45 @@ export default function Historial({ go, auth }) {
 
   const visibles = items.filter((c) => (c.title || "").toLowerCase().includes(q.toLowerCase()));
 
+  // Búsqueda del servidor: encuentra texto DENTRO de los mensajes, no sólo en
+  // el título. Con poco texto alcanza el filtro local.
+  const [buscados, setBuscados] = useState(null);
+  useEffect(() => {
+    const t = q.trim();
+    if (!auth || t.length < 2) {
+      setBuscados(null);
+      return;
+    }
+    let vivo = true;
+    const timer = setTimeout(() => {
+      fetch(`/api/history?q=${encodeURIComponent(t)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (vivo) setBuscados(Array.isArray(d?.resultados) ? d.resultados : null);
+        })
+        .catch(() => {});
+    }, 250);
+    return () => {
+      vivo = false;
+      clearTimeout(timer);
+    };
+  }, [q, auth?.id]);
+
+  async function fijar(id) {
+    try {
+      await fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accion: "fijar", conv_id: id }),
+      });
+      load();
+    } catch {
+      showToast("No se pudo actualizar la conversación.", { tone: "error" });
+    }
+  }
+
+  const lista = buscados ?? visibles;
+
   return (
     <section>
       <div className="page-head">
@@ -107,10 +146,11 @@ export default function Historial({ go, auth }) {
           )}
           {!loading && items.length > 0 && (
             <div className="history-count">
-              {visibles.length} {visibles.length === 1 ? "conversación" : "conversaciones"}
+              {lista.length} {lista.length === 1 ? "conversación" : "conversaciones"}
+              {buscados ? " con ese texto" : ""}
             </div>
           )}
-          {!loading && visibles.length === 0 && (
+          {!loading && lista.length === 0 && (
             <div className="empty-state">
               <span className="sq"><Icon name="chat" size={22} /></span>
               <h3>{items.length === 0 ? "Todavía no tenés conversaciones" : "Sin resultados"}</h3>
@@ -126,7 +166,7 @@ export default function Historial({ go, auth }) {
             </div>
           )}
           <ul className="history-list">
-            {visibles.map((c) => (
+            {lista.map((c) => (
               <li key={c.id}>
                 <button
                   className="history-item spot"
@@ -134,10 +174,23 @@ export default function Historial({ go, auth }) {
                   onClick={() => go(`chat/${c.id}`)}
                 >
                   <span className="hi-sq"><Icon name="chat" size={15} /></span>
-                  <strong>{c.title}</strong>
+                  <strong>
+                    {!!c.pinned && <span className="hi-pin" title="Fijada">★</span>}
+                    {c.title}
+                    {c.extracto && <span className="hi-extracto">…{c.extracto}</span>}
+                  </strong>
                   <span className="meta">
-                    {c.mensajes} mensajes · {fmtDate(c.created_at)}
+                    {c.mensajes != null ? `${c.mensajes} mensajes · ` : ""}
+                    {fmtDate(c.created_at)}
                   </span>
+                </button>
+                <button
+                  className={"icon-btn" + (c.pinned ? " fijada" : "")}
+                  title={c.pinned ? "Desfijar conversación" : "Fijar arriba"}
+                  aria-label={c.pinned ? "Desfijar conversación" : "Fijar arriba"}
+                  onClick={() => fijar(c.id)}
+                >
+                  <Icon name="crown" size={16} />
                 </button>
                 <button
                   className="icon-danger"
