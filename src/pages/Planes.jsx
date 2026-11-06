@@ -54,7 +54,7 @@ export default function Planes({ go, auth }) {
                 const negativo = /^sin /i.test(e);
                 return (
                   <li key={e} className={negativo ? "no" : ""}>
-                    <span className="check" style={{ color: negativo ? "#b3453a" : undefined }}>
+                    <span className="check" style={{ color: negativo ? "var(--danger)" : undefined }}>
                       {negativo ? "✕" : "✓"}
                     </span>{" "}
                     {e}
