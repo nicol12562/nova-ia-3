@@ -25,6 +25,15 @@ const VIEWS = [
   { key: "admin", title: "Panel de control", Comp: Admin },
 ];
 
+const NAV = [
+  { key: "", label: "Inicio", icon: "grid" },
+  { key: "chat", label: "Nuevo chat", icon: "plusSq" },
+  { key: "planes", label: "Planes", icon: "crown" },
+  { key: "historial", label: "Historial", icon: "clock" },
+  { key: "mini-agentes", label: "Mini agentes", icon: "cpu" },
+  { key: "uso-tokens", label: "Uso y tokens", icon: "pulse" },
+];
+
 const QUOTA_FALLBACK = 1000000; // solo mientras responde el backend
 const fmt = (n) => Math.round(n).toLocaleString("es-AR");
 
@@ -216,166 +225,144 @@ export default function App() {
   const quota = cuota ?? QUOTA_FALLBACK;
   const pct = auth && used != null && quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
   const restantes = auth ? fmt(Math.max(0, quota - (used ?? 0))) : fmt(quota);
+  const planName = auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis";
+  const planLabel = auth ? `Plan ${planName}` : "Sin cuenta";
 
   return (
     <div className="app">
-      {menuOpen && (
-        <button className="sidebar-scrim" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)} />
-      )}
-      <aside className={"sidebar" + (menuOpen ? " open" : "")}>
-        <button className="icon-btn sidebar-close" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)}>
-          <Icon name="x" size={18} />
-        </button>
-        <button className="brand" onClick={() => go("")}>
-          <span className="logo-mark" aria-hidden="true">
-            n
-          </span>
-          <span className="wordmark">
-            <b>nova</b>ia
-          </span>
-        </button>
-
-        <button className="space-card" onClick={() => go("ajustes")}>
-          <span className="avatar">N</span>
-          <span className="t">
-            <strong>Mi espacio</strong>
-            <span>Plan {auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis"}</span>
-          </span>
-          <span className="chev">
-            <Icon name="chevronDown" size={15} />
-          </span>
-        </button>
-
-        <div className="side-label">ESPACIO DE TRABAJO</div>
-        <nav className="side-nav">
-          <button className={"side-item" + (base === "" ? " active" : "")} onClick={() => go("")}>
-            <span className="icon"><Icon name="grid" size={17} /></span> Inicio
-          </button>
-          <button className={"side-item" + (base === "chat" ? " active" : "")} onClick={() => go("chat")}>
-            <span className="icon"><Icon name="plusSq" size={17} /></span> Nuevo chat
-            <span className="kbd">⌘ K</span>
-          </button>
-          <button className={"side-item" + (base === "planes" ? " active" : "")} onClick={() => go("planes")}>
-            <span className="icon"><Icon name="crown" size={17} /></span> Planes
-          </button>
-          <button className={"side-item" + (base === "historial" ? " active" : "")} onClick={() => go("historial")}>
-            <span className="icon"><Icon name="clock" size={17} /></span> Historial
-          </button>
-          <button className={"side-item" + (base === "mini-agentes" ? " active" : "")} onClick={() => go("mini-agentes")}>
-            <span className="icon"><Icon name="cpu" size={17} /></span> Mini agentes
-          </button>
-          <button className={"side-item" + (base === "uso-tokens" ? " active" : "")} onClick={() => go("uso-tokens")}>
-            <span className="icon"><Icon name="pulse" size={17} /></span> Uso y tokens
-          </button>
-        </nav>
-
-        <div className="side-label">TU CUENTA</div>
-        <nav className="side-nav">
-          <button className={"side-item" + (base === "ajustes" ? " active" : "")} onClick={() => go("ajustes")}>
-            <span className="icon"><Icon name="sliders" size={17} /></span> Ajustes
-          </button>
-          {auth?.role === "admin" && (
-            <button className={"side-item" + (base === "admin" ? " active" : "")} onClick={() => go("admin")}>
-              <span className="icon"><Icon name="lock" size={17} /></span> Panel de control
-            </button>
-          )}
-        </nav>
-
-        <div className="plan-card">
-          <div className="row">
-            <span className="crown"><Icon name="crown" size={16} /></span>
-            <strong>Plan {auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis"}</strong>
-            <span className="chip-active" style={{ marginLeft: "auto" }}>ACTIVO</span>
-          </div>
-          <div className="meta">
-            <span>Consumo mensual</span>
-            <b>{pct}%</b>
-          </div>
-          <div className="frac">
-            <b>{auth ? fmt(used ?? 0) : "0"} / {fmt(quota)}</b>
-          </div>
-          <div className="plan-bar" aria-hidden="true">
-            <span style={{ width: pct + "%" }} />
-          </div>
-          <div className="rest">{auth ? `${restantes} tokens restantes` : `${fmt(quota)} tokens gratis por mes`}</div>
-          <button className="btn btn-ghost" onClick={() => go("planes")}>
-            Conocer los planes <Icon name="arrowUpRight" size={13} />
-          </button>
-        </div>
-
-        <div className={"user-menu-wrap" + (userMenu ? " open" : "")}>
-          <button
-            className="user-row"
-            onClick={() => setUserMenu((v) => !v)}
-            aria-expanded={userMenu}
-            aria-haspopup="menu"
-          >
-            <span className="avatar">
-              {auth ? ((auth.name || auth.email || "N")[0] || "N").toUpperCase() : "N"}
+      <header className="topnav">
+        <div className="nav-inner">
+          <button className="brand" onClick={() => go("")}>
+            <span className="logo-mark" aria-hidden="true">n</span>
+            <span className="wordmark">
+              <b>nova</b>ia
             </span>
-            <span className="t">
-              <strong>{auth ? auth.name || auth.email : "Invitado"}</strong>
-              <span>{auth ? (auth.plan === "plus" ? "Plan Plus" : auth.plan === "pro" ? "Plan Pro" : "Plan Gratis") : "Iniciar sesión"}</span>
-            </span>
-            <span className="chev"><Icon name="chevronDown" size={15} /></span>
           </button>
-          {userMenu && (
-            <>
-              <button className="user-scrim" onClick={() => setUserMenu(false)} tabIndex={-1} aria-label="Cerrar menú de usuario" />
-              <div className="user-menu" role="menu">
-                {auth ? (
-                  <>
-                    <div className="user-menu-head">
-                      <strong>{auth.name || auth.email}</strong>
-                      <span>{auth.email}</span>
-                    </div>
-                    <button role="menuitem" onClick={() => { setUserMenu(false); go("ajustes"); }}>
-                      <Icon name="sliders" size={14} /> Ajustes
-                    </button>
-                    <button role="menuitem" onClick={() => { setUserMenu(false); go("uso-tokens"); }}>
-                      <Icon name="pulse" size={14} /> Uso y tokens
-                    </button>
-                    <button role="menuitem" className="danger" onClick={logout}>
-                      <Icon name="logout" size={14} /> Cerrar sesión
-                    </button>
-                  </>
-                ) : (
-                  <button role="menuitem" onClick={() => { setUserMenu(false); go("login"); }}>
-                    <Icon name="logout" size={14} /> Iniciar sesión
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </aside>
 
-      <div className="content">
-        <header className="topbar">
-          <div className="top-left">
-            <button className="icon-btn menu-btn" aria-label="Abrir menú" onClick={() => setMenuOpen(true)}>
-              <Icon name="menu" size={19} />
-            </button>
-            <div className="crumbs">
-              Nova IA <span>/</span> <b>{title}</b>
-            </div>
-          </div>
-          <div className="top-actions">
-            <span className="chip-preview"><span className="dot" /> Vista previa</span>
+          <nav className="nav-links" aria-label="Navegación principal">
+            {NAV.map((n) => (
+              <button
+                key={n.key}
+                className={"nav-link" + (base === n.key ? " active" : "")}
+                onClick={() => go(n.key)}
+              >
+                {n.label}
+                {n.key === "chat" && <span className="kbd">⌘K</span>}
+              </button>
+            ))}
+          </nav>
+
+          <div className="nav-right">
             {!auth && (
-              <button className="btn-top" onClick={() => go("login")}>
-                Iniciar sesión <Icon name="arrowUpRight" size={13} />
+              <button className="btn btn-ghost btn-sm" onClick={() => go("login")}>
+                Iniciar sesión
               </button>
             )}
-            <button className="icon-btn" title="Cambiar tema" onClick={toggleTheme}>
+            <button className="icon-btn" title="Cambiar tema" aria-label="Cambiar tema" onClick={toggleTheme}>
               <Icon name={dark ? "moon" : "sun"} size={17} />
             </button>
             <button className="help-btn" onClick={() => setHelpOpen(true)}>
-              <Icon name="help" size={16} /> Ayuda
+              <Icon name="help" size={16} /> <span className="help-txt">Ayuda</span>
+            </button>
+
+            <div className={"user-menu-wrap" + (userMenu ? " open" : "")}>
+              <button
+                className="user-row"
+                onClick={() => setUserMenu((v) => !v)}
+                aria-expanded={userMenu}
+                aria-haspopup="menu"
+              >
+                <span className="avatar">
+                  {auth ? ((auth.name || auth.email || "N")[0] || "N").toUpperCase() : "N"}
+                </span>
+                <span className="t">
+                  <strong>{auth ? auth.name || auth.email : "Invitado"}</strong>
+                  <span>{planLabel}</span>
+                </span>
+                <span className="chev"><Icon name="chevronDown" size={15} /></span>
+              </button>
+              {userMenu && (
+                <>
+                  <button className="user-scrim" onClick={() => setUserMenu(false)} tabIndex={-1} aria-label="Cerrar menú de usuario" />
+                  <div className="user-menu" role="menu">
+                    <div className="plan-card compact">
+                      <div className="row">
+                        <span className="crown"><Icon name="crown" size={15} /></span>
+                        <strong>Plan {planName}</strong>
+                        <span className="chip-active" style={{ marginLeft: "auto" }}>ACTIVO</span>
+                      </div>
+                      <div className="frac"><b>{auth ? fmt(used ?? 0) : "0"} / {fmt(quota)}</b></div>
+                      <div className="plan-bar" aria-hidden="true"><span style={{ width: pct + "%" }} /></div>
+                      <div className="rest">{auth ? restantes + " tokens restantes" : fmt(quota) + " tokens gratis por mes"}</div>
+                    </div>
+                    {auth ? (
+                      <>
+                        <button role="menuitem" onClick={() => { setUserMenu(false); go("ajustes"); }}>
+                          <Icon name="sliders" size={14} /> Ajustes
+                        </button>
+                        <button role="menuitem" onClick={() => { setUserMenu(false); go("uso-tokens"); }}>
+                          <Icon name="pulse" size={14} /> Uso y tokens
+                        </button>
+                        {auth.role === "admin" && (
+                          <button role="menuitem" onClick={() => { setUserMenu(false); go("admin"); }}>
+                            <Icon name="lock" size={14} /> Panel de control
+                          </button>
+                        )}
+                        <button role="menuitem" className="danger" onClick={logout}>
+                          <Icon name="logout" size={14} /> Cerrar sesión
+                        </button>
+                      </>
+                    ) : (
+                      <button role="menuitem" onClick={() => { setUserMenu(false); go("login"); }}>
+                        <Icon name="logout" size={14} /> Iniciar sesión
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button className="icon-btn nav-burger" aria-label="Abrir menú" onClick={() => setMenuOpen(true)}>
+              <Icon name="menu" size={19} />
             </button>
           </div>
-        </header>
+        </div>
+      </header>
 
+      {menuOpen && (
+        <>
+          <button className="sidebar-scrim open" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)} />
+          <div className="nav-sheet" role="dialog" aria-label="Navegación">
+            <div className="sheet-head">
+              <span className="mono-label" style={{ margin: 0 }}>NAVEGACIÓN</span>
+              <button className="icon-btn" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)}>
+                <Icon name="x" size={18} />
+              </button>
+            </div>
+            {NAV.map((n) => (
+              <button
+                key={n.key}
+                className={"side-item" + (base === n.key ? " active" : "")}
+                onClick={() => { setMenuOpen(false); go(n.key); }}
+              >
+                <span className="icon"><Icon name={n.icon} size={17} /></span>
+                {n.label}
+              </button>
+            ))}
+            <hr className="sheet-sep" />
+            <button className={"side-item" + (base === "ajustes" ? " active" : "")} onClick={() => { setMenuOpen(false); go("ajustes"); }}>
+              <span className="icon"><Icon name="sliders" size={17} /></span> Ajustes
+            </button>
+            {auth?.role === "admin" && (
+              <button className={"side-item" + (base === "admin" ? " active" : "")} onClick={() => { setMenuOpen(false); go("admin"); }}>
+                <span className="icon"><Icon name="lock" size={17} /></span> Panel de control
+              </button>
+            )}
+          </div>
+        </>
+      )}
+
+      <div className="content">
         <main className="main">
           <ErrorBoundary key={base + "/" + (param || "")}>
             {base === "chat" ? (
