@@ -1041,7 +1041,15 @@ body.dark .skeleton {
   min-width: 190px;
 }
 body.dark .seg {
-  background: var(--surface);
+  /* En oscuro, --surface y --panel son casi el mismo verde: el thumb desaparecía
+     (1,11:1 de contraste). Hundimos el track y subimos el thumb con tinte menta. */
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+body.dark .seg-thumb {
+  background: color-mix(in srgb, var(--accent) 16%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
 }
 .seg-thumb {
   position: absolute;
