@@ -269,6 +269,8 @@ export default function Chat({ auth, convId, go }) {
       let acc = "";
       let buf = "";
       let ultSync = 0;
+      let fallo = false;
+      let evento = "";
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -277,18 +279,30 @@ export default function Chat({ auth, convId, go }) {
         buf = lines.pop() ?? "";
         for (const line of lines) {
           const t = line.trim();
+          if (t.startsWith("event:")) {
+            evento = t.slice(6).trim();
+            continue;
+          }
           if (!t.startsWith("data:")) continue;
           const payload = t.slice(5).trim();
           if (payload === "[DONE]") continue;
           try {
-            const delta = JSON.parse(payload).choices?.[0]?.delta?.content ?? "";
+            const json = JSON.parse(payload);
+            // "event: nova" con error:true es el aviso de que no hubo respuesta
+            // del modelo: ese texto no es una pieza del usuario.
+            if (evento === "nova") {
+              if (json.error) fallo = true;
+              evento = "";
+              continue;
+            }
+            const delta = json.choices?.[0]?.delta?.content ?? "";
             if (delta) {
               if (waiting) setWaiting(false);
               acc += delta;
               pushDelta(delta);
               // Se espeja en el canvas cada ~48 caracteres: alcanza para que se
               // vea escribir y no dispara un render extra por cada token.
-              if (acc.length - ultSync >= 48) {
+              if (!fallo && acc.length - ultSync >= 48) {
                 ultSync = acc.length;
                 actualizarPieza(acc, titulo, content);
               }
@@ -302,7 +316,7 @@ export default function Chat({ auth, convId, go }) {
       rafRef.current = 0;
       flushAcc();
       if (acc) {
-        actualizarPieza(acc, titulo, content); // la versión completa, sin recortes del throttle
+        if (!fallo) actualizarPieza(acc, titulo, content); // la versión completa, sin recortes del throttle
         vivaRef.current = -1;
         await save("assistant", acc, currentConv);
       } else {

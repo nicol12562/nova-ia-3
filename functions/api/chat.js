@@ -332,6 +332,12 @@ export async function onRequestPost(context) {
         }
 
         if (!usedSlot) {
+          // Aviso primero, con un evento propio, de que esto NO es una respuesta
+          // del modelo: si llega como un delta más, el frente lo trata como texto
+          // normal y lo sube al canvas como si fuera una pieza del usuario.
+          controller.enqueue(
+            encoder.encode(`event: nova\ndata: ${JSON.stringify({ model: null, key: null, error: true })}\n\n`)
+          );
           const msg =
             "Ahora mismo no pude obtener una respuesta. Probá de nuevo en un rato: casi siempre se resuelve al reintentar.";
           controller.enqueue(
