@@ -108,7 +108,11 @@ export default function Planes({ go, auth }) {
                   <span className="lim">{lim}</span>
                 </li>
               ))}
-              {p.extras.map((e) => {
+              {p.extras
+                // Con el modelo global forzado, "upstream propio" no es cierto:
+                // los tres roles van al mismo proveedor. Se oculta en vez de mentir.
+                .filter((e) => techos?.forzado || !/upstream propio/i.test(e))
+                .map((e) => {
                 const negativo = /^sin /i.test(e);
                 return (
                   <li key={e} className={negativo ? "no" : ""}>
