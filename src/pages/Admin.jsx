@@ -333,6 +333,15 @@ export default function Admin({ auth, setAuth, go }) {
                 {chequeando ? "Revisando…" : "Revisar ahora"}
               </button>
             </div>
+            {health?.gratis && (
+              <p className="ah-cupo">
+                <strong>Cupo de modelos gratis:</strong> {health.gratis.dia} requests hoy
+                {health.gratis.mes ? ` · ${health.gratis.mes} en el mes` : ""}
+                {health.gratis.creditos != null ? ` · créditos ${health.gratis.creditos}` : ""}
+                <br />
+                Con el modelo global forzado a un router gratuito, cada mensaje de cada plan descuenta de acá.
+              </p>
+            )}
             {!health && !chequeando && <p className="ah-vacio">Todavía no se revisó OpenRouter.</p>}
             {health?.error && <p className="ah-malo">{health.error}</p>}
             {health?.items && (

@@ -1959,3 +1959,15 @@ body.dark .toast {
   }
   .cv-foot .btn-sm { flex: 1; justify-content: center; }
 }
+
+.ah-cupo {
+  margin: 10px 0 0;
+  padding: 9px 11px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.ah-cupo strong { color: var(--text); font-weight: 600; }

@@ -75,6 +75,31 @@ export async function onRequestGet(context) {
   }));
 
   const rotos = items.filter((i) => i.enCatalogo === "no esta");
+
+  // El cupo de modelos gratis es lo que realmente topa el servicio: 50 requests
+  // por día con menos de US$10 de crédito en la cuenta (1000/día pasándola).
+  // Con openrouter/free forzado, TODOS los mensajes de TODOS los planes cuentan ahí.
+  let gratis = null;
+  try {
+    const kr = await fetch("https://openrouter.ai/api/v1/key", {
+      headers: { Authorization: `Bearer ${env.OPENROUTER_API_KEY}` },
+    });
+    if (kr.ok) {
+      const k = await kr.json();
+      const d = k?.data || k || {};
+      const uso = d.free_model_daily_requests || {};
+      const mes = d.free_model_monthly_requests || {};
+      gratis = {
+        dia: `${uso.usage ?? "?"} / ${uso.limit ?? "?"}`,
+        mes: `${mes.usage ?? "?"} / ${mes.limit ?? "?"}`,
+        creditos: d.total_credits ?? null,
+        sin_usar: d.unlimited ? "sin límite" : null,
+      };
+    }
+  } catch {
+    gratis = null;
+  }
+
   return json({
     ok: rotos.length === 0,
     revisado: new Date().toISOString(),
@@ -82,6 +107,7 @@ export async function onRequestGet(context) {
     rotos: rotos.map((r) => r.id),
     items,
     exposicion,
+    gratis,
   });
 }
 

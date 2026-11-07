@@ -225,6 +225,7 @@ export async function onRequestPost(context) {
   let usedTokens = 0;
   let usedPrompt = 0;
   let usedCompletion = 0;
+  const codigos = []; // por qué falló cada candidato: sin esto el 429 se disfraza de "intentá de nuevo"
   let marcarListo = () => {};
   const finished = new Promise((resolve) => { marcarListo = resolve; });
 
@@ -253,9 +254,13 @@ export async function onRequestPost(context) {
               }),
             });
           } catch {
+            codigos.push("red");
             continue;
           }
-          if (!res.ok || !res.body) continue;
+          if (!res.ok || !res.body) {
+            codigos.push(res.status || 0);
+            continue;
+          }
 
           const reader = res.body.getReader();
           let emitted = false;
@@ -332,14 +337,20 @@ export async function onRequestPost(context) {
         }
 
         if (!usedSlot) {
-          // Aviso primero, con un evento propio, de que esto NO es una respuesta
-          // del modelo: si llega como un delta más, el frente lo trata como texto
-          // normal y lo sube al canvas como si fuera una pieza del usuario.
+          // Un 429 de OpenRouter en modelos gratis no es una falla transitoria:
+          // significa que se acabaron los requests gratuitos del día (50/día con
+          // menos de US$10 de crédito en la cuenta). Decir "probá de nuevo" era mentir.
+          const cupo = codigos.includes(429);
+          const msg = cupo
+            ? "Se acabaron las respuestas gratuitas de hoy. Volvá a probar mañana, o pasá a un plan pago para usar modelos que no dependen del cupo gratuito."
+            : "Ahora mismo no pude obtener una respuesta. Probá de nuevo en un rato: casi siempre se resuelve al reintentar.";
+          // El aviso va ANTES del texto: si llega sólo como delta, el frente no
+          // tiene cómo saber que no fue una respuesta del modelo y lo sube al canvas.
           controller.enqueue(
-            encoder.encode(`event: nova\ndata: ${JSON.stringify({ model: null, key: null, error: true })}\n\n`)
+            encoder.encode(
+              `event: nova\ndata: ${JSON.stringify({ model: null, key: null, error: true, cupo, codigos })}\n\n`
+            )
           );
-          const msg =
-            "Ahora mismo no pude obtener una respuesta. Probá de nuevo en un rato: casi siempre se resuelve al reintentar.";
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: msg } }] })}\n\ndata: [DONE]\n\n`)
           );
