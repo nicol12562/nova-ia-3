@@ -80,10 +80,10 @@ export default function Home({ go, auth }) {
 
         <div className="home-sug">
           {[
-            "Respondé este mensaje de un cliente como si fueras el vendedor",
-            "Explícame un tema difícil con un ejemplo de todos los días",
-            "Revisá este código y decime dónde se rompe",
-            "Armá un presupuesto corto con seña y envío",
+            "Respondé como el vendedor del negocio",
+            "Explicame un tema difícil",
+            "Revisá este código y decime dónde falla",
+            "Armá un presupuesto con seña y envío",
           ].map((s) => (
             <button key={s} className="sug" onClick={() => empezar(s)}>{s}</button>
           ))}
