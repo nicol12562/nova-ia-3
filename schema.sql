@@ -107,5 +107,7 @@ CREATE TABLE IF NOT EXISTS upstream_health (
   fails INTEGER NOT NULL DEFAULT 0,
   until TEXT,
   last_status INTEGER,
+  last_reason TEXT,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+ALTER TABLE upstream_health ADD COLUMN last_reason TEXT;

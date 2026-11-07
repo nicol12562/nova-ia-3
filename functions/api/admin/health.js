@@ -100,6 +100,33 @@ export async function onRequestGet(context) {
     gratis = null;
   }
 
+  // Qué proveedores están enfriados ahora y por qué. Es el reemplazo de mandar
+  // los códigos de error al navegador: el diagnóstico queda acá, en el panel.
+  let breakers = [];
+  if (env.DB) {
+    try {
+      const b = await env.DB
+        .prepare(
+          `SELECT upstream, fails, until, last_status, last_reason,
+                  max(0, (strftime('%s', until) - strftime('%s', datetime('now')))) AS segundos
+           FROM upstream_health
+           WHERE until IS NULL OR until > datetime('now')
+           ORDER BY until DESC`
+        )
+        .all();
+      breakers = (b.results || []).map((r) => ({
+        upstream: r.upstream,
+        fails: r.fails,
+        until: r.until,
+        status: r.last_status,
+        motivo: r.last_reason,
+        quedanSeg: r.segundos,
+      }));
+    } catch {
+      breakers = [];
+    }
+  }
+
   return json({
     ok: rotos.length === 0,
     revisado: new Date().toISOString(),
@@ -108,6 +135,7 @@ export async function onRequestGet(context) {
     items,
     exposicion,
     gratis,
+    breakers,
   });
 }
 

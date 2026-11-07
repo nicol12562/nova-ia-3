@@ -1971,3 +1971,36 @@ body.dark .toast {
   border-radius: var(--radius);
 }
 .ah-cupo strong { color: var(--text); font-weight: 600; }
+
+.ah-breakers {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ah-breakers li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+.ah-breakers code {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.ah-breakers span { color: var(--text); }
+.ah-breakers em {
+  flex: 1 1 100%;
+  font-style: normal;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}

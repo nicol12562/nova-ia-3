@@ -337,9 +337,23 @@ export default function Admin({ auth, setAuth, go }) {
               <p className="ah-cupo">
                 <strong>Cupo de modelos gratis:</strong> {health.gratis.dia}
                 {health.gratis.unlimited ? " · cuenta sin límite" : ""}
-                <br />
-                Con el modelo global forzado a un router gratuito, cada mensaje de cada plan descuenta de acá.
               </p>
+            )}
+            {health?.breakers?.length > 0 && (
+              <ul className="ah-breakers">
+                {health.breakers.map((b) => (
+                  <li key={b.upstream}>
+                    <code>{b.upstream}</code>
+                    <span>
+                      {b.quedanSeg}s de enfriamiento · {b.fails} fallo(s) · HTTP {String(b.status)}
+                    </span>
+                    {b.motivo && <em>{b.motivo}</em>}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {health && health.breakers?.length === 0 && (
+              <p className="ah-vacio">Ningún proveedor en enfriamiento ahora.</p>
             )}
             {!health && !chequeando && <p className="ah-vacio">Todavía no se revisó OpenRouter.</p>}
             {health?.error && <p className="ah-malo">{health.error}</p>}

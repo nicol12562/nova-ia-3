@@ -261,8 +261,7 @@ export async function onRequestPost(context) {
   let usedTokens = 0;
   let usedPrompt = 0;
   let usedCompletion = 0;
-  const codigos = []; // por qué falló cada candidato: sin esto el 429 se disfraza de "intentá de nuevo"
-  const motivos = []; // primer fragmento del error de OpenRouter, sin la key
+  let ultimoMotivo = ""; // por qué falló el último intento; se guarda en upstream_health, no en el navegador
   let marcarListo = () => {};
   const finished = new Promise((resolve) => { marcarListo = resolve; });
 
@@ -310,20 +309,19 @@ export async function onRequestPost(context) {
           } catch (e) {
             clearTimeout(cronometro);
             const motivoAbort = e?.name === "AbortError";
-            codigos.push(motivoAbort ? "timeout" : "red");
-            marcarFrio(env, waitUntil, upstream, motivoAbort ? 408 : 0);
+            ultimoMotivo = motivoAbort ? "sin primer token en 12s" : "fallo de red";
+            marcarFrio(env, waitUntil, upstream, motivoAbort ? 408 : 0, ultimoMotivo);
             continue;
           }
           if (!res.ok || !res.body) {
             clearTimeout(cronometro);
-            codigos.push(res.status || 0);
-            // El cuerpo del error dice por qué (key inválida, sin crédito, modelo
-            // muerto). Se guarda sanitizado y corto: sin esto un 401 se ve igual
-            // que un 429 y uno termina culpando al cupo equivocado.
+            // El cuerpo dice por qué (key inválida, sin crédito, modelo muerto).
+            // Se sanitiza (fuera la key) y se guarda corto en la tabla del breaker.
+            ultimoMotivo = "HTTP " + (res.status || 0);
             try {
               const texto = (await res.text()).slice(0, 300);
               const limpio = texto.replace(/sk-or-[A-Za-z0-9_-]+/g, "sk-***").replace(/\s+/g, " ").trim();
-              if (limpio && !motivos.includes(limpio)) motivos.push(limpio.slice(0, 140));
+              if (limpio) ultimoMotivo = `${ultimoMotivo} ${limpio.slice(0, 120)}`;
             } catch {
               /* sin cuerpo */
             }
@@ -333,7 +331,7 @@ export async function onRequestPost(context) {
               falloCredencial = true;
               break;
             }
-            if (esRecuperable(res.status)) marcarFrio(env, waitUntil, upstream, res.status);
+            if (esRecuperable(res.status)) marcarFrio(env, waitUntil, upstream, res.status, ultimoMotivo);
             continue;
           }
 
@@ -394,8 +392,8 @@ export async function onRequestPost(context) {
               try { await reader.cancel(); } catch { /* noop */ }
               // Respuesta sin contenido: los modelos de razonamiento se comen el
               // presupuesto de tokens y devuelven vacío. Es un fallo recuperable.
-              codigos.push("vacio");
-              marcarFrio(env, waitUntil, upstream, 408);
+              ultimoMotivo = "respuesta vacía (razonamiento se comió el presupuesto)";
+              marcarFrio(env, waitUntil, upstream, 408, ultimoMotivo);
               continue;
             }
             emitted = true;
@@ -424,23 +422,16 @@ export async function onRequestPost(context) {
         }
 
         if (!usedSlot) {
-          // Tres causas distintas, tres mensajes. Decir "probá de nuevo" cuando
-          // el problema es la clave, o "no hay gratuitas" cuando quedan 32,
-          // manda a el usuario a hacer algo inútil.
-          const motivo = motivos.join(" ");
-          const saturado = /temporarily rate-limited|Provider returned error/i.test(motivo);
-          const cupo = codigos.includes(429) && !saturado;
+          // El usuario recibe lenguaje llano. Los números internos (quedan 32 de
+          // 50 requests gratuitos, qué status devolvió cada proveedor) NO van al
+          // navegador: se anotan en upstream_health y se ven en el panel admin.
           const msg = falloCredencial
             ? "Nova no puede conectar con sus modelos en este momento. El problema es del servicio, no de tu cuenta: intentá más tarde."
-            : cupo
-            ? "Se acabaron las respuestas gratuitas de hoy. Volvení a probar mañana, o pasá a un plan pago para usar modelos que no dependen del cupo gratuito."
             : "Se cortó la conexión con los modelos. Reintentá en unos segundos: si no vuelve, escribinos por WhatsApp.";
           // El aviso va ANTES del texto: si llega sólo como delta, el frente no
           // tiene cómo saber que no fue una respuesta del modelo y lo sube al canvas.
           controller.enqueue(
-            encoder.encode(
-              `event: nova\ndata: ${JSON.stringify({ model: null, key: null, error: true, cupo, codigos, motivos })}\n\n`
-            )
+            encoder.encode(`event: nova\ndata: ${JSON.stringify({ model: null, key: null, error: true })}\n\n`)
           );
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: msg } }] })}\n\ndata: [DONE]\n\n`)
@@ -510,7 +501,7 @@ const messagesCharLen = (msgs) => msgs.reduce((a, m) => a + (m.content || "").le
 // Breaker: anota el fallo y deja al upstream fuera de la lista un rato. Lee el
 // contador, calcula el enfriamiento con la fórmula de resiliencia.js (fuente
 // única) y escribe una vez. Todo con waitUntil: el usuario ya está esperando.
-function marcarFrio(env, waitUntil, upstream, status) {
+function marcarFrio(env, waitUntil, upstream, status, reason) {
   if (!env.DB || !upstream) return;
   waitUntil(
     env.DB.prepare("SELECT fails FROM upstream_health WHERE upstream = ?")
@@ -519,15 +510,16 @@ function marcarFrio(env, waitUntil, upstream, status) {
       .then((fila) => {
         const nuevos = (fila?.fails || 0) + 1;
         return env.DB.prepare(
-          `INSERT INTO upstream_health (upstream, fails, until, last_status, updated_at)
-           VALUES (?, ?, datetime('now', '+' || ? || ' second'), ?, datetime('now'))
+          `INSERT INTO upstream_health (upstream, fails, until, last_status, last_reason, updated_at)
+           VALUES (?, ?, datetime('now', '+' || ? || ' second'), ?, ?, datetime('now'))
            ON CONFLICT(upstream) DO UPDATE SET
              fails = excluded.fails,
              until = excluded.until,
              last_status = excluded.last_status,
+             last_reason = excluded.last_reason,
              updated_at = datetime('now')`
         )
-          .bind(upstream, nuevos, cooldownSegun(nuevos), status)
+          .bind(upstream, nuevos, cooldownSegun(nuevos), status, String(reason || "").slice(0, 160))
           .run();
       })
       .catch(() => {})
