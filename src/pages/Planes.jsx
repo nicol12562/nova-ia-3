@@ -111,7 +111,7 @@ export default function Planes({ go, auth }) {
               {p.extras
                 // Con el modelo global forzado, "upstream propio" no es cierto:
                 // los tres roles van al mismo proveedor. Se oculta en vez de mentir.
-                .filter((e) => techos?.forzado || !/upstream propio/i.test(e))
+                .filter((e) => !(/upstream propio/i.test(e) && techos?.forzado))
                 .map((e) => {
                 const negativo = /^sin /i.test(e);
                 return (
