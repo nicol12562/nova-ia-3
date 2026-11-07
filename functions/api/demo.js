@@ -72,6 +72,8 @@ export async function onRequest(context) {
               { role: "user", content: tarea.prompt },
             ],
             max_tokens: MAX_TOKENS_DEMO,
+            // Igual que en /api/chat: el razonamiento no va en la respuesta.
+            reasoning: { exclude: true },
           }),
         });
         const j = await res.json().catch(() => ({}));

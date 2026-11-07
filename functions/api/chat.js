@@ -252,6 +252,10 @@ export async function onRequestPost(context) {
                 messages: [{ role: "system", content: systemPrompt }, ...messages],
                 stream: true,
                 max_tokens: maxTokens,
+                // Los modelos de razonamiento del router gratuito escribían su
+                // "Analyze the Request..." dentro de content: el usuario veía el
+                // system prompt como respuesta. Siguen razonando, no nos lo mandan.
+                reasoning: { exclude: true },
               }),
             });
           } catch {
