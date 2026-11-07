@@ -2,7 +2,8 @@
 // Cambia el plan de un usuario desde el panel. Misma puerta que el listado:
 // cabecera x-admin-key contra el secreto ADMIN_KEY.
 
-const PLANES = ["gratis", "pro", "plus"];
+// De menor a mayor: Plus es el escalón intermedio y Pro el plan top.
+const PLANES = ["gratis", "plus", "pro"];
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -17,7 +18,7 @@ export async function onRequestPost(context) {
   const plan = String(body?.plan || "").toLowerCase();
 
   if (!Number.isInteger(userId) || userId <= 0) return json({ error: "Usuario inválido." }, 400);
-  if (!PLANES.includes(plan)) return json({ error: "Plan inválido: usá gratis, pro o plus." }, 400);
+  if (!PLANES.includes(plan)) return json({ error: "Plan inválido: usá gratis, plus o pro." }, 400);
 
   const target = await env.DB.prepare("SELECT id, email, plan FROM users WHERE id = ?").bind(userId).first();
   if (!target) return json({ error: "Ese usuario no existe." }, 404);

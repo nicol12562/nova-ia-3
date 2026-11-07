@@ -3,8 +3,8 @@ import { Icon } from "../icons.jsx";
 import { showToast, spotlight, useCountUp } from "../ui.jsx";
 
 const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
-const PLAN_LABEL = { gratis: "Gratis", pro: "Pro", plus: "Plus" };
-const FILTROS = ["todos", "gratis", "pro", "plus"];
+const PLAN_LABEL = { gratis: "Gratis", plus: "Plus", pro: "Pro" };
+const FILTROS = ["todos", "gratis", "plus", "pro"];
 
 const ADMIN_STORE = "novaia_admin_key";
 const readStoredKey = () => localStorage.getItem(ADMIN_STORE) || sessionStorage.getItem(ADMIN_STORE) || "";
@@ -141,7 +141,7 @@ export default function Admin({ auth, setAuth, go }) {
         resumen: {
           ...prev.resumen,
           porPlan: Object.fromEntries(
-            ["gratis", "pro", "plus"].map((p) => [
+            ["gratis", "plus", "pro"].map((p) => [
               p,
               prev.usuarios.filter((u) => (u.id === usuario.id ? p === planNuevo : p === u.plan)).length,
             ])
@@ -289,7 +289,7 @@ export default function Admin({ auth, setAuth, go }) {
             </div>
             <p className="mc-note">
               {modelo
-                ? "Todos los planes usan este modelo, sin importar la escalera de Gratis/Pro/Plus."
+                ? "Todos los planes usan este modelo, sin importar la escalera de Gratis/Plus/Pro."
                 : "Sin modelo fijo: cada plan usa su escalera y pasa al siguiente si uno falla."}
             </p>
             <div className="mc-row">
@@ -415,7 +415,7 @@ export default function Admin({ auth, setAuth, go }) {
                           onChange={(e) => cambiarPlan(u, e.target.value)}
                           aria-label={`Plan de ${u.email}`}
                         >
-                          {["gratis", "pro", "plus"].map((p) => (
+                          {["gratis", "plus", "pro"].map((p) => (
                             <option key={p} value={p}>{PLAN_LABEL[p]}</option>
                           ))}
                         </select>

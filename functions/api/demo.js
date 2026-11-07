@@ -26,7 +26,7 @@ export async function onRequest(context) {
   const user = await leerSesion(request, env);
   if (!user) return json({ error: "Iniciá sesión para probar los modelos.", login: true }, 401);
   const userId = user.id;
-  const plan = user.role === "admin" ? "plus" : user.plan; // el admin ve el techo completo
+  const plan = user.role === "admin" ? "pro" : user.plan; // el admin ve el techo más alto
 
   const day = new Date().toISOString().slice(0, 10);
   const usado = await env.DB

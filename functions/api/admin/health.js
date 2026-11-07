@@ -11,7 +11,7 @@
 
 import { SLOTS } from "../../_lib/models.js";
 
-const PLANS = ["gratis", "pro", "plus"];
+const PLANS = ["gratis", "plus", "pro"];
 
 export async function onRequestGet(context) {
   const { request, env } = context;

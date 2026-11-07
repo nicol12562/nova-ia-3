@@ -48,9 +48,9 @@ export const TAREAS = [
     prompt:
       "Resumí en exactamente 3 bullets, sin agregar nada que no esté acá: 'Nova IA corre sobre " +
       "tres roles con techos mensuales distintos. El plan Gratis da 1 millón de tokens en total, pero " +
-      "Nova Pro 3.1 sólo 25 mil, así que se agota rápido. Pro multiplica ese techo por 30. " +
-      "Plus llega a 3 millones en ese rol y permite respuestas de hasta 8.192 tokens. " +
-      "Los mini agentes se desbloquean en Pro.'",
+      "Nova Pro 3.1 sólo 25 mil, así que se agota rápido. Plus multiplica ese techo por 30. " +
+      "Pro, el plan más alto, llega a 3 millones en ese rol y permite respuestas de hasta 8.192 tokens. " +
+      "Los mini agentes se desbloquean en Plus y en Pro.'",
   },
   {
     id: "actualidad",

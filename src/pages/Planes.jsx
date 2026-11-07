@@ -10,7 +10,7 @@ const WHATS = "5493416116096";
 
 const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
 const MULT = (a, b) => (b > 0 ? Math.round((a / b) * 10) / 10 : 0);
-const NOMBRE = { gratis: "Gratis", pro: "Pro", plus: "Plus" };
+const NOMBRE = { gratis: "Gratis", plus: "Plus", pro: "Pro" };
 
 const whatsappLink = (p, email) => {
   const msg =
@@ -21,7 +21,7 @@ const whatsappLink = (p, email) => {
 };
 
 export default function Planes({ go, auth }) {
-  const planIndex = auth?.plan === "plus" ? 3 : auth?.plan === "pro" ? 2 : 1;
+  const planIndex = auth?.plan === "pro" ? 3 : auth?.plan === "plus" ? 2 : 1;
   const [techos, setTechos] = useState(null);
   const [demo, setDemo] = useState({ tareas: [], restantes: 3, elegida: null, resultado: null, cargando: false, error: null });
 
@@ -62,7 +62,7 @@ export default function Planes({ go, auth }) {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d && Array.isArray(d.planes)) {
-          setTechos({ planes: d.planes, modelos: d.modelos || [] });
+          setTechos({ planes: d.planes, modelos: d.modelos || [], forzado: !!d.forzado });
         }
       })
       .catch(() => {});
@@ -91,7 +91,7 @@ export default function Planes({ go, auth }) {
               <span className="crown-lg"><Icon name="crown" size={21} /></span>
               <div className="chips">
                 <span className="chip">{p.badge}</span>
-                {(p.isCurrent || auth?.plan === p.id) && <span className="chip chip-plan">tu plan</span>}
+                {auth?.plan === p.id && <span className="chip chip-plan">tu plan</span>}
               </div>
             </div>
             <h2>{p.name}</h2>
@@ -158,7 +158,7 @@ export default function Planes({ go, auth }) {
           </p>
 
           <div className="edge-grid">
-            {["gratis", "pro", "plus"].map((p) => {
+            {["gratis", "plus", "pro"].map((p) => {
               const datos = porPlan[p];
               if (!datos) return null;
               const base = porPlan.gratis;
@@ -175,7 +175,7 @@ export default function Planes({ go, auth }) {
                         d: `Nova Pro 3.1 te deja unas ${Math.max(1, Math.round(datos.techos.pro31 / 900))} respuestas largas (estimado sobre 900 tokens por respuesta).`,
                       },
                     ]
-                  : p === "pro"
+                  : p === "plus"
                   ? [
                       {
                         t: `${MULT(datos.techos.pro, base.techos.pro)}× más Nova Pro`,
@@ -196,7 +196,9 @@ export default function Planes({ go, auth }) {
                         t: `${MULT(datos.cuota, base.cuota)}× el cupón total`,
                         d: `${fmt(base.cuota)} → ${fmt(datos.cuota)} tokens por mes, repartidos entre los tres roles.`,
                       },
-                      { t: "Respuestas de hasta 8.192 tokens", d: "El doble de largo que Pro en una sola salida: sesiones largas sin cortar a mitad." },
+                      techos.forzado
+                        ? { t: "Respuestas de hasta 8.192 tokens", d: "El doble de largo que Plus en una sola salida." }
+                        : { t: "Upstream propio en Nova Pro 3.1", d: "Es el único plan donde ese rol cambia de proveedor. Además: respuestas de hasta 8.192 tokens." },
                     ];
               return (
                 <div key={p} className={"edge-card" + (p === "pro" ? " featured" : "")}>

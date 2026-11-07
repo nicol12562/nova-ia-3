@@ -8,8 +8,8 @@ export const SLOTS = [
     key: "flash",
     label: "Nova Flash",
     desc: "El que más tokens te da: para usarlo todo el mes sin estar contando.",
-    upstream: { gratis: "openrouter/free", pro: "openrouter/free", plus: "openrouter/free" },
-    techo: { gratis: 1_000_000, pro: 2_500_000, plus: 5_000_000 },
+    upstream: { gratis: "openrouter/free", plus: "openrouter/free", pro: "openrouter/free" },
+    techo: { gratis: 1_000_000, plus: 2_500_000, pro: 5_000_000 },
   },
   {
     key: "pro",
@@ -20,29 +20,31 @@ export const SLOTS = [
     // también suele caerse a este. Si se cambia, probar contra la API antes.
     upstream: {
       gratis: "nvidia/nemotron-3-ultra-550b-a55b:free",
-      pro: "nvidia/nemotron-3-ultra-550b-a55b:free",
       plus: "nvidia/nemotron-3-ultra-550b-a55b:free",
+      pro: "nvidia/nemotron-3-ultra-550b-a55b:free",
     },
-    techo: { gratis: 100_000, pro: 1_500_000, plus: 4_000_000 },
+    techo: { gratis: 100_000, plus: 1_500_000, pro: 4_000_000 },
   },
   {
     key: "pro31",
     label: "Nova Pro 3.1",
     desc: "El saldo más chico, para lo que vale la pena gastar. En Gratis se agota enseguida.",
+    // Pro (el plan top) es el único que cambia de upstream acá.
     upstream: {
       gratis: "deepseek/deepseek-v4-flash",
-      pro: "deepseek/deepseek-v4-flash",
-      plus: "google/gemini-3.8-flash",
+      plus: "deepseek/deepseek-v4-flash",
+      pro: "google/gemini-3.8-flash",
     },
-    techo: { gratis: 25_000, pro: 750_000, plus: 3_000_000 },
+    techo: { gratis: 25_000, plus: 750_000, pro: 3_000_000 },
   },
 ];
 
 // Cuota total del plan por mes. Es el techo global; los de cada modelo viven dentro de este.
-export const CUOTA = { gratis: 1_000_000, pro: 2_500_000, plus: 5_000_000 };
+// Pro es el plan más alto; Plus queda en el medio (mismo criterio que ChatGPT usa).
+export const CUOTA = { gratis: 1_000_000, plus: 2_500_000, pro: 5_000_000 };
 
 // Cuántos tokens de salida pide como máximo cada respuesta, según el plan.
-export const MAX_TOKENS = { gratis: 2048, pro: 4096, plus: 8192 };
+export const MAX_TOKENS = { gratis: 2048, plus: 4096, pro: 8192 };
 
 export const SLOT_KEYS = SLOTS.map((s) => s.key);
 

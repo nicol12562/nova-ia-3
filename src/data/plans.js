@@ -1,6 +1,9 @@
 // Datos de la página de planes. Los números de cuota y techo por modelo los sirve
 // el backend (/api/usage) desde functions/_lib/models.js; acá vive la prosa y lo
 // que no se puede calcular. Si un modelo deja de existir, se cambia en models.js.
+//
+// Orden de menor a mayor: Gratis → Plus ($20.000) → Pro ($40.000). Pro es el plan
+// más alto, mismo criterio que usa ChatGPT con Plus/Pro.
 
 import { AGENTS } from "./agents.js";
 
@@ -27,8 +30,8 @@ export const plans = [
     activation: "Inmediata",
   },
   {
-    id: "pro",
-    name: "Pro",
+    id: "plus",
+    name: "Plus",
     badge: "Para todos los días",
     description: "Si usás Nova casi diario para estudiar, trabajar, programar o atender clientes.",
     tokensPerMonth: "2.500.000",
@@ -43,10 +46,10 @@ export const plans = [
     activation: "Revisión manual",
   },
   {
-    id: "plus",
-    name: "Plus",
-    badge: "Para uso intensivo",
-    description: "Sesiones largas, proyectos en paralelo y el modelo más denso sin tope corto.",
+    id: "pro",
+    name: "Pro",
+    badge: "El más completo",
+    description: "Sesiones largas, proyectos en paralelo y el rol más exigente con su propio upstream.",
     tokensPerMonth: "5.000.000",
     price: "$40.000 ARS/mes",
     models: [
@@ -54,14 +57,14 @@ export const plans = [
       ["Nova Pro", "hasta 4.000.000"],
       ["Nova Pro 3.1", "hasta 3.000.000"],
     ],
-    extras: EXTRAS_PAGO,
+    extras: [...EXTRAS_PAGO, "Nova Pro 3.1 con upstream propio"],
     cta: "Solicitar este plan",
     activation: "Revisión manual",
   },
 ];
 
 export const comparison = {
-  headers: ["Incluye", "Gratis", "Pro", "Plus"],
+  headers: ["Incluye", "Gratis", "Plus", "Pro"],
   rows: [
     ["Ideal para", "Probar y dudas sueltas", "Uso diario", "Uso intensivo"],
     ["Cuota mensual", "1 millón", "2,5 millones", "5 millones"],
