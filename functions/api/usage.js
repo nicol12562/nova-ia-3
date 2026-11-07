@@ -65,7 +65,7 @@ export async function onRequestGet({ request, env }) {
   });
 
   return json({
-    dias: rows, totalIn, totalOut, total: totalIn + totalOut, plan,
+    days: rows, totalIn, totalOut, total: totalIn + totalOut, plan,
     forzado: !!forzado,
     cuota: CUOTA[plan] ?? CUOTA.gratis, modelos,
     racha: userId ? await racha(env, userId) : 0,
