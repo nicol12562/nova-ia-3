@@ -1,10 +1,10 @@
 // La memoria de Nova: notas cortas que el usuario guarda y que entran al
 // system prompt de TODAS las conversaciones.
 //
-// Es la única parte del producto que mejora con el uso. Un tipo que paga la
-// API de OpenRouter por su cuenta obtiene el mismo modelo; lo que no obtiene
-// es que el modelo ya sepa que él vende repuestos en Rosario y odia las
-// respuestas con relleno.
+// Mejora con el uso. Contra una API cruda de OpenRouter es la diferencia real:
+// el modelo es el mismo, pero ya sabe que este usuario vende repuestos en
+// Rosario y odia el relleno. Contra ChatGPT es paridad, no ventaja: no vender
+// esto como si fuera exclusivo.
 
 const MAX_NOTAS = 40;
 const MAX_LARGO = 220;

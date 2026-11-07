@@ -47,43 +47,47 @@ export default function Login({ go, setAuth }) {
           </span>
         </div>
         <div className="center">
-          <p className="eyebrow">TU ESPACIO CREATIVO</p>
+          <p className="eyebrow">Nova IA · Hecho en Argentina</p>
           <h1>
             <span className="line">
-              <span className="reveal-word" style={{ "--i": 0 }}>Las</span>{" "}
-              <span className="reveal-word" style={{ "--i": 1 }}>buenas</span>{" "}
-              <span className="reveal-word" style={{ "--i": 2 }}>ideas</span>
+              <span className="reveal-word" style={{ "--i": 0 }}>Preguntalo</span>{" "}
+              <span className="reveal-word" style={{ "--i": 1 }}>en</span>{" "}
+              <span className="reveal-word" style={{ "--i": 2 }}>español.</span>
             </span>
             <span className="line">
-              <span className="reveal-word" style={{ "--i": 3 }}>empiezan</span>{" "}
+              <span className="reveal-word" style={{ "--i": 3 }}>Te responde</span>{" "}
               <span className="reveal-word login-em" style={{ "--i": 4 }}>acá.</span>
             </span>
           </h1>
           <p className="lede">
-            Un asistente para explorar ideas, resolver problemas y avanzar en lo que estás creando.
+            Estudiar, programar, trabajar, vender. Nova arranca en español rioplatense, te muestra el
+            saldo que te queda y no te cobra en dólares.
           </p>
           <ul className="login-feats">
             <li>
-              <Icon name="pulse" size={15} /> Respuestas en vivo, mientras escribís
+              <Icon name="pulse" size={15} /> Respuestas en vivo, mientras las leés
             </li>
             <li>
-              <Icon name="clock" size={15} /> Historial guardado en tu cuenta
+              <Icon name="clock" size={15} /> Historial, búsqueda y memoria en tu cuenta
             </li>
             <li>
-              <Icon name="crown" size={15} /> Tres modelos según tu plan
+              <Icon name="crown" size={15} /> Tres modelos, un saldo que se ve
+            </li>
+            <li>
+              <Icon name="chat" size={15} /> Soporte: una persona, por WhatsApp
             </li>
           </ul>
           <hr className="sep" />
           <p className="note">
             <span className="star" aria-hidden="true" />
             <span>
-              Menos ruido. Más claridad.
+              Sin tarjeta para empezar.
               <br />
-              Más cerca de lo que imaginás.
+              Sin dólares. Sin letra chica.
             </span>
           </p>
         </div>
-        <p className="minifoot">Nova IA · Hecho para pensar en grande.</p>
+        <p className="minifoot">Nova IA · Desarrollado en Argentina</p>
       </div>
 
       <div className="login-right">
@@ -92,9 +96,13 @@ export default function Login({ go, setAuth }) {
         </button>
 
         <div className="login-box">
-          <p className="eyebrow">QUÉ BUENO VERTE</p>
-          <h2>Bienvenido de vuelta.</h2>
-          <p className="sub">Entrá a tu espacio y seguí donde lo dejaste.</p>
+          <p className="eyebrow">{mode === "login" ? "QUÉ BUENO VERTE" : "UN MINUTO, SIN TARJETA"}</p>
+          <h2>{mode === "login" ? "Bienvenido de vuelta." : "Creá tu cuenta."}</h2>
+          <p className="sub">
+            {mode === "login"
+              ? "Entrá y seguí donde lo dejaste: el historial y la memoria quedan en tu cuenta."
+              : "Después de crearla ya tenés historial guardado, búsqueda y el saldo del mes a la vista."}
+          </p>
 
           <div className="tabs">
             <button
@@ -170,7 +178,7 @@ export default function Login({ go, setAuth }) {
                 type="button"
                 className="linklike"
                 style={{ fontWeight: 500 }}
-                onClick={() => showToast("La recuperación de contraseña llega en la próxima versión.")}
+                onClick={() => showToast("Todavía no hay recuperación por email. Si no recordás la contraseña, creá otra cuenta o escribinos por WhatsApp.")}
               >
                 ¿Olvidaste tu contraseña?
               </button>
@@ -201,7 +209,11 @@ export default function Login({ go, setAuth }) {
           </button>
 
           <p className="legal">
-            Al continuar, aceptás usar Nova IA de forma responsable y cuidar la privacidad de tu cuenta.
+            Al continuar aceptás los{" "}
+            <a href="/terminos.html" target="_blank" rel="noopener noreferrer">Términos</a>. Guardamos
+            lo justo para la cuenta, el historial y los límites del plan; cada mensaje se procesa con
+            modelos de terceros a través de OpenRouter. Está explicado en{" "}
+            <a href="/privacidad.html" target="_blank" rel="noopener noreferrer">Privacidad</a>.
           </p>
 
           <p className="login-swap">

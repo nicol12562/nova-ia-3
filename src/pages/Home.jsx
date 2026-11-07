@@ -9,6 +9,7 @@ export default function Home({ go, auth }) {
   const [q, setQ] = useState("");
   const [modelos, setModelos] = useState([]);
   const [racha, setRacha] = useState(0);
+  const [cuota, setCuota] = useState(null);
   const pago = !!auth && (auth.plan === "pro" || auth.plan === "plus");
 
   // Los techos los sirve el backend; así el Inicio no duplica números que pueden desactualizarse.
@@ -19,6 +20,7 @@ export default function Home({ go, auth }) {
       .then((d) => {
         if (!d) return;
         if (Array.isArray(d.modelos)) setModelos(d.modelos);
+        if (d.cuota) setCuota(d.cuota);
         setRacha(d.racha || 0);
       })
       .catch(() => {});
@@ -40,9 +42,9 @@ export default function Home({ go, auth }) {
   return (
     <section className="home">
       <div className="home-hero">
-        <p className="eyebrow">Nova IA</p>
+        <p className="eyebrow">Nova IA · Hecho en Argentina</p>
         <h1 className="hero hero-title">
-          {auth && racha >= 2 ? `Otro día, ${racha} seguidos.` : "Preguntá algo y empezá."}
+          {auth && racha >= 2 ? `Otro día, ${racha} seguidos.` : "IA en español. Precios en pesos."}
         </h1>
         {auth && racha >= 2 && (
           <p className="home-racha">
@@ -51,8 +53,8 @@ export default function Home({ go, auth }) {
           </p>
         )}
         <p className="lede">
-          Escribí, aprendé, programá. Nova te responde en español, sin registro previo y con
-          historial guardado cuando iniciás sesión.
+          Un asistente para estudiar, programar, trabajar y crear. Responde en español rioplatense por
+          defecto, te muestra el saldo que te queda y lo atiende una persona, no un formulario de soporte.
         </p>
 
         <form className="home-ask" onSubmit={(e) => { e.preventDefault(); empezar(); }}>
@@ -66,7 +68,7 @@ export default function Home({ go, auth }) {
                 empezar();
               }
             }}
-            placeholder="¿En qué estás trabajando?"
+            placeholder="Pegá la duda, el enunciado o el mensaje del cliente…"
             aria-label="Escribí tu primera pregunta"
           />
           <button type="submit" className="btn btn-primary" disabled={!q.trim()}>
@@ -75,28 +77,33 @@ export default function Home({ go, auth }) {
         </form>
 
         <div className="home-sug">
-          {["Explícame un tema difícil", "Escribí un mail breve", "Dame ideas para un proyecto"].map((s) => (
+          {[
+            "Respondé este mensaje de un cliente como si fueras el vendedor",
+            "Explícame un tema difícil con un ejemplo de todos los días",
+            "Revisá este código y decime dónde se rompe",
+            "Armá un presupuesto corto con seña y envío",
+          ].map((s) => (
             <button key={s} className="sug" onClick={() => empezar(s)}>{s}</button>
           ))}
         </div>
 
         {!auth && (
           <p className="home-note">
-            <Icon name="lock" size={13} /> Sin cuenta tenés 3 mensajes por día. Crearla toma un minuto.
+            <Icon name="lock" size={13} /> Probar no pide tarjeta: 3 mensajes por día sin cuenta. Crearla lleva un minuto.
           </p>
         )}
       </div>
 
       <div className="home-stats">
-        <div><b>1.000.000</b><span>tokens gratis por mes</span></div>
-        <div><b>3</b><span>modelos, cada uno con su propio saldo</span></div>
-        <div><b>{AGENTS.length}</b><span>mini agentes en Pro y Plus</span></div>
+        <div><b>{cuota ? fmt(cuota) : "1.000.000"}</b><span>tokens por mes para empezar, sin tarjeta</span></div>
+        <div><b>{modelos.length || 3}</b><span>modelos bajo una sola cuenta y un saldo visible</span></div>
+        <div><b>{AGENTS.length}</b><span>mini agentes con instrucciones ya cargadas</span></div>
       </div>
 
-      <h2 className="section-h2">Cómo se reparte tu mes</h2>
+      <h2 className="section-h2">Tres formas de responder</h2>
       <p className="section-sub">
-        Cada modelo consume de su propia bolsa. Usar Nova Pro 3.1 en el plan Gratis se agota rápido;
-        Nova Flash te alcanza para mucho más.
+        Flash para lo rápido y largo, Pro para texto y código, Pro 3.1 para lo difícil. Cada uno consume
+        de su propia bolsa, y al lado del nombre está el proveedor que lo atiende hoy.
       </p>
       <div className="home-models">
         {modelos.map((m) => (
@@ -111,13 +118,14 @@ export default function Home({ go, auth }) {
               <span>tokens/mes en Gratis</span>
             </div>
             <p className="hm-desc">{m.desc}</p>
+            {m.upstream && <p className="hm-up" title="Proveedor que atiende este rol en el plan Gratis">{m.upstream}</p>}
           </div>
         ))}
       </div>
 
       <h2 className="section-h2">Mini agentes</h2>
       <p className="section-sub">
-        Instrucciones ya cargadas para escritura, código, ideas y resúmenes. Vienen con Pro o Plus.
+        {`${AGENTS.length} tareas concretas con las instrucciones ya cargadas —de responderle a un cliente por WhatsApp a revisar código—, sin que tengas que escribir el prompt. Se activan con Pro o Plus.`}
       </p>
       <div className="home-agents">
         {destacados.map((a) => (

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Icon } from "../icons.jsx";
 import Md from "../md.jsx";
 import { plans, comparison, notes } from "../data/plans.js";
+import { AGENTS } from "../data/agents.js";
 import { showToast, spotlight } from "../ui.jsx";
 
 // Venta manual por WhatsApp. Formato internacional argentino: 54 + 9 + área + línea.
@@ -72,8 +73,12 @@ export default function Planes({ go, auth }) {
   return (
     <section>
       <p className="eyebrow">02 · PLANES Y MODELOS</p>
-      <h1 className="hero">Elegí cómo usar Nova.</h1>
-      <p className="lede">Elegí el plan según el uso que necesitás, con precios mensuales claros.</p>
+      <h1 className="hero">Elegí por uso, no por promesas.</h1>
+      <p className="lede">
+        Los tres planes atienden con los mismos modelos. Lo que cambia es cuánto los podés usar, qué
+        tan larga sale cada respuesta y si tenés mini agentes. Todo en pesos, y se activa escribiendo
+        al mismo WhatsApp que te responde después.
+      </p>
 
       <div className="plans-grid">
         {plans.map((p) => (
@@ -86,7 +91,6 @@ export default function Planes({ go, auth }) {
               <span className="crown-lg"><Icon name="crown" size={21} /></span>
               <div className="chips">
                 <span className="chip">{p.badge}</span>
-                {p.id === "pro" && <span className="chip chip-popular">El más elegido</span>}
                 {(p.isCurrent || auth?.plan === p.id) && <span className="chip chip-plan">tu plan</span>}
               </div>
             </div>
@@ -161,14 +165,14 @@ export default function Planes({ go, auth }) {
               const destacados =
                 p === "gratis"
                   ? [
-                      { t: "Sin costo fijo", d: `${fmt(datos.cuota)} tokens por mes y ninguna tarjeta.` },
+                      { t: "Sin costo y sin tarjeta", d: `${fmt(datos.cuota)} tokens por mes para siempre, no sólo el primer mes.` },
                       {
-                        t: "Nova Flash ilimitado en la práctica",
-                        d: `Todo el cupón va al modelo rápido: ${fmt(datos.techos.flash)} tokens.`,
+                        t: "El saldo grande está en Flash",
+                        d: `${fmt(datos.techos.flash)} tokens en el rol rápido: alcanza para leer, escribir y programar sin mirar el contador.`,
                       },
                       {
-                        t: "Probalo antes de pagar",
-                        d: `Alcanza para unas ${Math.max(1, Math.round(datos.techos.pro31 / 900))} respuestas largas con Nova Pro 3.1.`,
+                        t: "Probá el modelo denso antes de pagar",
+                        d: `Nova Pro 3.1 te deja unas ${Math.max(1, Math.round(datos.techos.pro31 / 900))} respuestas largas (estimado sobre 900 tokens por respuesta).`,
                       },
                     ]
                   : p === "pro"
@@ -179,29 +183,25 @@ export default function Planes({ go, auth }) {
                       },
                       {
                         t: `${MULT(datos.techos.pro31, base.techos.pro31)}× más Nova Pro 3.1`,
-                        d: `${fmt(base.techos.pro31)} → ${fmt(datos.techos.pro31)}. Es donde más se nota el salto.`,
+                        d: `${fmt(base.techos.pro31)} → ${fmt(datos.techos.pro31)}. Es el cambio que más se nota en el mes.`,
                       },
-                      { t: "Mini agentes habilitados", d: "Los 6 con instrucciones propias, y el tuyo." },
+                      { t: `Los ${AGENTS.length} mini agentes`, d: "Con las instrucciones ya cargadas, incluido el de clientes por WhatsApp." },
                     ]
                   : [
                       {
                         t: `${MULT(datos.techos.pro31, base.techos.pro31)}× más Nova Pro 3.1`,
-                        d: `${fmt(base.techos.pro31)} → ${fmt(datos.techos.pro31)} tokens. El mejor modelo, sin tope real.` ,
+                        d: `${fmt(base.techos.pro31)} → ${fmt(datos.techos.pro31)} tokens en el rol más denso.`,
                       },
                       {
                         t: `${MULT(datos.cuota, base.cuota)}× el cupón total`,
-                        d: `${fmt(base.cuota)} → ${fmt(datos.cuota)} tokens por mes.`,
+                        d: `${fmt(base.cuota)} → ${fmt(datos.cuota)} tokens por mes, repartidos entre los tres roles.`,
                       },
-                      {
-                        t: "Mejor modelo disponible",
-                        d: "Nova Pro 3.1 apunta al upstream más capaz del catálogo.",
-                      },
+                      { t: "Respuestas de hasta 8.192 tokens", d: "El doble de largo que Pro en una sola salida: sesiones largas sin cortar a mitad." },
                     ];
               return (
                 <div key={p} className={"edge-card" + (p === "pro" ? " featured" : "")}>
                   <div className="edge-head">
                     <strong>Plan {NOMBRE[p]}</strong>
-                    {p === "pro" && <span className="chip chip-popular">El más elegido</span>}
                   </div>
                   <ul>
                     {destacados.map((x) => (

@@ -27,7 +27,7 @@ export default function Agentes({ go, auth }) {
           <p className="eyebrow">04 · MINI AGENTES</p>
           <h1 className="hero">Mini agentes</h1>
           <p className="lede">
-            Seis asistentes con las instrucciones ya cargadas. Cada uno responde distinto a la misma pregunta.
+            {`${AGENTS.length} asistentes con las instrucciones ya cargadas. Escribí nomás la pregunta: el agente se encarga del resto.`}
           </p>
         </div>
         <div style={{ paddingTop: 26 }}>

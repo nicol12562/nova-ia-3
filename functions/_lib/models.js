@@ -7,14 +7,14 @@ export const SLOTS = [
   {
     key: "flash",
     label: "Nova Flash",
-    desc: "Rápido y barato. Es el que más tokens te da.",
+    desc: "El que más tokens te da: para usarlo todo el mes sin estar contando.",
     upstream: { gratis: "openrouter/free", pro: "openrouter/free", plus: "openrouter/free" },
     techo: { gratis: 1_000_000, pro: 2_500_000, plus: 5_000_000 },
   },
   {
     key: "pro",
     label: "Nova Pro",
-    desc: "Mejor calidad para texto largo y código.",
+    desc: "Saldo medio: útil para texto largo y código.",
     // Ojo: meta-llama/llama-3.3-70b-instruct:free ya NO existe en OpenRouter
     // (verificado contra /api/v1/models, 458 modelos). El router gratuito
     // también suele caerse a este. Si se cambia, probar contra la API antes.
@@ -28,7 +28,7 @@ export const SLOTS = [
   {
     key: "pro31",
     label: "Nova Pro 3.1",
-    desc: "El más capaz. En Gratis se agota enseguida.",
+    desc: "El saldo más chico, para lo que vale la pena gastar. En Gratis se agota enseguida.",
     upstream: {
       gratis: "deepseek/deepseek-v4-flash",
       pro: "deepseek/deepseek-v4-flash",

@@ -12,13 +12,28 @@
       rel="stylesheet"
     />
     <style>
+      /* Mismos tokens de la app: estas páginas no pueden parecer otro producto. */
       :root {
-        --accent: #6c5cf5;
-        --text: #16161a;
-        --muted: #6f7377;
-        --border: #e7e6e2;
-        --bg: #f6f6f4;
+        --bg: #ffffff;
         --panel: #ffffff;
+        --surface: #f4f4f5;
+        --border: #e4e4e7;
+        --text: #09090b;
+        --muted: #71717a;
+        --accent: #004de5;
+        --radius: 8px;
+        --radius-xl: 12px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #09090b;
+          --panel: #0c0c0e;
+          --surface: #18181b;
+          --border: #27272a;
+          --text: #fafafa;
+          --muted: #a1a1aa;
+          --accent: #4d8bff;
+        }
       }
       * { box-sizing: border-box; }
       body {
@@ -28,65 +43,47 @@
         color: var(--text);
         line-height: 1.65;
         font-size: 15px;
+        -webkit-font-smoothing: antialiased;
       }
-      main {
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 48px 24px 80px;
-      }
+      main { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
       .volver {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--muted);
-        text-decoration: none;
-        font-size: 13.5px;
-        font-weight: 500;
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--muted); text-decoration: none; font-size: 13.5px; font-weight: 500;
       }
       .volver:hover { color: var(--accent); }
       .eyebrow {
-        color: var(--accent);
-        font-size: 11.5px;
-        letter-spacing: 0.16em;
-        font-weight: 700;
-        margin: 40px 0 0;
+        color: var(--accent); font-size: 11.5px; letter-spacing: 0.16em;
+        text-transform: uppercase; font-weight: 700; margin: 40px 0 0;
       }
       h1 {
-        font-family: "Fraunces", Georgia, serif;
-        font-weight: 600;
-        font-size: 40px;
-        letter-spacing: -0.5px;
-        margin: 8px 0 6px;
+        font-family: "Fraunces", Georgia, serif; font-weight: 600;
+        font-size: 40px; letter-spacing: -0.5px; margin: 8px 0 6px;
       }
       .vigencia { color: var(--muted); font-size: 13.5px; margin: 0 0 28px; }
       h2 {
-        font-family: "Fraunces", Georgia, serif;
-        font-weight: 600;
-        font-size: 22px;
-        letter-spacing: -0.2px;
-        margin: 34px 0 8px;
+        font-family: "Fraunces", Georgia, serif; font-weight: 600;
+        font-size: 22px; letter-spacing: -0.2px; margin: 34px 0 8px;
       }
       p { margin: 0 0 14px; }
       ul { margin: 0 0 14px; padding-left: 22px; }
       li { margin-bottom: 6px; }
       .card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 26px 28px;
-        margin: 24px 0;
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius-xl); padding: 26px 28px; margin: 24px 0;
       }
+      .table { width: 100%; border-collapse: collapse; margin: 18px 0 6px; font-size: 14px; }
+      .table th, .table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+      .table th { color: var(--muted); font-weight: 600; font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; }
+      .table td:first-child { font-weight: 600; white-space: nowrap; }
       a { color: var(--accent); }
+      code {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 1px 6px;
+      }
       .contacto {
-        display: inline-block;
-        background: var(--accent);
-        color: #fff;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 14px;
-        border-radius: 12px;
-        padding: 12px 20px;
-        margin-top: 6px;
+        display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
+        font-weight: 600; font-size: 14px; border-radius: var(--radius); padding: 12px 20px; margin-top: 6px;
       }
       .contacto:hover { opacity: 0.92; }
     </style>
@@ -94,72 +91,126 @@
   <body>
     <main>
       <a class="volver" href="/">← Volver a Nova IA</a>
-      <p class="eyebrow">NOVA IA</p>
+      <p class="eyebrow">Nova IA</p>
       <h1>Política de Privacidad</h1>
-      <p class="vigencia">Vigencia: 26 de octubre de 2026</p>
+      <p class="vigencia">Vigencia: 6 de noviembre de 2026</p>
 
       <p>
-        Esta política explica, en lenguaje claro, qué datos guarda Nova IA, para qué los usamos
-        y qué podés hacer con ellos. Si después de leerla te queda alguna duda, escribínos.
+        Esta política explica, en lenguaje claro, qué datos guarda Nova IA, para qué los usamos y qué
+        podés hacer con ellos. Está escrita para que se pueda verificar contra la app: si algo cambia,
+        cambia esta página.
       </p>
 
       <h2>1. Quién es el responsable</h2>
       <p>
-        Nova IA es un servicio de asistente conversacional operado de forma independiente.
-        Podés contactarnos en <strong>gonzaloangio@gmail.com</strong> por cualquier tema de privacidad.
+        Nova IA es un asistente conversacional desarrollado y operado en Argentina de forma
+        independiente, sin una empresa detrás que responda por él. Para cualquier tema de privacidad
+        escribinos a <strong>gonzaloangio@gmail.com</strong>.
       </p>
 
-      <h2>2. Qué datos guardamos</h2>
+      <h2>2. Qué guardamos, y por qué</h2>
       <div class="card">
-        <ul>
-          <li><strong>Datos de cuenta:</strong> tu nombre y tu email. Si entrás con Google, recibimos estos datos del perfil de tu cuenta de Google (nombre, email y foto básica si la compartís). Si te registrás con email, guardamos además un <em>hash</em> de tu contraseña — nunca la contraseña en claro.</li>
-          <li><strong>Conversaciones:</strong> los mensajes que escribís y las respuestas de la IA, para mostrarte tu historial. Son privadas de tu cuenta.</li>
-          <li><strong>Consumo de tokens:</strong> un contador agregado por día, para aplicarte los límites de tu plan.</li>
-        </ul>
+        <table class="table">
+          <thead>
+            <tr><th>Dato</th><th>Con qué fin</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Nombre y email</td>
+              <td>Identificar tu cuenta. Con Google recibimos nombre, email y foto del perfil si los compartís.</td>
+            </tr>
+            <tr>
+              <td>Hash de contraseña</td>
+              <td>Verificarte sin guardar la contraseña. Usamos PBKDF2-SHA256 con 100.000 iteraciones y sal por cuenta; el texto nunca se almacena.</td>
+            </tr>
+            <tr>
+              <td>Tus mensajes y las respuestas</td>
+              <td>Mostrarte el historial y dejar retomar una conversación. Se envían al modelo en cada turno para que tenga contexto.</td>
+            </tr>
+            <tr>
+              <td>Notas de memoria</td>
+              <td>Las que vos guardás desde Ajustes o desde un mensaje. Se agregan al inicio de cada conversación para que no tengas que repetir el dato.</td>
+            </tr>
+            <tr>
+              <td>Contadores de uso</td>
+              <td>Tokens por día y por modelo, para aplicar los límites del plan y mostrarte el saldo.</td>
+            </tr>
+            <tr>
+              <td>Sesión</td>
+              <td>Un token aleatorio en una cookie <code>HttpOnly</code> durante 30 días, para reconocer tu cuenta sin volver a pedir la contraseña.</td>
+            </tr>
+            <tr>
+              <td>Dirección IP</td>
+              <td>Sólo dos cosas: contar los 3 mensajes diarios de quien entra sin cuenta, y limitar intentos de inicio de sesión para frenar fuerza bruta.</td>
+            </tr>
+            <tr>
+              <td>Preferencias</td>
+              <td>Idioma de respuesta, largo, tema y modelo preferido quedan en tu navegador (localStorage), no en nuestro servidor.</td>
+            </tr>
+          </tbody>
+        </table>
         <p style="margin:0">
-          <strong>No pedimos ni guardamos</strong> datos sensibles, números de tarjeta (los pagos del MVP no procesan tarjetas) ni datos de contactos tuyos.
+          <strong>No pedimos ni guardamos</strong> datos sensibles, números de tarjeta ni agenda de
+          contactos. Los planes pago hoy se coordinan por WhatsApp y se cobran fuera de la app: no
+          procesamos pagos con tarjeta.
         </p>
       </div>
 
       <h2>3. Para qué los usamos</h2>
       <ul>
-        <li>Prestar el servicio: responder tus mensajes y mantener tu historial.</li>
-        <li>Aplicar los límites de uso de tu plan.</li>
-        <li>Detectar abusos que afecten la disponibilidad del servicio.</li>
+        <li>Prestar el servicio: responder, mantener el historial y aplicar la memoria que pediste.</li>
+        <li>Aplicar los límites de uso de tu plan y mostrarte el saldo.</li>
+        <li>Detectar abuso que afecte la disponibilidad (cuentas masivas, ataques al login).</li>
       </ul>
-      <p><strong>No vendemos tus datos.</strong> No hay publicidad ni rastreadores de terceros en la app.</p>
-
-      <h2>4. Con quién compartimos tus mensajes</h2>
       <p>
-        Para generar las respuestas, tu mensaje se envía junto con el contexto de la conversación a
-        <strong>OpenRouter</strong>, que lo procesa con el modelo correspondiente (por ejemplo, Google Gemini o
-        Meta Llama según tu plan). Estos proveedores procesan el contenido como parte del servicio de IA.
-        No enviemos tu email ni tu nombre con cada mensaje.
+        <strong>No vendemos tus datos.</strong> No hay publicidad ni rastreadores de terceros en la
+        aplicación. Nova no entrena modelos con tus conversaciones: no tenemos modelos propios.
+      </p>
+
+      <h2>4. Con quién se procesan tus mensajes</h2>
+      <p>
+        Para generar una respuesta, tu mensaje —junto con el contexto de la conversación— se envía a
+        <strong>OpenRouter</strong>, que lo deriva a un modelo de un tercero. Los proveedores que atienden
+        hoy los tres roles son <strong>NVIDIA (Nemotron)</strong>, <strong>DeepSeek</strong> y
+        <strong>Google (Gemini)</strong>, además de un router de modelos gratuitos. Qué proveedor atiende
+        cada rol lo ves al lado del nombre en el Inicio y puede cambiar.
+      </p>
+      <p>
+        Cada proveedor tiene sus propias condiciones sobre el contenido que procesa y puede conservarlo
+        según sus políticas. Nova no puede prometer lo que ellos prometen; si necesitás esa garantía por
+        escrito, escribinos antes de usarlo con información sensible de terceros.
       </p>
       <ul>
-        <li><strong>Google:</strong> si usás "Continuar con Google", Google nos confirma tu identidad (nombre y email).</li>
-        <li><strong>Cloudflare:</strong> aloja la aplicación y su base de datos.</li>
-        <li><strong>OpenRouter:</strong> procesa los mensajes con los modelos de IA.</li>
+        <li><strong>OpenRouter</strong>: intermediario que ejecuta los modelos.</li>
+        <li><strong>NVIDIA / DeepSeek / Google</strong>: procesan el texto para generar la respuesta.</li>
+        <li><strong>Google (login)</strong>: confirma tu identidad si entrás con “Continuar con Google”.</li>
+        <li><strong>Cloudflare</strong>: aloja la app, la base de datos y las funciones del servidor.</li>
       </ul>
 
-      <h2>5. Dónde queda tu información y cuánto tiempo</h2>
+      <h2>5. Dónde queda y cuánto tiempo</h2>
       <p>
-        En una base de datos de Cloudflare (D1) y en el almacenamiento local de tu navegador
-        (tu sesión y preferencia de tema). Tus conversaciones se guardan hasta que las borres vos
-        desde la app, o hasta que pidas la eliminación de tu cuenta.
+        En una base de datos de Cloudflare (D1) y en el almacenamiento local de tu navegador. Las
+        conversaciones y las notas de memoria se guardan hasta que las borrés vos desde la app o pidas
+        la eliminación de la cuenta. Los contadores de uso de visitantes sin cuenta y los contadores
+        antiabuso se purgan en ventanas cortas (día y horas).
       </p>
 
       <h2>6. Tus derechos</h2>
       <ul>
-        <li><strong>Borrar una conversación:</strong> desde <em>Historial</em> en la app, cuándo quieras.</li>
-        <li><strong>Eliminar tu cuenta:</strong> escribínos a gonzaloangio@gmail.com y borramos cuenta, conversaciones y datos asociados.</li>
-        <li><strong>Cerrar sesión desde un dispositivo:</strong> desde <em>Ajustes</em>.</li>
+        <li><strong>Borrar una conversación</strong>: desde <em>Historial</em>, o todo de una vez.</li>
+        <li><strong>Borrar una nota de memoria</strong>: desde <em>Ajustes → Memoria de Nova</em>, o con ✕ en cada nota.</li>
+        <li><strong>Cerrar sesión en un dispositivo</strong>: desde <em>Ajustes</em>; invalida la cookie del servidor, no sólo la de tu navegador.</li>
+        <li><strong>Eliminar la cuenta</strong>: escribinos a gonzaloangio@gmail.com y borramos cuenta, conversaciones, memoria y contadores.</li>
       </ul>
+      <p>
+        Todavía no hay exportación de tus chats a un archivo. Si la necesitás antes de borrar la cuenta,
+        pedila por email y la preparamos a mano.
+      </p>
 
       <h2>7. Cambios de esta política</h2>
       <p>
-        Si cambiamos algo importante, lo avisamos dentro de la app antes de que aplique.
-        La fecha de vigencia siempre queda arriba de esta página.
+        Si cambia algo importante, lo avisamos dentro de la app antes de que aplique. La fecha de
+        vigencia siempre queda arriba de esta página.
       </p>
 
       <a class="contacto" href="mailto:gonzaloangio@gmail.com">Escribir por privacidad</a>

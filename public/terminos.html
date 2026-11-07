@@ -12,13 +12,28 @@
       rel="stylesheet"
     />
     <style>
+      /* Mismos tokens de la app: estas páginas no pueden parecer otro producto. */
       :root {
-        --accent: #6c5cf5;
-        --text: #16161a;
-        --muted: #6f7377;
-        --border: #e7e6e2;
-        --bg: #f6f6f4;
+        --bg: #ffffff;
         --panel: #ffffff;
+        --surface: #f4f4f5;
+        --border: #e4e4e7;
+        --text: #09090b;
+        --muted: #71717a;
+        --accent: #004de5;
+        --radius: 8px;
+        --radius-xl: 12px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #09090b;
+          --panel: #0c0c0e;
+          --surface: #18181b;
+          --border: #27272a;
+          --text: #fafafa;
+          --muted: #a1a1aa;
+          --accent: #4d8bff;
+        }
       }
       * { box-sizing: border-box; }
       body {
@@ -28,65 +43,38 @@
         color: var(--text);
         line-height: 1.65;
         font-size: 15px;
+        -webkit-font-smoothing: antialiased;
       }
-      main {
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 48px 24px 80px;
-      }
+      main { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
       .volver {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--muted);
-        text-decoration: none;
-        font-size: 13.5px;
-        font-weight: 500;
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--muted); text-decoration: none; font-size: 13.5px; font-weight: 500;
       }
       .volver:hover { color: var(--accent); }
       .eyebrow {
-        color: var(--accent);
-        font-size: 11.5px;
-        letter-spacing: 0.16em;
-        font-weight: 700;
-        margin: 40px 0 0;
+        color: var(--accent); font-size: 11.5px; letter-spacing: 0.16em;
+        text-transform: uppercase; font-weight: 700; margin: 40px 0 0;
       }
       h1 {
-        font-family: "Fraunces", Georgia, serif;
-        font-weight: 600;
-        font-size: 40px;
-        letter-spacing: -0.5px;
-        margin: 8px 0 6px;
+        font-family: "Fraunces", Georgia, serif; font-weight: 600;
+        font-size: 40px; letter-spacing: -0.5px; margin: 8px 0 6px;
       }
       .vigencia { color: var(--muted); font-size: 13.5px; margin: 0 0 28px; }
       h2 {
-        font-family: "Fraunces", Georgia, serif;
-        font-weight: 600;
-        font-size: 22px;
-        letter-spacing: -0.2px;
-        margin: 34px 0 8px;
+        font-family: "Fraunces", Georgia, serif; font-weight: 600;
+        font-size: 22px; letter-spacing: -0.2px; margin: 34px 0 8px;
       }
       p { margin: 0 0 14px; }
       ul { margin: 0 0 14px; padding-left: 22px; }
       li { margin-bottom: 6px; }
       .card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 26px 28px;
-        margin: 24px 0;
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius-xl); padding: 26px 28px; margin: 24px 0;
       }
       a { color: var(--accent); }
       .contacto {
-        display: inline-block;
-        background: var(--accent);
-        color: #fff;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 14px;
-        border-radius: 12px;
-        padding: 12px 20px;
-        margin-top: 6px;
+        display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
+        font-weight: 600; font-size: 14px; border-radius: var(--radius); padding: 12px 20px; margin-top: 6px;
       }
       .contacto:hover { opacity: 0.92; }
     </style>
@@ -94,9 +82,9 @@
   <body>
     <main>
       <a class="volver" href="/">← Volver a Nova IA</a>
-      <p class="eyebrow">NOVA IA</p>
+      <p class="eyebrow">Nova IA</p>
       <h1>Términos y Condiciones</h1>
-      <p class="vigencia">Vigencia: 26 de octubre de 2026</p>
+      <p class="vigencia">Vigencia: 6 de noviembre de 2026</p>
 
       <p>
         Al crear una cuenta o usar Nova IA aceptás estos términos. Son cortos y en castellano
@@ -105,45 +93,60 @@
 
       <h2>1. Qué es Nova IA</h2>
       <p>
-        Un asistente conversacional con modelos de IA, disponible en los planes Gratis, Pro y Plus,
-        con límites mensuales de tokens según el plan. El servicio se ofrece "tal cual", en desarrollo
-        activo: pueden aparecer mejoras, cambios de límites o funciones nuevas.
+        Un asistente conversacional desarrollado en Argentina que da acceso a modelos de IA de terceros
+        desde una sola cuenta, con límites mensuales por plan. Se ofrece “tal cual” y en desarrollo
+        activo: pueden aparecer mejoras, cambios de límites o funciones nuevas sin costo adicional.
       </p>
 
       <h2>2. Tu cuenta</h2>
-      <ul>
-        <li>Sos responsable del uso de tu cuenta y de las conversaciones que se generen en ella.</li>
-        <li>Un solo uso responsable por persona. No compartas tu cuenta para revender el acceso.</li>
-      </ul>
+      <p>
+        Sos responsable del uso de tu cuenta y de lo que se genere con ella. Un uso responsable por
+        persona: no compartas la cuenta ni revendas el acceso. Si dejás de usar Nova, podés pedir la
+        eliminación de la cuenta cuando quieras.
+      </p>
 
       <h2>3. Uso aceptable</h2>
-      <div class="card">
-        <ul style="margin-bottom:0">
-          <li>No usar el servicio para nada ilegal, para generar contenido dañino, para spam ni para atacar la plataforma.</li>
-          <li>No intentar saturar, automatizar en exceso o sortear los límites de tu plan.</li>
-          <li>Si hay abuso, podemos limitar o suspender la cuenta involucrada.</li>
-        </ul>
-      </div>
+      <ul>
+        <li>No usar el servicio para nada ilegal, contenido dañino, spam ni para atacar la plataforma.</li>
+        <li>No crear cuentas masivas ni sortear los límites del plan con automatización.</li>
+        <li>Si hay abuso, podemos limitar o suspender la cuenta involucrada.</li>
+      </ul>
 
-      <h2>4. Límites y planes</h2>
+      <h2>4. Planes, límites y pago</h2>
       <p>
-        Cada plan tiene una cuota mensual de tokens y un conjunto de modelos disponibles
-        (los detalles están en la página de Planes). Los límites y precios pueden cambiar:
-        si afectan un plan pago, avisamos con antelación razonable.
+        Los tres planes atienden con los mismos roles de modelo (Nova Flash, Nova Pro, Nova Pro 3.1).
+        Lo que cambia entre planes es la cuota mensual, el largo máximo de cada respuesta y si tenés
+        mini agentes incluidos. Los detalles están en la página de Planes y se recalculan desde la
+        configuración real del servidor.
+      </p>
+      <p>
+        Los precios son en pesos argentinos. Hoy la solicitud y la activación de Pro y Plus se hacen a
+        mano por WhatsApp, y el pago se coordina ahí mismo: la app no procesa tarjetas ni tiene débito
+        automático. Los límites y precios pueden cambiar; si afecta un plan pago, avisamos con
+        antelación razonable antes de que aplique.
       </p>
 
       <h2>5. Las respuestas de la IA</h2>
       <p>
-        Nova puede equivocarse: las respuestas de los modelos no son asesoramiento profesional
-        (médico, legal, financiero) y hay que verificar la información importante antes de usarla.
-        Lo que escribís en el chat es tuyo; los modelos usados son propiedad de sus respectivos proveedores.
+        Nova puede equivocarse. Las respuestas de los modelos no son asesoramiento profesional
+        (médico, legal, contable ni financiero) y conviene verificar cualquier dato importante antes de
+        usarlo. Lo que escribís en el chat es tuyo; los modelos son propiedad de sus proveedores
+        respectivos, y el proveedor que atiende cada rol puede cambiar en cualquier momento.
       </p>
+      <div class="card">
+        <p style="margin:0">
+          <strong>Si usás Nova para atender clientes o vender</strong> —por ejemplo con el mini agente
+          de WhatsApp—, el mensaje sale de acá pero lo enviás vos. Confirmá stock, precios, medidas y
+          tiempos de entrega antes de mandarlo: Nova está instruido para no inventarlos, pero ningún
+          modelo es una fuente de verdad sobre tu propio negocio.
+        </p>
+      </div>
 
       <h2>6. Disponibilidad y garantías</h2>
       <p>
-        El servicio depende de terceros (proveedores de IA, hosting y login con Google), por lo que
-        no garantizamos disponibilidad ininterrumpida ni ausencia de errores. Si algo se corta,
-        lo reintentamos y, si el problema persiste, podés avisarnos.
+        El servicio depende de terceros (proveedores de IA, hosting y login con Google), así que no
+        garantizamos disponibilidad ininterrumpida ni ausencia de errores. Los modelos gratuitos pueden
+        estar lentos o saturarse en horarios pico. Si algo se corta de forma sostenida, escribinos.
       </p>
 
       <h2>7. Responsabilidad</h2>
@@ -152,15 +155,18 @@
         derivados del uso del servicio o de las respuestas generadas por los modelos.
       </p>
 
-      <h2>8. Cancelación</h2>
+      <h2>8. Cancelación y datos</h2>
       <p>
-        Podés dejar de usar el servicio y borrar tus conversaciones cuándo quieras; tu cuenta se puede
-        eliminar a pedido. Nosotros podemos suspender cuentas que violen el uso aceptable.
+        Podés dejar de usar el servicio y borrar tus conversaciones o tus notas de memoria cuando
+        quieras desde la app. La eliminación de la cuenta se pide por email y borra cuenta, historial,
+        memoria y contadores asociados. Cómo tratamos los datos está en la
+        <a href="/privacidad.html">Política de Privacidad</a>.
       </p>
 
       <h2>9. Contacto y ley aplicable</h2>
       <p>
-        Dudas sobre estos términos: gonzaloangio@gmail.com. Se rigen por las leyes de la República Argentina.
+        Dudas sobre estos términos: gonzaloangio@gmail.com. Se rigen por las leyes de la República
+        Argentina.
       </p>
 
       <a class="contacto" href="mailto:gonzaloangio@gmail.com">Escribir por términos</a>

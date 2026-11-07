@@ -47,9 +47,10 @@ export const TAREAS = [
     criterio: "Si respeta la consigna o infla el texto con relleno.",
     prompt:
       "Resumí en exactamente 3 bullets, sin agregar nada que no esté acá: 'Nova IA corre sobre " +
-      "tres modelos con techos mensuales distintos. El plan Gratis da 1 millón de tokens, pero " +
+      "tres roles con techos mensuales distintos. El plan Gratis da 1 millón de tokens en total, pero " +
       "Nova Pro 3.1 sólo 25 mil, así que se agota rápido. Pro multiplica ese techo por 30. " +
-      "Plus usa el upstream más capaz y llega a 3 millones. Los mini agentes se desbloquean en Pro.'",
+      "Plus llega a 3 millones en ese rol y permite respuestas de hasta 8.192 tokens. " +
+      "Los mini agentes se desbloquean en Pro.'",
   },
   {
     id: "actualidad",

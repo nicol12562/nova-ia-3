@@ -71,6 +71,7 @@ export default function Chat({ auth, convId, go }) {
   const [agent, setAgent] = useState(leerAgente);
   const [agentBlock, setAgentBlock] = useState(false);
   const [modelos, setModelos] = useState([]);
+  const [cuota, setCuota] = useState(null);
   const [prefs] = useState(leerPrefs);
   const [modelKey, setModelKey] = useState(prefs.modelo || "flash");
   const endRef = useRef(null);
@@ -87,6 +88,7 @@ export default function Chat({ auth, convId, go }) {
       if (!r.ok) return;
       const d = await r.json();
       if (Array.isArray(d.modelos)) setModelos(d.modelos);
+      if (d.cuota) setCuota(d.cuota);
     } catch {
       /* sin datos, el chip queda en modo simple */
     }
@@ -534,14 +536,14 @@ export default function Chat({ auth, convId, go }) {
         </div>
 
         <p className="gm-copy">
-          Así es como Nova te deja probarla sin pedir datos. Con una cuenta el chat no se corta y
-          queda guardado en tu historial.
+          Así es como Nova te deja probarla sin pedir datos. Con una cuenta el chat no se corta a los
+          tres mensajes y queda guardado en tu historial.
         </p>
 
         <ul className="gm-list">
-          <li><span className="tick"><Icon name="check" size={12} /></span> Mensajes ilimitados</li>
-          <li><span className="tick"><Icon name="check" size={12} /></span> 1.000.000 de tokens por mes</li>
-          <li><span className="tick"><Icon name="check" size={12} /></span> Historial en cualquier dispositivo</li>
+          <li><span className="tick"><Icon name="check" size={12} /></span> Sin el corte diario de invitado</li>
+          <li><span className="tick"><Icon name="check" size={12} /></span> {`${cuota ? fmt(cuota) : "1.000.000"} tokens por mes, sin tarjeta`}</li>
+          <li><span className="tick"><Icon name="check" size={12} /></span> Historial, búsqueda y memoria en cualquier dispositivo</li>
         </ul>
 
         <p className="modal-note">

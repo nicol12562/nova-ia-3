@@ -1,28 +1,36 @@
-// Datos extraídos en vivo de la página de planes (verificados oct 2026)
+// Datos de la página de planes. Los números de cuota y techo por modelo los sirve
+// el backend (/api/usage) desde functions/_lib/models.js; acá vive la prosa y lo
+// que no se puede calcular. Si un modelo deja de existir, se cambia en models.js.
+
+import { AGENTS } from "./agents.js";
+
+// Se arma desde el catálogo real: si se agrega o se quita un agente, el texto de
+// las tarjetas no queda diciendo un número viejo.
+const EXTRAS_PAGO = [`Los ${AGENTS.length} mini agentes`, "Respuestas más largas"];
+
 export const plans = [
   {
     id: "gratis",
     name: "Gratis",
-    badge: "Uso ocasional",
+    badge: "Para empezar",
     isCurrent: true,
-    description: "Para consultas puntuales, probar Nova y resolver dudas ocasionales sin pagar.",
+    description: "Resolvé dudas puntuales, probá los tres modelos y quedate con el historial.",
     tokensPerMonth: "1.000.000",
     price: "Gratis",
     models: [
       ["Nova Flash", "hasta 1.000.000"],
       ["Nova Pro", "hasta 100.000"],
       ["Nova Pro 3.1", "hasta 25.000"],
-      ["Nova Mini Flash", "respaldo de 250.000"],
     ],
-    extras: ["Sin creación de mini agentes"],
+    extras: ["Historial y búsqueda", "Sin mini agentes"],
     cta: "Empezar gratis",
     activation: "Inmediata",
   },
   {
     id: "pro",
     name: "Pro",
-    badge: "Uso frecuente",
-    description: "Para quienes usan Nova casi todos los días para estudiar, trabajar, programar y escribir.",
+    badge: "Para todos los días",
+    description: "Si usás Nova casi diario para estudiar, trabajar, programar o atender clientes.",
     tokensPerMonth: "2.500.000",
     price: "$20.000 ARS/mes",
     models: [
@@ -30,15 +38,15 @@ export const plans = [
       ["Nova Pro", "hasta 1.500.000"],
       ["Nova Pro 3.1", "hasta 750.000"],
     ],
-    extras: ["Crear mini agentes"],
+    extras: EXTRAS_PAGO,
     cta: "Solicitar este plan",
     activation: "Revisión manual",
   },
   {
     id: "plus",
     name: "Plus",
-    badge: "Uso intensivo",
-    description: "Para creadores, desarrolladores y usuarios intensivos con sesiones largas y varios proyectos en marcha.",
+    badge: "Para uso intensivo",
+    description: "Sesiones largas, proyectos en paralelo y el modelo más denso sin tope corto.",
     tokensPerMonth: "5.000.000",
     price: "$40.000 ARS/mes",
     models: [
@@ -46,7 +54,7 @@ export const plans = [
       ["Nova Pro", "hasta 4.000.000"],
       ["Nova Pro 3.1", "hasta 3.000.000"],
     ],
-    extras: ["Crear mini agentes"],
+    extras: EXTRAS_PAGO,
     cta: "Solicitar este plan",
     activation: "Revisión manual",
   },
@@ -55,18 +63,22 @@ export const plans = [
 export const comparison = {
   headers: ["Incluye", "Gratis", "Pro", "Plus"],
   rows: [
-    ["Ideal para", "Uso ocasional", "Uso frecuente", "Uso intensivo"],
+    ["Ideal para", "Probar y dudas sueltas", "Uso diario", "Uso intensivo"],
     ["Cuota mensual", "1 millón", "2,5 millones", "5 millones"],
     ["Nova Flash", "1.000.000", "2.500.000", "5.000.000"],
     ["Nova Pro", "100.000", "1.500.000", "4.000.000"],
     ["Nova Pro 3.1", "25.000", "750.000", "3.000.000"],
-    ["Mini agentes personalizados", "No", "Sí", "Sí"],
+    ["Largo máximo por respuesta", "2.048 tokens", "4.096 tokens", "8.192 tokens"],
+    ["Mini agentes", "No", "Sí", "Sí"],
+    ["Historial, búsqueda y memoria", "Sí", "Sí", "Sí"],
     ["Precio", "Gratis", "$20.000 ARS/mes", "$40.000 ARS/mes"],
-    ["Solicitud y activación", "Inmediata", "Revisión manual", "Revisión manual"],
+    ["Activación", "Inmediata", "Por WhatsApp", "Por WhatsApp"],
   ],
 };
 
+// Transparencia, no letra chica. Cada línea tiene que ser verificable en el código.
 export const notes = [
-  "Las cuotas son límites de uso, no una promesa de que cada nombre de modelo tenga una calidad distinta. La configuración actual puede dirigir varios nombres al mismo proveedor gratuito.",
-  "El acceso a los modelos se valida en el backend. Los cambios a Pro y Plus son manuales y requieren aprobación del propietario.",
+  "Nova no entrena modelos propios: deriva tu mensaje a proveedores de IA a través de OpenRouter y te cobra por uso, con un techo mensual por cada rol.",
+  "Nova Flash, Nova Pro y Nova Pro 3.1 son roles dentro de Nova, no marcas de modelo. El proveedor que atiende cada rol se muestra al lado del nombre en el Inicio y puede cambiar; cuando cambia, actualizamos esta página.",
+  "Los planes pago se activan y se cancelan a mano, escribiendo al mismo WhatsApp. No hay débito automático: cada mes se solicita.",
 ];

@@ -145,6 +145,13 @@ export async function onRequestPost(context) {
         )
         .bind(ip, day)
         .run()
+        // Sin esto, las IPs de un día que ya no sirve quedan acumuladas para
+        // siempre en la base. La política dice que se purgan: acá se cumple.
+        .then(() =>
+          env.DB
+            .prepare("DELETE FROM guest_usage WHERE day < date('now', '-2 day')")
+            .run()
+        )
         .catch(() => {})
     );
   }

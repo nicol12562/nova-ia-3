@@ -138,9 +138,9 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
                   value={prefs.modelo}
                   onChange={(e) => cambiar({ modelo: e.target.value })}
                 >
-                  <option value="flash">Nova Flash · el más rápido</option>
-                  <option value="pro">Nova Pro · mejor texto largo</option>
-                  <option value="pro31">Nova Pro 3.1 · el más capaz</option>
+                  <option value="flash">Nova Flash · el de saldo más grande</option>
+                  <option value="pro">Nova Pro · saldo medio, texto y código</option>
+                  <option value="pro31">Nova Pro 3.1 · saldo corto, para lo importante</option>
                 </select>
                 <p className="prefs-hint">
                   Se aplica al abrir el chat; igual lo podés cambiar desde el composer.

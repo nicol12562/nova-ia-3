@@ -3,7 +3,7 @@
 // racha de uso. Los datos personales salen de la cookie de sesión, no de un
 // ?user_id= que cualquiera puede escribir.
 
-import { SLOTS, techoDe, CUOTA } from "../_lib/models.js";
+import { SLOTS, techoDe, CUOTA, upstreamDe } from "../_lib/models.js";
 import { leerSesion } from "../_lib/session.js";
 
 export async function onRequestGet({ request, env }) {
@@ -14,6 +14,14 @@ export async function onRequestGet({ request, env }) {
 
   const user = await leerSesion(request, env);
   const userId = user?.id || null;
+
+  // El admin puede forzar un upstream único; si no se refleja acá, la página
+  // mostraría un proveedor que ya no es el que atiende.
+  let forzado = null;
+  if (env.DB) {
+    const fijo = await env.DB.prepare("SELECT value FROM settings WHERE key = 'model'").first();
+    if (fijo?.value) forzado = fijo.value;
+  }
 
   // Sin sesión devolvemos sólo los techos del plan Gratis (datos publicados),
   // para que el selector de modelo y la página de planes funcionen igual.
@@ -47,6 +55,7 @@ export async function onRequestGet({ request, env }) {
       key: s.key,
       label: s.label,
       desc: s.desc,
+      upstream: forzado || upstreamDe(plan, s.key, null),
       usado,
       techo,
       restantes: Math.max(0, techo - usado),
