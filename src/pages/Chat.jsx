@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../icons.jsx";
 import Md from "../md.jsx";
+import Canvas from "../canvas.jsx";
+import { piezaDe } from "../piece.js";
 import { copyText, showToast, spotlight, Modal } from "../ui.jsx";
 import { AGENTS, AGENT_KEY } from "../data/agents.js";
 import { leerPrefs } from "../data/prefs.js";
@@ -79,6 +81,30 @@ export default function Chat({ auth, convId, go }) {
   const loadedRef = useRef(false);
   const accRef = useRef("");
   const rafRef = useRef(0);
+  // Piezas del canvas: lo que Nova produjo listo para copiar o descargar.
+  const [piezas, setPiezas] = useState([]);
+  const [indicePieza, setIndicePieza] = useState(0);
+  const [canvasAbierto, setCanvasAbierto] = useState(false);
+  const vivaRef = useRef(-1);
+
+  const tituloDe = (texto) => (texto || "").replace(/\s+/g, " ").trim().slice(0, 60);
+
+  // Se llama durante el stream: la primera vez que la respuesta parece un
+  // entregable se crea la pieza y se va actualizando mientras se escribe.
+  function actualizarPieza(texto, titulo) {
+    const p = piezaDe(texto, agent?.id);
+    if (!p) return;
+    const i = vivaRef.current;
+    if (i >= 0) {
+      setPiezas((prev) => prev.map((x, k) => (k === i ? { pieza: p, titulo } : x)));
+      return;
+    }
+    const nuevo = piezas.length;
+    vivaRef.current = nuevo;
+    setPiezas((prev) => [...prev, { pieza: p, titulo }]);
+    setIndicePieza(nuevo);
+    setCanvasAbierto(true);
+  }
 
   // Saldo por modelo: lo define el servidor según el plan real de la cuenta.
   const cargarModelos = React.useCallback(async () => {
@@ -188,6 +214,8 @@ export default function Chat({ auth, convId, go }) {
     setBusy(true);
     setWaiting(true);
     setCopiedIdx(null);
+    vivaRef.current = -1; // cada respuesta nueva escribe su propia pieza
+    const titulo = tituloDe(content);
     try {
       const currentConv = await save("user", content);
       const res = await fetch("/api/chat", {
@@ -228,6 +256,7 @@ export default function Chat({ auth, convId, go }) {
       const decoder = new TextDecoder();
       let acc = "";
       let buf = "";
+      let ultSync = 0;
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -245,6 +274,12 @@ export default function Chat({ auth, convId, go }) {
               if (waiting) setWaiting(false);
               acc += delta;
               pushDelta(delta);
+              // Se espeja en el canvas cada ~48 caracteres: alcanza para que se
+              // vea escribir y no dispara un render extra por cada token.
+              if (acc.length - ultSync >= 48) {
+                ultSync = acc.length;
+                actualizarPieza(acc, titulo);
+              }
             }
           } catch {
             /* línea parcial, se ignora */
@@ -255,6 +290,8 @@ export default function Chat({ auth, convId, go }) {
       rafRef.current = 0;
       flushAcc();
       if (acc) {
+        actualizarPieza(acc, titulo); // la versión completa, sin recortes del throttle
+        vivaRef.current = -1;
         await save("assistant", acc, currentConv);
       } else {
         setMsgs([...history, { role: "assistant", content: "(No hubo respuesta del modelo. Probá de nuevo.)" }]);
@@ -305,15 +342,28 @@ export default function Chat({ auth, convId, go }) {
   }
 
   const conversando = msgs.length > 0;
+  const piezaActual = piezas[indicePieza] || null;
+  const moverPieza = (delta) => {
+    const siguiente = Math.min(piezas.length - 1, Math.max(0, indicePieza + delta));
+    setIndicePieza(siguiente);
+  };
 
   return (
+    <>
     <section className="chat">
       {conversando && (
         <div className="chat-topline">
           <span>Conversación</span>
-          <button className="btn-plain" onClick={() => go("chat")}>
-            <Icon name="plusSq" size={14} /> Nuevo chat
-          </button>
+          <div className="tl-actions">
+            {piezas.length > 0 && !canvasAbierto && (
+              <button className="btn-plain" onClick={() => setCanvasAbierto(true)}>
+                <Icon name="doc" size={14} /> Ver {piezas.length === 1 ? "la pieza" : `las ${piezas.length} piezas`}
+              </button>
+            )}
+            <button className="btn-plain" onClick={() => go("chat")}>
+              <Icon name="plusSq" size={14} /> Nuevo chat
+            </button>
+          </div>
         </div>
       )}
 
@@ -551,5 +601,27 @@ export default function Chat({ auth, convId, go }) {
         </p>
       </Modal>
     </section>
+
+    {canvasAbierto && piezaActual && (
+      <Canvas
+        pieza={piezaActual.pieza}
+        titulo={piezaActual.titulo}
+        indice={indicePieza}
+        total={piezas.length}
+        vivo={busy}
+        onAnterior={() => moverPieza(-1)}
+        onSiguiente={() => moverPieza(1)}
+        onCerrar={() => setCanvasAbierto(false)}
+      />
+    )}
+    {canvasAbierto && piezaActual && (
+      <button
+        className="cv-scrim"
+        onClick={() => setCanvasAbierto(false)}
+        aria-label="Cerrar la pieza"
+        tabIndex={-1}
+      />
+    )}
+    </>
   );
 }
