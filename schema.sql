@@ -99,3 +99,13 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 
 -- Conversaciones fijadas arriba del sidebar.
 ALTER TABLE conversations ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0;
+
+-- Estado de cada upstream para el reintento con breaker. `until` en UTC: mientras
+-- no venza, ese proveedor se saltea en vez de golpearlo otra vez.
+CREATE TABLE IF NOT EXISTS upstream_health (
+  upstream TEXT PRIMARY KEY,
+  fails INTEGER NOT NULL DEFAULT 0,
+  until TEXT,
+  last_status INTEGER,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

@@ -64,6 +64,9 @@ export default function Chat({ auth, convId, go }) {
   const [input, setInput] = useState(leerBorrador);
   const [busy, setBusy] = useState(false);
   const [waiting, setWaiting] = useState(false);
+  // Perro guardián: si a los 18s no llegó ni un token, se lo decimos en vez de
+  // dejar la pantalla "pensando" indefinidamente; a los 45s cortamos el fetch.
+  const [lento, setLento] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [recordando, setRecordando] = useState(null);
   const [recordado, setRecordado] = useState(null);
@@ -227,11 +230,16 @@ export default function Chat({ auth, convId, go }) {
     setWaiting(true);
     setCopiedIdx(null);
     vivaRef.current = -1; // cada respuesta nueva escribe su propia pieza
+    setLento(false);
     const titulo = tituloDe(content);
+    const control = new AbortController();
+    const relojLento = setTimeout(() => setLento(true), 18000);
+    const relojCorte = setTimeout(() => control.abort(), 45000);
     try {
       const currentConv = await save("user", content);
       const res = await fetch("/api/chat", {
         method: "POST",
+        signal: control.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: history,
@@ -298,6 +306,7 @@ export default function Chat({ auth, convId, go }) {
             const delta = json.choices?.[0]?.delta?.content ?? "";
             if (delta) {
               if (waiting) setWaiting(false);
+              clearTimeout(relojLento);
               acc += delta;
               pushDelta(delta);
               // Se espeja en el canvas cada ~48 caracteres: alcanza para que se
@@ -320,12 +329,24 @@ export default function Chat({ auth, convId, go }) {
         vivaRef.current = -1;
         await save("assistant", acc, currentConv);
       } else {
-        setMsgs([...history, { role: "assistant", content: "(No hubo respuesta del modelo. Probá de nuevo.)" }]);
+        setMsgs([...history, { role: "assistant", content: "No llegó ninguna respuesta. Reintentá: si pasa dos veces, cambiá de modelo desde el menú de abajo." }]);
       }
     } catch (e) {
-      setMsgs([...history, { role: "assistant", content: "Error: " + e.message }]);
-      showToast("No pudimos obtener la respuesta. Probá de nuevo.", { tone: "error" });
+      const cortado = e?.name === "AbortError";
+      setMsgs([
+        ...history,
+        {
+          role: "assistant",
+          content: cortado
+            ? "Tardó demasiado en responder y corté la espera para no dejarte colgado. Probá de nuevo."
+            : "Error: " + e.message,
+        },
+      ]);
+      showToast(cortado ? "Se cortó la espera. Reintentá." : "No pudimos obtener la respuesta.", { tone: "error" });
     } finally {
+      clearTimeout(relojLento);
+      clearTimeout(relojCorte);
+      setLento(false);
       setBusy(false);
       setWaiting(false);
       cargarModelos();
@@ -443,7 +464,9 @@ export default function Chat({ auth, convId, go }) {
                   <span className={"typing" + (waiting ? " thinking" : "")}>
                     <span className="dots" aria-hidden="true"><i /><i /><i /></span>
                     <span className="typing-label" aria-live="polite">
-                      {waiting ? "Nova está pensando…" : "Escribiendo…"}
+                      {lento
+                        ? "Está tardando más de lo normal…"
+                        : waiting ? "Nova está pensando…" : "Escribiendo…"}
                     </span>
                   </span>
                 ) : (

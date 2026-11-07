@@ -13,6 +13,16 @@ import {
 } from "../_lib/models.js";
 import { leerSesion } from "../_lib/session.js";
 import { notasDe, promptMemoria } from "../_lib/memoria.js";
+import {
+  RESERVA,
+  SLA_PRIMER_TOKEN_MS,
+  SLA_SILENCIO_MS,
+  candidatosDe,
+  cooldownSegun,
+  estaFrio,
+  esErrorDeCredencial,
+  esRecuperable,
+} from "../_lib/resiliencia.js";
 
 // Base común a todas las respuestas. El idioma y el largo vienen de las
 // preferencias del usuario (más abajo), no de acá.
@@ -204,15 +214,39 @@ export async function onRequestPost(context) {
 
   const restantes = (key) => Math.max(0, techoDe(plan, key) - (usados[key] || 0));
   const orden = ordenAlternativas(plan, pedidos).filter((k) => slotByKey(k));
-  const candidatos = orden.filter((k) => !userId || restantes(k) > 0);
+  const conSaldo = orden.filter((k) => !userId || restantes(k) > 0);
 
-  if (candidatos.length === 0) {
+  if (conSaldo.length === 0) {
     const agotado = orden.map((k) => `${slotByKey(k).label}: ${fmt(restantes(k))} restantes`).join(" · ");
     return ssePlaceholder(
       `Te quedaste sin saldo de modelos este mes en el plan ${plan}. ${agotado}. ` +
         "Cambiá de plan o esperá a la renovación."
     );
   }
+
+  // Lista de intentos: lo forzado por el admin, la escalera del plan y al fondo
+  // la reserva paga. Cada upstream se prueba una sola vez y se saltea si está en
+  // enfriamiento por fallos recientes.
+  let frios = [];
+  if (env.DB) {
+    try {
+      const h = await env.DB.prepare("SELECT upstream, until FROM upstream_health").all();
+      frios = (h.results || []).filter((r) => estaFrio(r)).map((r) => r.upstream);
+    } catch {
+      /* si la tabla falla, se intenta con todo */
+    }
+  }
+
+  const intentos = [];
+  const vistos = new Set();
+  const agregar = (upstream, key) => {
+    if (!upstream || vistos.has(upstream) || frios.includes(upstream)) return;
+    vistos.add(upstream);
+    intentos.push({ upstream, key });
+  };
+  if (forzado) agregar(forzado, pedidos);
+  conSaldo.forEach((k) => agregar(upstreamDe(plan, k, null), k));
+  RESERVA.forEach((up) => agregar(up, pedidos));
 
   // El largo elegido manda, pero el plan pone el techo.
   const maxTokens = Math.min(LARGOS[largo].maxTokens, MAX_TOKENS[plan]);
@@ -222,6 +256,8 @@ export async function onRequestPost(context) {
   const encoder = new TextEncoder();
   let outChars = 0;
   let usedSlot = null;
+  let usedUpstream = null;
+  let falloCredencial = false;
   let usedTokens = 0;
   let usedPrompt = 0;
   let usedCompletion = 0;
@@ -233,15 +269,28 @@ export async function onRequestPost(context) {
   const composite = new ReadableStream({
     async start(controller) {
       try {
-        for (const key of candidatos) {
+        for (const intento of intentos) {
+          const key = intento.key;
           const slot = slotByKey(key);
-          const upstream = forzado || upstreamDe(plan, key, null);
-          if (!upstream) continue;
+          const upstream = intento.upstream;
+          if (!slot) continue;
+
+          // Un upstream que cuelga es peor que uno que falla: el usuario se queda
+          // mirando "Nova está pensando" sin fin. Se corta el intento si no
+          // aparece el primer token, y también si el stream se queda mudo.
+          const control = new AbortController();
+          let primero = false;
+          let cronometro = setTimeout(() => control.abort(), SLA_PRIMER_TOKEN_MS);
+          const rearmar = () => {
+            clearTimeout(cronometro);
+            cronometro = setTimeout(() => control.abort(), SLA_SILENCIO_MS);
+          };
 
           let res;
           try {
             res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
               method: "POST",
+              signal: control.signal,
               headers: {
                 Authorization: `Bearer ${apiKey}`,
                 "Content-Type": "application/json",
@@ -258,11 +307,15 @@ export async function onRequestPost(context) {
                 reasoning: { exclude: true },
               }),
             });
-          } catch {
-            codigos.push("red");
+          } catch (e) {
+            clearTimeout(cronometro);
+            const motivoAbort = e?.name === "AbortError";
+            codigos.push(motivoAbort ? "timeout" : "red");
+            marcarFrio(env, waitUntil, upstream, motivoAbort ? 408 : 0);
             continue;
           }
           if (!res.ok || !res.body) {
+            clearTimeout(cronometro);
             codigos.push(res.status || 0);
             // El cuerpo del error dice por qué (key inválida, sin crédito, modelo
             // muerto). Se guarda sanitizado y corto: sin esto un 401 se ve igual
@@ -274,6 +327,13 @@ export async function onRequestPost(context) {
             } catch {
               /* sin cuerpo */
             }
+            if (esErrorDeCredencial(res.status)) {
+              // Con la key rechazada, probar otros modelos gasta el cupo del día
+              // para llegar al mismo 401.
+              falloCredencial = true;
+              break;
+            }
+            if (esRecuperable(res.status)) marcarFrio(env, waitUntil, upstream, res.status);
             continue;
           }
 
@@ -288,6 +348,8 @@ export async function onRequestPost(context) {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
+            // Trajo bytes: el proveedor está vivo, se reinicia la ventana de silencio.
+            rearmar();
             const lines = (tail + decoder.decode(value, { stream: true })).split("\n");
             tail = lines.pop() ?? "";
             const processedRaw = lines.join("\n") + "\n";
@@ -327,8 +389,13 @@ export async function onRequestPost(context) {
           }
 
           if (!emitted) {
+            clearTimeout(cronometro);
             if (isDegenerateOutput(buffered)) {
               try { await reader.cancel(); } catch { /* noop */ }
+              // Respuesta sin contenido: los modelos de razonamiento se comen el
+              // presupuesto de tokens y devuelven vacío. Es un fallo recuperable.
+              codigos.push("vacio");
+              marcarFrio(env, waitUntil, upstream, 408);
               continue;
             }
             emitted = true;
@@ -339,32 +406,35 @@ export async function onRequestPost(context) {
             controller.enqueue(encoder.encode(tail));
             tail = "";
           }
+          clearTimeout(cronometro);
 
           usedSlot = key;
+          usedUpstream = upstream;
           usedPrompt = promptTokens;
           usedCompletion = completionTokens;
           usedTokens = promptTokens + completionTokens || Math.round((messagesCharLen(messages) + outChars) / 4);
+          sanarFrio(env, waitUntil, upstream);
           controller.enqueue(
-            encoder.encode(`event: nova\ndata: ${JSON.stringify({ model: slot.label, key, tokens: usedTokens })}\n\n`)
+            encoder.encode(
+              `event: nova\ndata: ${JSON.stringify({ model: slot.label, key, tokens: usedTokens, upstream })}\n\n`
+            )
           );
           controller.close();
           break;
         }
 
         if (!usedSlot) {
-          // Un 429 de OpenRouter en modelos gratis no es una falla transitoria:
-          // significa que se acabaron los requests gratuitos del día (50/día con
-          // menos de US$10 de crédito en la cuenta). Decir "probá de nuevo" era mentir.
-          // Dos 429 distintos, y decirle lo equivocado al usuario es peor que el
-          // error: "temporarily rate-limited upstream" es el proveedor gratis
-          // saturado (transitorio); rate_limit_exceeded es el tope de 50 requests
-          // por día de la cuenta, y ese no se resuelve reintentando.
+          // Tres causas distintas, tres mensajes. Decir "probá de nuevo" cuando
+          // el problema es la clave, o "no hay gratuitas" cuando quedan 32,
+          // manda a el usuario a hacer algo inútil.
           const motivo = motivos.join(" ");
           const saturado = /temporarily rate-limited|Provider returned error/i.test(motivo);
           const cupo = codigos.includes(429) && !saturado;
-          const msg = cupo
+          const msg = falloCredencial
+            ? "Nova no puede conectar con sus modelos en este momento. El problema es del servicio, no de tu cuenta: intentá más tarde."
+            : cupo
             ? "Se acabaron las respuestas gratuitas de hoy. Volvení a probar mañana, o pasá a un plan pago para usar modelos que no dependen del cupo gratuito."
-            : "El modelo gratuito está saturado ahora mismo. Probá de nuevo en un minuto: suele descomprimirse solo.";
+            : "Se cortó la conexión con los modelos. Reintentá en unos segundos: si no vuelve, escribinos por WhatsApp.";
           // El aviso va ANTES del texto: si llega sólo como delta, el frente no
           // tiene cómo saber que no fue una respuesta del modelo y lo sube al canvas.
           controller.enqueue(
@@ -436,6 +506,44 @@ export async function onRequestPost(context) {
 }
 
 const messagesCharLen = (msgs) => msgs.reduce((a, m) => a + (m.content || "").length, 0);
+
+// Breaker: anota el fallo y deja al upstream fuera de la lista un rato. Lee el
+// contador, calcula el enfriamiento con la fórmula de resiliencia.js (fuente
+// única) y escribe una vez. Todo con waitUntil: el usuario ya está esperando.
+function marcarFrio(env, waitUntil, upstream, status) {
+  if (!env.DB || !upstream) return;
+  waitUntil(
+    env.DB.prepare("SELECT fails FROM upstream_health WHERE upstream = ?")
+      .bind(upstream)
+      .first()
+      .then((fila) => {
+        const nuevos = (fila?.fails || 0) + 1;
+        return env.DB.prepare(
+          `INSERT INTO upstream_health (upstream, fails, until, last_status, updated_at)
+           VALUES (?, ?, datetime('now', '+' || ? || ' second'), ?, datetime('now'))
+           ON CONFLICT(upstream) DO UPDATE SET
+             fails = excluded.fails,
+             until = excluded.until,
+             last_status = excluded.last_status,
+             updated_at = datetime('now')`
+        )
+          .bind(upstream, nuevos, cooldownSegun(nuevos), status)
+          .run();
+      })
+      .catch(() => {})
+  );
+}
+
+function sanarFrio(env, waitUntil, upstream) {
+  if (!env.DB || !upstream) return;
+  waitUntil(
+    env.DB
+      .prepare("DELETE FROM upstream_health WHERE upstream = ?")
+      .bind(upstream)
+      .run()
+      .catch(() => {})
+  );
+}
 const fmt = (n) => Math.round(n).toLocaleString("es-AR");
 
 function ssePlaceholder(text) {
