@@ -71,7 +71,7 @@ export default function Login({ go, setAuth }) {
               <Icon name="clock" size={15} /> Historial, búsqueda y memoria en tu cuenta
             </li>
             <li>
-              <Icon name="crown" size={15} /> Tres modelos, un saldo que se ve
+              <Icon name="crown" size={15} /> Tres formas de responder, un saldo que se ve
             </li>
             <li>
               <Icon name="chat" size={15} /> Soporte: una persona, por WhatsApp

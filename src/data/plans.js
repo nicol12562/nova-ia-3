@@ -14,7 +14,7 @@ export const plans = [
     name: "Gratis",
     badge: "Para empezar",
     isCurrent: true,
-    description: "Resolvé dudas puntuales, probá los tres modelos y quedate con el historial.",
+    description: "Resolvé dudas puntuales, probá las tres formas de responder y quedate con el historial.",
     tokensPerMonth: "1.000.000",
     price: "Gratis",
     models: [
