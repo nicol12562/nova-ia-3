@@ -87,12 +87,24 @@ export default function Chat({ auth, convId, go }) {
   const [canvasAbierto, setCanvasAbierto] = useState(false);
   const vivaRef = useRef(-1);
 
+  // Botón explícito: cualquier respuesta se puede subir a la pieza sin que el
+  // heuristic decida por el usuario. Toma el pedido anterior como título.
+  function abrirPieza(texto, idx) {
+    const pedido = [...msgs].slice(0, idx).reverse().find((m) => m.role === "user")?.content || "";
+    const p = piezaDe(texto, agent?.id, pedido) || { kind: "text", lang: "", body: (texto || "").trim() };
+    vivaRef.current = -1;
+    const nuevo = piezas.length;
+    setPiezas((prev) => [...prev, { pieza: p, titulo: tituloDe(pedido) }]);
+    setIndicePieza(nuevo);
+    setCanvasAbierto(true);
+  }
+
   const tituloDe = (texto) => (texto || "").replace(/\s+/g, " ").trim().slice(0, 60);
 
   // Se llama durante el stream: la primera vez que la respuesta parece un
   // entregable se crea la pieza y se va actualizando mientras se escribe.
-  function actualizarPieza(texto, titulo) {
-    const p = piezaDe(texto, agent?.id);
+  function actualizarPieza(texto, titulo, pedido) {
+    const p = piezaDe(texto, agent?.id, pedido);
     if (!p) return;
     const i = vivaRef.current;
     if (i >= 0) {
@@ -278,7 +290,7 @@ export default function Chat({ auth, convId, go }) {
               // vea escribir y no dispara un render extra por cada token.
               if (acc.length - ultSync >= 48) {
                 ultSync = acc.length;
-                actualizarPieza(acc, titulo);
+                actualizarPieza(acc, titulo, content);
               }
             }
           } catch {
@@ -290,7 +302,7 @@ export default function Chat({ auth, convId, go }) {
       rafRef.current = 0;
       flushAcc();
       if (acc) {
-        actualizarPieza(acc, titulo); // la versión completa, sin recortes del throttle
+        actualizarPieza(acc, titulo, content); // la versión completa, sin recortes del throttle
         vivaRef.current = -1;
         await save("assistant", acc, currentConv);
       } else {
@@ -429,6 +441,13 @@ export default function Chat({ auth, convId, go }) {
                   <button className="msg-act" onClick={() => handleCopy(m.content, i)}>
                     <Icon name={copiedIdx === i ? "check" : "copy"} size={13} />
                     {copiedIdx === i ? "Copiado" : "Copiar"}
+                  </button>
+                  <button
+                    className="msg-act"
+                    onClick={() => abrirPieza(m.content, i)}
+                    title="Ver esto en el panel, listo para copiar o descargar"
+                  >
+                    <Icon name="doc" size={13} /> Abrir en la pieza
                   </button>
                 </div>
               )}

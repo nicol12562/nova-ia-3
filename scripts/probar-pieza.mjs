@@ -1,8 +1,22 @@
-import { piezaDe, nombreArchivo, wordCount } from "../src/piece.js";
+import { piezaDe, nombreArchivo, wordCount, quierePieza } from "../src/piece.js";
 
 const largo = "x".repeat(400) + " " + "y".repeat(400); // >700 chars
 
 const casos = [
+  {
+    nombre: "pedido de texto + respuesta corta → pieza",
+    texto: "Asunto: pedido de presupuesto. Buen día, les escribo por...",
+    agente: null,
+    pedido: "Escribí un mail breve para pedir un presupuesto de repuestos",
+    espera: { kind: "text" },
+  },
+  {
+    nombre: "pregunta de dato + respuesta corta → charla",
+    texto: "96",
+    agente: null,
+    pedido: "¿Cuánto es 12 x 8?",
+    espera: null,
+  },
   {
     nombre: "respuesta corta de dato",
     texto: "La capital de Australia es Canberra.",
@@ -55,11 +69,28 @@ const casos = [
 
 let ok = 0;
 for (const c of casos) {
-  const r = piezaDe(c.texto, c.agente);
+  const r = piezaDe(c.texto, c.agente, c.pedido);
   const got = r ? { kind: r.kind, ...(r.kind === "code" ? { lang: r.lang } : {}) } : null;
   const igual = JSON.stringify(got) === JSON.stringify(c.espera);
   if (igual) ok++;
-  console.log(igual ? "PASS" : "FAIL", "|", c.nombre.padEnd(38), "→", JSON.stringify(got), igual ? "" : `(esperaba ${JSON.stringify(c.espera)})`);
+  console.log(igual ? "PASS" : "FAIL", "|", c.nombre.padEnd(42), "→", JSON.stringify(got), igual ? "" : `(esperaba ${JSON.stringify(c.espera)})`);
+}
+
+const intenciones = [
+  ["armá un presupuesto con seña", true],
+  ["hacé un resumen de este texto", true],
+  ["escribí el post para instagram", true],
+  ["traducí esto al inglés", true],
+  ["dame el código de la función", true],
+  ["¿qué es un índice de base de datos?", false],
+  ["¿cuánto es 12 x 8?", false],
+  ["llovió ayer en Rosario?", false],
+];
+for (const [pedido, esperaba] of intenciones) {
+  const got = quierePieza(pedido);
+  const igual = got === esperaba;
+  if (igual) ok++;
+  console.log(igual ? "PASS" : "FAIL", "| intención", JSON.stringify(pedido), "→", got, igual ? "" : `(esperaba ${esperaba})`);
 }
 
 const archivos = [
@@ -75,5 +106,6 @@ for (const [t, pieza, esperado] of archivos) {
 }
 
 console.log("\npalabras en \"hola cómo andas\":", wordCount("hola cómo andas").length);
-console.log(`\n${ok}/${casos.length + archivos.length} casos pasan`);
-process.exit(ok === casos.length + archivos.length ? 0 : 1);
+const total = casos.length + intenciones.length + archivos.length;
+console.log(`\n${ok}/${total} casos pasan`);
+process.exit(ok === total ? 0 : 1);

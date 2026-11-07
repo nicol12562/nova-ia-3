@@ -10,7 +10,27 @@ export const LARGO_MINIMO = 700;
 
 const FENCE = /```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```/;
 
-export function piezaDe(texto, agenteId) {
+// Palabras con las que alguien pide un entregable, no una respuesta. Si el
+// pedido suena a "hacé esto", el panel se abre aunque la salida sea corta:
+// es justo el caso que la detección por longitud perdía.
+//
+// Se matchea sobre texto sin acentos: \b no reconoce "í" ni "á" como carácter de
+// palabra, así que "traducí", "escribí" o "hacé" no cerraban el borde y se
+// caían (lo agarró el test). Sin trailing \b porque importan los tallos.
+const sinAcentos = (s) =>
+  (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+const INTENCION =
+  /\b(escribi|escriba|redacta|arma|crea|hace|genera|traduci|traduce|resumi|resume|programa|corrigi|corrije|mejora|adapta|codigo|funcion|script|clase|texto|email|mail|nota|carta|presupuesto|publicacion|post|articulo|ensayo|guion|copy|listado|plantilla|modelo de|borrador)/;
+
+// Devuelve true si el pedido del usuario pide algo listo para usar.
+export function quierePieza(pedido) {
+  const t = sinAcentos(pedido).trim();
+  if (t.length < 3) return false;
+  return INTENCION.test(t);
+}
+
+export function piezaDe(texto, agenteId, pedido) {
   const t = (texto || "").trim();
   if (!t) return null;
 
@@ -20,7 +40,7 @@ export function piezaDe(texto, agenteId) {
     if (cuerpo.trim().length > 12) return { kind: "code", lang: (m[1] || "").toLowerCase(), body: cuerpo };
   }
 
-  const esCreacion = DE_CREACION.has(agenteId);
+  const esCreacion = DE_CREACION.has(agenteId) || quierePieza(pedido);
   if (!esCreacion && t.length < LARGO_MINIMO) return null;
   if (t.length < 90 && !esCreacion) return null;
   return { kind: "text", lang: "", body: t };
