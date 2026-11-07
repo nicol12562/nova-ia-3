@@ -1833,6 +1833,8 @@ body.dark .toast {
   flex: 0 0 min(520px, 40vw);
   align-self: stretch;
   min-height: 0;
+  min-width: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   margin-left: 10px;
