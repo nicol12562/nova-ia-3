@@ -393,10 +393,10 @@ export default function App() {
         <footer className="footer">
           <span className="brand-foot">novaia</span>
           <span className="mid">
-            Un poco más cerca de tus ideas.{" "}
+            IA en español, hecha en Argentina.{" "}
             <a href="/privacidad.html">Privacidad</a> · <a href="/terminos.html">Términos</a>
           </span>
-          <span>Edición 01 · 2026</span>
+          <span>Hecho por una persona · 2026</span>
         </footer>
       </div>
 

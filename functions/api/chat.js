@@ -223,6 +223,8 @@ export async function onRequestPost(context) {
   let outChars = 0;
   let usedSlot = null;
   let usedTokens = 0;
+  let usedPrompt = 0;
+  let usedCompletion = 0;
   let marcarListo = () => {};
   const finished = new Promise((resolve) => { marcarListo = resolve; });
 
@@ -319,6 +321,8 @@ export async function onRequestPost(context) {
           }
 
           usedSlot = key;
+          usedPrompt = promptTokens;
+          usedCompletion = completionTokens;
           usedTokens = promptTokens + completionTokens || Math.round((messagesCharLen(messages) + outChars) / 4);
           controller.enqueue(
             encoder.encode(`event: nova\ndata: ${JSON.stringify({ model: slot.label, key, tokens: usedTokens })}\n\n`)
@@ -345,12 +349,18 @@ export async function onRequestPost(context) {
 
   // ---- registro de consumo: por modelo y acumulado diario ----
   if (userId && env.DB) {
-    const inputTokens = Math.round(messagesCharLen(messages) / 4);
     const day = new Date().toISOString().slice(0, 10);
     waitUntil(
       finished
         .then(async () => {
-          const total = usedTokens || Math.round((inputTokens + outChars) / 4);
+          // Se anotan los tokens REALES que reportó el proveedor. Antes el
+          // acumulado diario usaba caracteres/4, así que "Uso y tokens" mostraba
+          // 161 tokens totales mientras el saldo por modelo ya había descontado
+          // 1.022 del mismo mes: dos números distintos en la misma pantalla.
+          const estimado = Math.round((messagesCharLen(messages) + outChars) / 4);
+          const tokensIn = usedPrompt || Math.round(messagesCharLen(messages) / 4);
+          const tokensOut = usedCompletion || Math.round(outChars / 4);
+          const total = usedTokens || estimado;
           if (!total) return;
           if (usedSlot) {
             await env.DB
@@ -369,7 +379,7 @@ export async function onRequestPost(context) {
                  tokens_in = tokens_in + excluded.tokens_in,
                  tokens_out = tokens_out + excluded.tokens_out`
             )
-            .bind(userId, day, inputTokens, Math.round(outChars / 4))
+            .bind(userId, day, tokensIn, tokensOut)
             .run();
         })
         .catch(() => {})
