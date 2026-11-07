@@ -335,9 +335,8 @@ export default function Admin({ auth, setAuth, go }) {
             </div>
             {health?.gratis && (
               <p className="ah-cupo">
-                <strong>Cupo de modelos gratis:</strong> {health.gratis.dia} requests hoy
-                {health.gratis.mes ? ` · ${health.gratis.mes} en el mes` : ""}
-                {health.gratis.creditos != null ? ` · créditos ${health.gratis.creditos}` : ""}
+                <strong>Cupo de modelos gratis:</strong> {health.gratis.dia}
+                {health.gratis.unlimited ? " · cuenta sin límite" : ""}
                 <br />
                 Con el modelo global forzado a un router gratuito, cada mensaje de cada plan descuenta de acá.
               </p>

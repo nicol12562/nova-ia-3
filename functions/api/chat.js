@@ -351,10 +351,16 @@ export async function onRequestPost(context) {
           // Un 429 de OpenRouter en modelos gratis no es una falla transitoria:
           // significa que se acabaron los requests gratuitos del día (50/día con
           // menos de US$10 de crédito en la cuenta). Decir "probá de nuevo" era mentir.
-          const cupo = codigos.includes(429);
+          // Dos 429 distintos, y decirle lo equivocado al usuario es peor que el
+          // error: "temporarily rate-limited upstream" es el proveedor gratis
+          // saturado (transitorio); rate_limit_exceeded es el tope de 50 requests
+          // por día de la cuenta, y ese no se resuelve reintentando.
+          const motivo = motivos.join(" ");
+          const saturado = /temporarily rate-limited|Provider returned error/i.test(motivo);
+          const cupo = codigos.includes(429) && !saturado;
           const msg = cupo
-            ? "Se acabaron las respuestas gratuitas de hoy. Volvá a probar mañana, o pasá a un plan pago para usar modelos que no dependen del cupo gratuito."
-            : "Ahora mismo no pude obtener una respuesta. Probá de nuevo en un rato: casi siempre se resuelve al reintentar.";
+            ? "Se acabaron las respuestas gratuitas de hoy. Volvení a probar mañana, o pasá a un plan pago para usar modelos que no dependen del cupo gratuito."
+            : "El modelo gratuito está saturado ahora mismo. Probá de nuevo en un minuto: suele descomprimirse solo.";
           // El aviso va ANTES del texto: si llega sólo como delta, el frente no
           // tiene cómo saber que no fue una respuesta del modelo y lo sube al canvas.
           controller.enqueue(

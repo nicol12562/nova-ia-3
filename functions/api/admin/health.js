@@ -90,10 +90,10 @@ export async function onRequestGet(context) {
       const uso = d.free_model_daily_requests || {};
       const mes = d.free_model_monthly_requests || {};
       gratis = {
-        dia: `${uso.usage ?? "?"} / ${uso.limit ?? "?"}`,
-        mes: `${mes.usage ?? "?"} / ${mes.limit ?? "?"}`,
-        creditos: d.total_credits ?? null,
-        sin_usar: d.unlimited ? "sin límite" : null,
+        // La API responde { used, limit, remaining }, no { usage }.
+        dia: `${uso.used ?? "?"} / ${uso.limit ?? "?"} (quedan ${uso.remaining ?? "?"})`,
+        mes: mes.used != null ? `${mes.used} / ${mes.limit}` : null,
+        unlimited: !!d.unlimited,
       };
     }
   } catch {
