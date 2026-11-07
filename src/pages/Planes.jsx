@@ -171,7 +171,7 @@ export default function Planes({ go, auth }) {
                         d: `${fmt(datos.techos.flash)} tokens en el rol rápido: alcanza para leer, escribir y programar sin mirar el contador.`,
                       },
                       {
-                        t: "Probá el modelo denso antes de pagar",
+                        t: "Probá el rol de saldo más corto antes de pagar",
                         d: `Nova Pro 3.1 te deja unas ${Math.max(1, Math.round(datos.techos.pro31 / 900))} respuestas largas (estimado sobre 900 tokens por respuesta).`,
                       },
                     ]
@@ -190,7 +190,7 @@ export default function Planes({ go, auth }) {
                   : [
                       {
                         t: `${MULT(datos.techos.pro31, base.techos.pro31)}× más Nova Pro 3.1`,
-                        d: `${fmt(base.techos.pro31)} → ${fmt(datos.techos.pro31)} tokens en el rol más denso.`,
+                        d: `${fmt(base.techos.pro31)} → ${fmt(datos.techos.pro31)} tokens en el rol de saldo más corto.`,
                       },
                       {
                         t: `${MULT(datos.cuota, base.cuota)}× el cupón total`,

@@ -10,6 +10,7 @@ export default function Home({ go, auth }) {
   const [modelos, setModelos] = useState([]);
   const [racha, setRacha] = useState(0);
   const [cuota, setCuota] = useState(null);
+  const [forzado, setForzado] = useState(false);
   const pago = !!auth && (auth.plan === "pro" || auth.plan === "plus");
 
   // Los techos los sirve el backend; así el Inicio no duplica números que pueden desactualizarse.
@@ -21,6 +22,7 @@ export default function Home({ go, auth }) {
         if (!d) return;
         if (Array.isArray(d.modelos)) setModelos(d.modelos);
         if (d.cuota) setCuota(d.cuota);
+        setForzado(!!d.forzado);
         setRacha(d.racha || 0);
       })
       .catch(() => {});
@@ -102,8 +104,9 @@ export default function Home({ go, auth }) {
 
       <h2 className="section-h2">Tres formas de responder</h2>
       <p className="section-sub">
-        Flash para lo rápido y largo, Pro para texto y código, Pro 3.1 para lo difícil. Cada uno consume
-        de su propia bolsa, y al lado del nombre está el proveedor que lo atiende hoy.
+        {forzado
+          ? "En este momento un ajuste global del panel dirige los tres roles al mismo proveedor: cambia el saldo disponible y el largo de la respuesta, no el modelo. Lo publicamos acá en vez de disimularlo."
+          : "Flash para lo rápido y largo, Pro para texto y código, Pro 3.1 para lo difícil. Cada uno consume de su propia bolsa, y al lado del nombre está el proveedor que lo atiende hoy."}
       </p>
       <div className="home-models">
         {modelos.map((m) => (
