@@ -226,6 +226,7 @@ export async function onRequestPost(context) {
   let usedPrompt = 0;
   let usedCompletion = 0;
   const codigos = []; // por qué falló cada candidato: sin esto el 429 se disfraza de "intentá de nuevo"
+  const motivos = []; // primer fragmento del error de OpenRouter, sin la key
   let marcarListo = () => {};
   const finished = new Promise((resolve) => { marcarListo = resolve; });
 
@@ -259,6 +260,16 @@ export async function onRequestPost(context) {
           }
           if (!res.ok || !res.body) {
             codigos.push(res.status || 0);
+            // El cuerpo del error dice por qué (key inválida, sin crédito, modelo
+            // muerto). Se guarda sanitizado y corto: sin esto un 401 se ve igual
+            // que un 429 y uno termina culpando al cupo equivocado.
+            try {
+              const texto = (await res.text()).slice(0, 300);
+              const limpio = texto.replace(/sk-or-[A-Za-z0-9_-]+/g, "sk-***").replace(/\s+/g, " ").trim();
+              if (limpio && !motivos.includes(limpio)) motivos.push(limpio.slice(0, 140));
+            } catch {
+              /* sin cuerpo */
+            }
             continue;
           }
 
@@ -348,7 +359,7 @@ export async function onRequestPost(context) {
           // tiene cómo saber que no fue una respuesta del modelo y lo sube al canvas.
           controller.enqueue(
             encoder.encode(
-              `event: nova\ndata: ${JSON.stringify({ model: null, key: null, error: true, cupo, codigos })}\n\n`
+              `event: nova\ndata: ${JSON.stringify({ model: null, key: null, error: true, cupo, codigos, motivos })}\n\n`
             )
           );
           controller.enqueue(
