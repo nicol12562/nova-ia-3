@@ -104,8 +104,10 @@ body.dark {
 }
 .rail-saldo { font-variant-numeric: tabular-nums; color: var(--lg-rail-ink); font-weight: 600; font-size: 12px; }
 .rail-aviso {
-  border: 1px solid var(--lg-alert);
-  color: var(--lg-alert);
+  /* No usa --lg-alert: ese rojo está reservado a un modelo agotado. Medido sobre
+     el riel teal daba 1,88:1, y un aviso de cuenta no es un error. */
+  border: 1px solid var(--lg-rail-dim);
+  color: var(--lg-rail-ink);
   background: none;
   border-radius: 6px;
   padding: 6px 4px;
@@ -114,6 +116,7 @@ body.dark {
   width: 100%;
   cursor: pointer;
 }
+.rail-aviso:hover { background: rgba(220, 236, 230, 0.12); }
 
 /* ---------- banda de vencimiento ---------- */
 
