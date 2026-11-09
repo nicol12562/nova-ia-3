@@ -416,8 +416,10 @@ export default function Chat({ auth, convId, go }) {
   // Fecha sin Date→locale: "2026-11-08" renderizado en GMT-3 da 07/11. El ciclo
   // de cuota es calendario, así que se arma el dd/mm a mano desde la cadena.
   const diaEs = (iso) => (iso || "").slice(8, 10) + "/" + (iso || "").slice(5, 7);
-  const hoy = new Date();
-  const renuevaMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1);
+  // "ahora", no "hoy": el módulo ya tiene una función hoy() que usa el límite
+  // de invitado, y taparla con un Date rompía cada envío sin sesión.
+  const ahora = new Date();
+  const renuevaMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 1);
   const renueva =
     String(renuevaMes.getDate()).padStart(2, "0") + "/" + String(renuevaMes.getMonth() + 1).padStart(2, "0");
   // Saldo corrido sobre TODOS los días del mes; se muestran los últimos 8,
