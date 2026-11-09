@@ -285,23 +285,20 @@ body.app-cuenta { background: var(--lg-papel); }
 .app-lg .main-chat,
 .app-lg .chat { background: var(--lg-papel); color: var(--lg-ink); }
 
-.app-lg .chat-hero .eyebrow { display: none; }
-.app-lg .chat-hero h1 { color: var(--lg-ink); }
-.app-lg .chat-hero h1 em {
-  /* El texto en degradé (background-clip + -webkit-text-fill-color) no se gana
-     con color: hay que apagar el relleno. Además está prohibido por el piso de
-     calidad: el énfasis va en peso, no en degradé. */
-  background: none;
-  -webkit-background-clip: border-box;
-  background-clip: border-box;
-  -webkit-text-fill-color: currentColor;
-  color: var(--lg-amount);
-  font-style: normal;
-  font-weight: 700;
-}
-.app-lg .chat-hero .lede, .app-lg .chat-hero p { color: var(--lg-ink-2); }
 
-.app-lg .guest-bar { background: var(--lg-field); border-color: var(--lg-rule); color: var(--lg-ink); }
+/* fix 6: .guest-bar .txt traía min-width:180px de styles.css y, con la etiqueta
+   y el botón, empujaba el documento más allá de 390. */
+.app-lg .guest-bar {
+  background: var(--lg-field);
+  border: 1px solid var(--lg-rule);
+  border-radius: 6px;
+  box-shadow: none;
+  color: var(--lg-ink);
+  padding: 10px 12px;
+}
+.app-lg .guest-bar .txt { min-width: 0; flex: 1 1 140px; }
+.app-lg .asiento .a-neutro { color: var(--lg-ink-2); }
+.app-lg .movimientos .m-vacia { color: var(--lg-ink-2); }
 
 .app-lg .composer { background: var(--lg-papel); border-top: 1px solid var(--lg-rule); }
 .app-lg .composer textarea { background: var(--lg-field); border-color: var(--lg-rule); color: var(--lg-ink); }
@@ -390,5 +387,4 @@ body.app-cuenta { background: var(--lg-papel); }
    composer a media hoja. */
 .app-lg .model-chip .spark,
 .app-lg .spark { background: var(--lg-amount); color: var(--lg-amount); box-shadow: none; }
-.app-lg .chat-log { min-height: 140px; }
-.app-lg .chat { min-height: 100%; }
+.app-lg .chat-log { min-height: 120px; }

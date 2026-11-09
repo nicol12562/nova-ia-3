@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import Home from "./pages/Home.jsx";
 import Planes from "./pages/Planes.jsx";
-import Chat from "./pages/Chat.jsx";
+import Chat, { GUEST_LIMIT } from "./pages/Chat.jsx";
 import Login from "./pages/Login.jsx";
 import GoogleFinish from "./pages/GoogleFinish.jsx";
 import Historial from "./pages/Historial.jsx";
@@ -299,8 +299,8 @@ export default function App() {
             <span>Tema</span>
           </button>
           <div className="rail-foot">
-            <span className="rail-saldo">{auth ? restantes : 3}</span>
-            <span>{auth ? "tokens del mes" : "mensajes hoy"}</span>
+            <span className="rail-saldo">{auth ? restantes : GUEST_LIMIT}</span>
+            <span>{auth ? "tokens del mes" : "mensajes por día"}</span>
             {racha > 1 && <span>{racha} días seguidos</span>}
             <button className="rail-aviso" onClick={() => go(auth ? "ajustes" : "login")}>
               {auth ? planLabel : "Crear cuenta gratis"}

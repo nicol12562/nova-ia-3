@@ -346,7 +346,7 @@ export default function Chat({ auth, convId, go }) {
         model: bruto.model || null,
         tokens: bruto.tokens || 0,
         upstream: bruto.upstream || null,
-        saldo: Math.max(0, (cuotaRef.current ?? 1000000) - totalRef.current - (bruto.tokens || 0)),
+        saldo: auth && bruto.tokens ? Math.max(0, (cuotaRef.current ?? 0) - totalRef.current - bruto.tokens) : null,
         fallo,
       };
       setMsgs((prev) =>
@@ -357,7 +357,7 @@ export default function Chat({ auth, convId, go }) {
         vivaRef.current = -1;
         await save("assistant", acc, currentConv);
       } else {
-        setMsgs([...history, { role: "assistant", content: "No llegó ninguna respuesta. Reintentá: si pasa dos veces, cambiá de modelo desde el menú de abajo." }]);
+        setMsgs([...history, { role: "assistant", content: "No llegó ninguna respuesta. Reintentá: si pasa dos veces, cambiá de modelo desde el menú de abajo.", asiento: asientoCorto(fallo) }]);
       }
     } catch (e) {
       const cortado = e?.name === "AbortError";
@@ -368,6 +368,7 @@ export default function Chat({ auth, convId, go }) {
           content: cortado
             ? "Tardó demasiado en responder y corté la espera para no dejarte colgado. Probá de nuevo."
             : "Error: " + e.message,
+          asiento: asientoCorto(true),
         },
       ]);
       showToast(cortado ? "Se cortó la espera. Reintentá." : "No pudimos obtener la respuesta.", { tone: "error" });
@@ -379,6 +380,12 @@ export default function Chat({ auth, convId, go }) {
       setWaiting(false);
       cargarModelos();
     }
+  }
+
+  // El asiento de un fallo no puede inventar un saldo: sin tokens cobrados y sin
+  // cuenta, el número que sigue es el del plan, no el de esta respuesta.
+  function asientoCorto(fallo) {
+    return { model: null, tokens: 0, upstream: null, saldo: null, fallo: !!fallo };
   }
 
   async function handleCopy(text, i) {
@@ -525,9 +532,9 @@ export default function Chat({ auth, convId, go }) {
                 )}
                 {!isUser && !streaming && m.asiento && (
                   <div className="asiento">
-                    <span className={m.asiento.tokens ? "a-cargo" : "a-vacia"}>
+                    <span className={m.asiento.tokens ? "a-cargo" : "a-neutro"}>
                       {m.asiento.tokens
-                        ? `−${fmt(m.asiento.tokens)} tokens · saldo ${fmt(m.asiento.saldo)}`
+                        ? `−${fmt(m.asiento.tokens)} tokens${m.asiento.saldo != null ? ` · saldo ${fmt(m.asiento.saldo)}` : ""}`
                         : m.asiento.fallo
                           ? "sin cargo: no hubo respuesta del modelo"
                           : "sin cargo registrado"}
