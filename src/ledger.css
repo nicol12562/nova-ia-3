@@ -279,6 +279,7 @@ body.dark {
    Sin esto la pantalla quedaba con riel y cuenta en teal/papel y el centro
    vestido con el zinc+azul anterior: dos mundos en una captura. */
 
+body.app-cuenta { background: var(--lg-papel); }
 .app-lg { background: var(--lg-papel); }
 .app-lg .content,
 .app-lg .main-chat,
@@ -316,7 +317,7 @@ body.dark {
 .app-lg .composer textarea { background: var(--lg-field); border-color: var(--lg-rule); color: var(--lg-ink); }
 .app-lg .composer textarea::placeholder { color: var(--lg-ink-2); }
 .app-lg .send-hint { color: var(--lg-ink-2); }
-.app-lg .model-chip { color: var(--lg-ink-2); }
+.app-lg .model-chip { color: var(--lg-ink-2); background: transparent; }
 .app-lg .model-chip select { background: var(--lg-field); color: var(--lg-ink); border-color: var(--lg-rule); }
 
 .app-lg .btn-primary,

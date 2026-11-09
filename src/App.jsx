@@ -262,6 +262,12 @@ export default function App() {
   const planLabel = auth ? `Plan ${planName}` : "Sin cuenta";
   const esApp = SUPERFICIE_APP.includes(base);
 
+  // El fondo del body, no el de .app: .app tiene min-height pisado por una regla
+  // posterior y dejaba una franja blanca bajo el hilo en 1440x900.
+  useEffect(() => {
+    document.body.classList.toggle("app-cuenta", esApp);
+  }, [esApp]);
+
   return (
     <div className={"app" + (esApp ? " app-lg" : "")}>
       {esApp ? (
