@@ -276,13 +276,25 @@ body.dark {
    Sin esto la pantalla quedaba con riel y cuenta en teal/papel y el centro
    vestido con el zinc+azul anterior: dos mundos en una captura. */
 
+.app-lg { background: var(--lg-papel); }
 .app-lg .content,
 .app-lg .main-chat,
 .app-lg .chat { background: var(--lg-papel); color: var(--lg-ink); }
 
 .app-lg .chat-hero .eyebrow { display: none; }
 .app-lg .chat-hero h1 { color: var(--lg-ink); }
-.app-lg .chat-hero h1 em { color: var(--lg-amount); font-style: normal; font-weight: 700; }
+.app-lg .chat-hero h1 em {
+  /* El texto en degradé (background-clip + -webkit-text-fill-color) no se gana
+     con color: hay que apagar el relleno. Además está prohibido por el piso de
+     calidad: el énfasis va en peso, no en degradé. */
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: currentColor;
+  color: var(--lg-amount);
+  font-style: normal;
+  font-weight: 700;
+}
 .app-lg .chat-hero .lede, .app-lg .chat-hero p { color: var(--lg-ink-2); }
 
 .app-lg .chip-suggestion {
