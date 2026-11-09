@@ -290,7 +290,7 @@ export default function App() {
           )}
           <button className="rail-btn" onClick={toggleTheme} aria-label="Cambiar tema">
             <Icon name={dark ? "moon" : "sun"} size={18} />
-            <span>{dark ? "Oscuro" : "Claro"}</span>
+            <span>Tema</span>
           </button>
           <div className="rail-foot">
             <span className="rail-saldo">{auth ? restantes : fmt(quota)}</span>

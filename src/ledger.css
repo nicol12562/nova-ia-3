@@ -18,6 +18,7 @@
   --lg-amount: #175c42;
   --lg-alert: #b3261e;
   --lg-band: #0f3b3a;
+  --lg-field: #fffdf7;
 }
 
 body.dark {
@@ -31,6 +32,7 @@ body.dark {
   --lg-amount: #7fd0a6;
   --lg-alert: #ff8778;
   --lg-band: #0a2b2a;
+  --lg-field: #1a2120;
 }
 
 /* ---------- shell con riel ---------- */
@@ -269,3 +271,49 @@ body.dark {
 @media (prefers-reduced-motion: reduce) {
   .rail-btn, .rail-aviso, .banda-venc .bv-burger { transition: none; }
 }
+
+/* ---------- el mundo tiene que llegar al hilo, no solo al marco ----------
+   Sin esto la pantalla quedaba con riel y cuenta en teal/papel y el centro
+   vestido con el zinc+azul anterior: dos mundos en una captura. */
+
+.app-lg .content,
+.app-lg .main-chat,
+.app-lg .chat { background: var(--lg-papel); color: var(--lg-ink); }
+
+.app-lg .chat-hero .eyebrow { display: none; }
+.app-lg .chat-hero h1 { color: var(--lg-ink); }
+.app-lg .chat-hero h1 em { color: var(--lg-amount); font-style: normal; font-weight: 700; }
+.app-lg .chat-hero .lede, .app-lg .chat-hero p { color: var(--lg-ink-2); }
+
+.app-lg .chip-suggestion {
+  background: var(--lg-field);
+  border: 1px solid var(--lg-rule);
+  color: var(--lg-ink);
+}
+.app-lg .chip-suggestion:hover { border-color: var(--lg-rail); }
+.app-lg .chip-suggestion .sq { background: var(--lg-rail); color: var(--lg-rail-ink); }
+.app-lg .chip-suggestion p { color: var(--lg-ink-2); }
+.app-lg .chip-suggestion .card-arrow { color: var(--lg-ink-2); }
+
+.app-lg .guest-bar { background: var(--lg-field); border-color: var(--lg-rule); color: var(--lg-ink); }
+
+.app-lg .composer { background: var(--lg-papel); border-top: 1px solid var(--lg-rule); }
+.app-lg .composer textarea { background: var(--lg-field); border-color: var(--lg-rule); color: var(--lg-ink); }
+.app-lg .composer textarea::placeholder { color: var(--lg-ink-2); }
+.app-lg .send-hint { color: var(--lg-ink-2); }
+.app-lg .model-chip { color: var(--lg-ink-2); }
+.app-lg .model-chip select { background: var(--lg-field); color: var(--lg-ink); border-color: var(--lg-rule); }
+
+.app-lg .btn-primary,
+.app-lg .send-btn { background: var(--lg-rail); color: var(--lg-rail-ink); }
+.app-lg .btn-primary:hover,
+.app-lg .send-btn:hover { background: #14504e; }
+.app-lg .btn-ghost { color: var(--lg-ink); border-color: var(--lg-rule); }
+
+.app-lg .bubble-user { background: var(--lg-rail); color: var(--lg-rail-ink); }
+.app-lg .bubble-ai { background: transparent; color: var(--lg-ink); }
+.app-lg .msg-ava { background: var(--lg-rail); color: var(--lg-rail-ink); }
+.app-lg .msg-act { color: var(--lg-ink-2); }
+.app-lg .msg-actions { border-color: var(--lg-rule); }
+.app-lg .chat-note, .app-lg .chat-topline { color: var(--lg-ink-2); }
+.app-lg .agent-chip { background: var(--lg-field); border-color: var(--lg-rule); color: var(--lg-ink); }
