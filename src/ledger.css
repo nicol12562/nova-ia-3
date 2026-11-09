@@ -385,3 +385,10 @@ body.app-cuenta { background: var(--lg-papel); }
 @media (max-width: 640px) {
   .app-lg .saldo-hero { font-size: 32px; }
 }
+
+/* El punto del selector de modelo era el azul retirado; el hilo vacío dejaba el
+   composer a media hoja. */
+.app-lg .model-chip .spark,
+.app-lg .spark { background: var(--lg-amount); color: var(--lg-amount); box-shadow: none; }
+.app-lg .chat-log { min-height: 140px; }
+.app-lg .chat { min-height: 100%; }

@@ -299,8 +299,8 @@ export default function App() {
             <span>Tema</span>
           </button>
           <div className="rail-foot">
-            <span className="rail-saldo">{auth ? restantes : fmt(quota)}</span>
-            <span>tokens del mes</span>
+            <span className="rail-saldo">{auth ? restantes : 3}</span>
+            <span>{auth ? "tokens del mes" : "mensajes hoy"}</span>
             {racha > 1 && <span>{racha} días seguidos</span>}
             <button className="rail-aviso" onClick={() => go(auth ? "ajustes" : "login")}>
               {auth ? planLabel : "Crear cuenta gratis"}
