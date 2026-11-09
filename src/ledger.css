@@ -42,7 +42,7 @@ body.dark {
   grid-template-columns: 108px minmax(0, 1fr);
   min-height: 100vh;
 }
-.app-lg > .content { grid-column: 2; }
+.app-lg > .content { grid-column: 2; min-height: 100dvh; }
 .app-lg .main-chat { height: 100dvh; }
 
 .rail {
@@ -231,6 +231,9 @@ body.dark {
   /* El riel no desaparece: se acuesta en una tira horizontal. Si no, las
      superficies de app se quedaban sin navegación al quitar la barra superior. */
   .app-lg { grid-template-columns: minmax(0, 1fr); }
+  /* Sin esto el .content pedía la columna 2 y el grid se agrandaba con una
+     columna implícita: el hilo desbordaba el teléfono y la banda salía cortada. */
+  .app-lg > .content { grid-column: 1; min-height: 0; }
   .rail {
     grid-column: 1;
     position: sticky;
