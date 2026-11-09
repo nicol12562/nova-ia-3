@@ -285,7 +285,6 @@ export default function App() {
             >
               <Icon name={n.icon} size={18} />
               <span>{n.label}</span>
-              {n.key === "chat" && <span className="kbd-rail">⌘K</span>}
             </button>
           ))}
           {auth?.role === "admin" && (

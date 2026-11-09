@@ -84,13 +84,13 @@ body.dark {
   background: none;
   color: var(--lg-rail-dim);
   font: inherit;
-  font-size: 10.5px;
+  font-size: 11.5px;
   line-height: 1.15;
   cursor: pointer;
 }
 .rail-btn:hover { background: rgba(220, 236, 230, 0.09); color: var(--lg-rail-ink); }
 .rail-btn[aria-current="page"] { background: rgba(220, 236, 230, 0.14); color: #ffffff; font-weight: 600; }
-.rail-btn .kbd-rail { font-size: 9px; color: var(--lg-rail-dim); letter-spacing: 0.02em; }
+
 
 .rail-foot {
   margin-top: auto;
@@ -100,7 +100,7 @@ body.dark {
   align-items: center;
   padding-top: 12px;
   border-top: 1px solid rgba(220, 236, 230, 0.18);
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: var(--lg-rail-dim);
   text-align: center;
 }
@@ -262,6 +262,9 @@ body.dark {
     white-space: nowrap;
   }
   .rail-aviso { width: auto; padding: 6px 10px; }
+  /* El pie repetía el número que la banda ya dice, y su nowrap ensanchaba la
+     tira de navegación. En móvil manda la banda. */
+  .rail-foot { display: none; }
   .chat-lg { flex-direction: column; }
   .cuenta {
     width: auto;
