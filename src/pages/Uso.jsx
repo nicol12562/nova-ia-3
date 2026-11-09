@@ -39,7 +39,6 @@ export default function Uso({ auth, go }) {
     <section>
       <div className="page-head">
         <div>
-          <p className="eyebrow">05 · TU CUENTA</p>
           <h1 className="hero">Uso y tokens</h1>
           <p className="lede">Consumo real registrado en el backend, con tokens de entrada y salida.</p>
         </div>

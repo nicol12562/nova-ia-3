@@ -391,3 +391,18 @@ body.app-cuenta { background: var(--lg-papel); }
 .app-lg .model-chip .spark,
 .app-lg .spark { background: var(--lg-amount); color: var(--lg-amount); box-shadow: none; }
 .app-lg .chat-log { min-height: 120px; }
+
+/* ---------- terminando de limpiar el shell ---------- */
+
+/* El grano de película de polish.css vive en body::before sin ámbito y caía
+   encima del riel, la banda y la columna de cuenta: el contrato pide campos
+   planos. Se apaga solo dentro del shell de ledger. */
+body.app-cuenta::before { display: none; }
+
+/* Un solo rojo por pantalla: mc-warn usaba --danger, otro rojo distinto. */
+.app-lg .model-chip .mc-warn { color: var(--lg-alert); }
+
+/* La columna de cuenta va al borde de la ventana: .main traía max-width 1220 y
+   .chat 780, así que el saldo quedaba flotando en el medio. */
+.app-lg .main-chat { max-width: none; }
+.app-lg .chat { max-width: none; }

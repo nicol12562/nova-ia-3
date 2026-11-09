@@ -24,7 +24,6 @@ export default function Agentes({ go, auth }) {
     <section>
       <div className="page-head">
         <div>
-          <p className="eyebrow">04 · MINI AGENTES</p>
           <h1 className="hero">Mini agentes</h1>
           <p className="lede">
             {`${AGENTS.length} asistentes con las instrucciones ya cargadas. Escribí nomás la pregunta: el agente se encarga del resto.`}

@@ -24,7 +24,6 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
 
   return (
     <section>
-      <p className="eyebrow">06 · PREFERENCIAS</p>
       <h1 className="hero">Ajustes</h1>
       <p className="lede">Configurá tu experiencia en Nova IA.</p>
 

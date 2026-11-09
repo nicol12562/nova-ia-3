@@ -180,7 +180,6 @@ export default function Admin({ auth, setAuth, go }) {
       <section>
         <div className="page-head">
           <div>
-            <p className="eyebrow">07 · ADMINISTRACIÓN</p>
             <h1 className="hero">Panel de control</h1>
             <p className="lede">Acceso restringido. Necesitás la clave de administración.</p>
           </div>
@@ -226,7 +225,6 @@ export default function Admin({ auth, setAuth, go }) {
     <section>
       <div className="page-head">
         <div>
-          <p className="eyebrow">07 · ADMINISTRACIÓN</p>
           <h1 className="hero">Usuarios registrados</h1>
           <p className="lede">Planes, consumo de tokens y actividad, leído directo de la base.</p>
         </div>

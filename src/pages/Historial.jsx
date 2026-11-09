@@ -91,7 +91,6 @@ export default function Historial({ go, auth }) {
     <section>
       <div className="page-head">
         <div>
-          <p className="eyebrow">03 · TU ESPACIO</p>
           <h1 className="hero">Tu historial</h1>
           <p className="lede">Volvé a conversaciones guardadas o eliminá las que ya no necesitás.</p>
         </div>
