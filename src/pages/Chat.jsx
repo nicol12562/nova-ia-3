@@ -609,8 +609,8 @@ export default function Chat({ auth, convId, go }) {
         }
       >
         <p className="gm-copy">
-          Te saqué el agente y podés seguir conversando igual. Los seis mini agentes con instrucciones
-          propias vienen con el plan Pro.
+          Te saqué el agente y podés seguir conversando igual. Los {AGENTS.length} mini agentes con
+          instrucciones propias vienen con el plan Pro.
         </p>
       </Modal>
 

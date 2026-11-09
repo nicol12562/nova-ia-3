@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import Home from "./pages/Home.jsx";
 import Planes from "./pages/Planes.jsx";
@@ -11,7 +11,7 @@ import Uso from "./pages/Uso.jsx";
 import Ajustes from "./pages/Ajustes.jsx";
 import Admin from "./pages/Admin.jsx";
 import { Icon } from "./icons.jsx";
-import { Modal, Toaster } from "./ui.jsx";
+import { Modal, Toaster, useFocoAtrapado } from "./ui.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 
 const VIEWS = [
@@ -58,6 +58,10 @@ export default function App() {
   const [cuota, setCuota] = useState(null);
   const [racha, setRacha] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const sheetRef = useRef(null);
+  // La hoja de navegación es un diálogo: sin foco atrapado,
+  // Tab se escapa a la página que queda detrás del scrim.
+  useFocoAtrapado(sheetRef, menuOpen, () => setMenuOpen(false));
   const [helpOpen, setHelpOpen] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
 
@@ -349,7 +353,7 @@ export default function App() {
       {menuOpen && (
         <>
           <button className="sidebar-scrim open" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)} />
-          <div className="nav-sheet" role="dialog" aria-label="Navegación">
+          <div className="nav-sheet" role="dialog" aria-label="Navegación" aria-modal="true" tabIndex={-1} ref={sheetRef}>
             <div className="sheet-head">
               <span className="mono-label" style={{ margin: 0 }}>NAVEGACIÓN</span>
               <button className="icon-btn" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)}>

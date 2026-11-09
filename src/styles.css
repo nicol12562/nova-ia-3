@@ -533,6 +533,22 @@ body.dark .chip { background: var(--surface); color: var(--muted); }
 .plan-box li.no { color: var(--muted); }
 .plan-box li.no .check { color: var(--danger); }
 .plan-box .foot-note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+/* Estado después de pedir un plan: la acción deja señal en la tarjeta, en el
+   color del propio plan (nunca gris, que sobre superficie llena se lee muerto). */
+.plan-estado {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.plan-estado svg { flex: none; }
 
 table.comparison {
   width: 100%;

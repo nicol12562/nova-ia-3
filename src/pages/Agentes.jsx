@@ -119,7 +119,7 @@ export default function Agentes({ go, auth }) {
           {needPlan?.desc} Con Pro o Plus lo usás sin límite de mensajes y con historial guardado.
         </p>
         <ul className="gm-list">
-          <li><span className="tick"><Icon name="check" size={12} /></span> Los 6 agentes habilitados</li>
+          <li><span className="tick"><Icon name="check" size={12} /></span> Los {AGENTS.length} agentes habilitados</li>
           <li><span className="tick"><Icon name="check" size={12} /></span> Más tokens por modelo cada mes</li>
           <li><span className="tick"><Icon name="check" size={12} /></span> Historial en cualquier dispositivo</li>
         </ul>

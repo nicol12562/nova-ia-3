@@ -20,10 +20,49 @@ const whatsappLink = (p, email) => {
   return `https://wa.me/${WHATS}?text=${encodeURIComponent(msg)}`;
 };
 
+// El link a WhatsApp no cambia: lo que faltaba era la señal de que la acción
+// pasó. Sin estado, el usuario vuelve a la tarjeta y no sabe si funcionó.
+const CLAVE_SOLICITUDES = "novaia.solicitudes";
+
+const leerSolicitudes = () => {
+  try {
+    return JSON.parse(localStorage.getItem(CLAVE_SOLICITUDES)) || {};
+  } catch {
+    return {};
+  }
+};
+
+const diaLocal = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+const cuando = (iso) => {
+  const d = new Date(iso);
+  if (isNaN(d)) return "";
+  const hora = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  const hoy = new Date();
+  const ayer = new Date(hoy);
+  ayer.setDate(hoy.getDate() - 1);
+  if (diaLocal(d) === diaLocal(hoy)) return `hoy ${hora}`;
+  if (diaLocal(d) === diaLocal(ayer)) return `ayer ${hora}`;
+  return `${d.toLocaleDateString("es-AR")} ${hora}`;
+};
+
 export default function Planes({ go, auth }) {
   const planIndex = auth?.plan === "pro" ? 3 : auth?.plan === "plus" ? 2 : 1;
   const [techos, setTechos] = useState(null);
   const [demo, setDemo] = useState({ tareas: [], restantes: 3, elegida: null, resultado: null, cargando: false, error: null });
+  const [solicitudes, setSolicitudes] = useState(leerSolicitudes);
+  const claveSolicitud = (planId) => `${auth?.email || "invitado"}::${planId}`;
+
+  function marcarSolicitud(planId) {
+    const nuevas = { ...solicitudes, [claveSolicitud(planId)]: new Date().toISOString() };
+    setSolicitudes(nuevas);
+    try {
+      localStorage.setItem(CLAVE_SOLICITUDES, JSON.stringify(nuevas));
+    } catch {
+      /* navegación privada: el estado dura lo que la pestaña */
+    }
+  }
 
   useEffect(() => {
     if (!auth?.id) return;
@@ -142,13 +181,21 @@ export default function Planes({ go, auth }) {
                 href={whatsappLink(p, auth.email)}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => marcarSolicitud(p.id)}
               >
                 <Icon name="chat" size={16} /> {p.cta} por WhatsApp
               </a>
             )}
-            <p className="foot-note">
-              {p.id === "gratis" ? `Activación: ${p.activation}` : "Activación: por WhatsApp, en el día"}
-            </p>
+            {solicitudes[claveSolicitud(p.id)] ? (
+              <p className="plan-estado" role="status">
+                <Icon name="check" size={13} /> Solicitado {cuando(solicitudes[claveSolicitud(p.id)])} ·
+                te responden por el mismo chat
+              </p>
+            ) : (
+              <p className="foot-note">
+                {p.id === "gratis" ? `Activación: ${p.activation}` : "Activación: por WhatsApp, en el día"}
+              </p>
+            )}
           </div>
         ))}
       </div>
