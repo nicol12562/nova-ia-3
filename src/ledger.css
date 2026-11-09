@@ -1,0 +1,268 @@
+/* =====================================================================
+   Mundo "El resumen de cuenta" — superficie chat (Operate, desktop primero)
+   Contrato de dirección: .impeccable/surfaces/src-pages-chat-jsx.md
+
+   Capa nueva y con nombres propios: no reesponde reglas de styles.css ni
+   polish.css, así que no agrega duplicados al problema que ya tenemos. Se
+   carga al final en main.jsx porque es la capa que decide el shell de la app.
+   ===================================================================== */
+
+:root {
+  --lg-papel: #f4f1e8;
+  --lg-ink: #16211f;
+  --lg-ink-2: #4c5a57;
+  --lg-rail: #0f3b3a;
+  --lg-rail-ink: #dcece6;
+  --lg-rail-dim: #9dc0b8;
+  --lg-rule: #d9d2c1;
+  --lg-amount: #175c42;
+  --lg-alert: #b3261e;
+  --lg-band: #0f3b3a;
+}
+
+body.dark {
+  --lg-papel: #141a19;
+  --lg-ink: #e9e6df;
+  --lg-ink-2: #a9b3b0;
+  --lg-rail: #0a2b2a;
+  --lg-rail-ink: #dcece6;
+  --lg-rail-dim: #85a9a2;
+  --lg-rule: #2b3634;
+  --lg-amount: #7fd0a6;
+  --lg-alert: #ff8778;
+  --lg-band: #0a2b2a;
+}
+
+/* ---------- shell con riel ---------- */
+
+.app-lg {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.app-lg > .content { grid-column: 2; }
+.app-lg .main-chat { height: 100dvh; }
+
+.rail {
+  grid-column: 1;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100dvh;
+  background: var(--lg-rail);
+  color: var(--lg-rail-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 8px 12px;
+  border-right: 1px solid var(--lg-rail);
+}
+.rail-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  color: var(--lg-rail-ink);
+  padding: 4px 0 12px;
+  cursor: pointer;
+}
+.rail-mark .logo-mark { background: var(--lg-rail-ink); color: var(--lg-rail); }
+.rail-mark .rail-word { font-size: 12px; font-weight: 600; letter-spacing: -0.01em; }
+
+.rail-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 2px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--lg-rail-dim);
+  font: inherit;
+  font-size: 10.5px;
+  line-height: 1.15;
+  cursor: pointer;
+}
+.rail-btn:hover { background: rgba(220, 236, 230, 0.09); color: var(--lg-rail-ink); }
+.rail-btn[aria-current="page"] { background: rgba(220, 236, 230, 0.14); color: #ffffff; font-weight: 600; }
+.rail-btn .kbd-rail { font-size: 9px; color: var(--lg-rail-dim); letter-spacing: 0.02em; }
+
+.rail-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid rgba(220, 236, 230, 0.18);
+  font-size: 10.5px;
+  color: var(--lg-rail-dim);
+  text-align: center;
+}
+.rail-saldo { font-variant-numeric: tabular-nums; color: var(--lg-rail-ink); font-weight: 600; font-size: 12px; }
+.rail-aviso {
+  border: 1px solid var(--lg-alert);
+  color: var(--lg-alert);
+  background: none;
+  border-radius: 6px;
+  padding: 6px 4px;
+  font: inherit;
+  font-size: 10.5px;
+  width: 100%;
+  cursor: pointer;
+}
+
+/* ---------- banda de vencimiento ---------- */
+
+.banda-venc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: var(--lg-band);
+  color: var(--lg-rail-ink);
+  padding: 9px 20px;
+  font-size: 13px;
+  flex: none;
+}
+.banda-venc b { font-weight: 600; }
+.banda-venc .bv-cifra { font-variant-numeric: tabular-nums; }
+.banda-venc .bv-derecha { display: flex; align-items: center; gap: 12px; }
+
+/* ---------- chat + columna de cuenta ---------- */
+
+.chat-lg {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.chat-lg > .chat { flex: 1 1 auto; min-width: 0; }
+
+.cuenta {
+  flex: none;
+  width: 320px;
+  background: var(--lg-papel);
+  color: var(--lg-ink);
+  border-left: 1px solid var(--lg-rule);
+  padding: 20px 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-variant-numeric: tabular-nums;
+}
+.cuenta h2 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lg-ink-2);
+  margin: 22px 0 8px;
+}
+.saldo-hero { font-size: 44px; font-weight: 650; line-height: 1; color: var(--lg-amount); margin: 0; }
+.saldo-sub { font-size: 12.5px; color: var(--lg-ink-2); margin: 6px 0 0; }
+
+.bolsas { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--lg-rule); }
+.bolsas li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--lg-rule);
+  font-size: 13px;
+}
+.bolsas .b-nombre { min-width: 0; overflow-wrap: anywhere; }
+.bolsas .b-up { display: block; font-size: 11px; color: var(--lg-ink-2); }
+.bolsas .b-rest { font-weight: 600; }
+.bolsas .b-vacia { color: var(--lg-alert); }
+
+.movimientos { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.movimientos th {
+  text-align: right;
+  font-weight: 600;
+  color: var(--lg-ink-2);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0 0 6px;
+  border-bottom: 1px solid var(--lg-rule);
+}
+.movimientos th:first-child { text-align: left; }
+.movimientos td { padding: 8px 0; border-bottom: 1px solid var(--lg-rule); vertical-align: baseline; }
+.movimientos td:not(:first-child) { text-align: right; }
+.movimientos .m-cargo { color: var(--lg-amount); }
+.movimientos .m-vacia { color: var(--lg-alert); }
+.movimientos caption { display: none; }
+
+/* ---------- el asiento bajo cada respuesta ---------- */
+
+.asiento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 10px;
+  padding-top: 7px;
+  border-top: 1px solid var(--lg-rule);
+  font-size: 12.5px;
+  color: var(--lg-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.asiento .a-cargo { color: var(--lg-amount); font-weight: 600; }
+.asiento .a-vacia { color: var(--lg-alert); font-weight: 600; }
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 1279px) {
+  .cuenta { width: 272px; }
+  .saldo-hero { font-size: 36px; }
+}
+
+@media (max-width: 1023px) {
+  /* El riel no desaparece: se acuesta en una tira horizontal. Si no, las
+     superficies de app se quedaban sin navegación al quitar la barra superior. */
+  .app-lg { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    grid-column: 1;
+    position: sticky;
+    top: 0;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 8px 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--lg-rail);
+  }
+  .rail-mark { padding: 0 8px 0 0; flex: none; }
+  .rail-btn { min-width: 62px; flex: none; }
+  .rail-foot {
+    margin-top: 0;
+    margin-left: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding-top: 0;
+    padding-left: 12px;
+    border-top: 0;
+    border-left: 1px solid rgba(220, 236, 230, 0.18);
+    white-space: nowrap;
+  }
+  .rail-aviso { width: auto; padding: 6px 10px; }
+  .chat-lg { flex-direction: column; }
+  .cuenta {
+    width: auto;
+    border-left: 0;
+    border-top: 1px solid var(--lg-rule);
+    max-height: 40dvh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-btn, .rail-aviso, .banda-venc .bv-burger { transition: none; }
+}

@@ -77,6 +77,9 @@ export default function Chat({ auth, convId, go }) {
   const [agentBlock, setAgentBlock] = useState(false);
   const [modelos, setModelos] = useState([]);
   const [cuota, setCuota] = useState(null);
+  const [dias, setDias] = useState([]);
+  const [totalMes, setTotalMes] = useState(0);
+  const asientoRef = useRef(null);
   const [prefs] = useState(leerPrefs);
   const [modelKey, setModelKey] = useState(prefs.modelo || "flash");
   const endRef = useRef(null);
@@ -130,6 +133,8 @@ export default function Chat({ auth, convId, go }) {
       const d = await r.json();
       if (Array.isArray(d.modelos)) setModelos(d.modelos);
       if (d.cuota) setCuota(d.cuota);
+      setDias(Array.isArray(d.days) ? d.days : []);
+      setTotalMes(d.total || 0);
     } catch {
       /* sin datos, el chip queda en modo simple */
     }
@@ -300,6 +305,9 @@ export default function Chat({ auth, convId, go }) {
             // del modelo: ese texto no es una pieza del usuario.
             if (evento === "nova") {
               if (json.error) fallo = true;
+              // El asiento del libro: qué modelo contestó, cuánto descontó y desde
+              // qué upstream. El servidor ya lo mandaba y el frente lo tiraba.
+              else asientoRef.current = { model: json.model, tokens: json.tokens, upstream: json.upstream };
               evento = "";
               continue;
             }
@@ -324,6 +332,13 @@ export default function Chat({ auth, convId, go }) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
       flushAcc();
+      if (asientoRef.current) {
+        const asiento = asientoRef.current;
+        asientoRef.current = null;
+        setMsgs((prev) =>
+          prev.map((m, k) => (k === prev.length - 1 && m.role === "assistant" ? { ...m, asiento } : m))
+        );
+      }
       if (acc) {
         if (!fallo) actualizarPieza(acc, titulo, content); // la versión completa, sin recortes del throttle
         vivaRef.current = -1;
@@ -395,9 +410,40 @@ export default function Chat({ auth, convId, go }) {
     setIndicePieza(siguiente);
   };
 
+  const planName = auth?.plan === "pro" ? "Pro" : auth?.plan === "plus" ? "Plus" : "Gratis";
+  const cuotaMes = cuota ?? 1000000;
+  const restantePlan = Math.max(0, cuotaMes - (auth ? totalMes : 0));
+  // Fecha sin Date→locale: "2026-11-08" renderizado en GMT-3 da 07/11. El ciclo
+  // de cuota es calendario, así que se arma el dd/mm a mano desde la cadena.
+  const diaEs = (iso) => (iso || "").slice(8, 10) + "/" + (iso || "").slice(5, 7);
+  const hoy = new Date();
+  const renuevaMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1);
+  const renueva =
+    String(renuevaMes.getDate()).padStart(2, "0") + "/" + String(renuevaMes.getMonth() + 1).padStart(2, "0");
+  // Saldo corrido sobre TODOS los días del mes; se muestran los últimos 8,
+  // del más reciente al más viejo.
+  const movimientos = (() => {
+    let usado = 0;
+    return dias
+      .map((r) => {
+        const cargo = (r.tokens_in || 0) + (r.tokens_out || 0);
+        usado += cargo;
+        return { day: r.day, cargo, saldo: Math.max(0, cuotaMes - usado) };
+      })
+      .slice(-8)
+      .reverse();
+  })();
+
   return (
     <>
+    <div className="chat-lg">
     <section className="chat">
+      <div className="banda-venc">
+        <span><b>{auth ? `Plan ${planName}` : "Sin cuenta"}</b> · renueva {renueva}</span>
+        <span className="bv-derecha">
+          <span className="bv-cifra">{fmt(restantePlan)} de {fmt(cuotaMes)} tokens</span>
+        </span>
+      </div>
       {conversando && (
         <div className="chat-topline">
           <span>Conversación</span>
@@ -471,6 +517,19 @@ export default function Chat({ auth, convId, go }) {
                   </span>
                 ) : (
                   <Md text={m.content} streaming={streaming} />
+                )}
+                {!isUser && !streaming && m.asiento && (
+                  <div className="asiento">
+                    {m.asiento.tokens ? (
+                      <span className="a-cargo">−{fmt(m.asiento.tokens)} tokens</span>
+                    ) : (
+                      <span className="a-vacia">sin cargo registrado</span>
+                    )}
+                    <span>
+                      {m.asiento.model || "sin modelo"}
+                      {m.asiento.upstream ? ` · ${m.asiento.upstream}` : ""}
+                    </span>
+                  </div>
                 )}
               </div>
               {!isUser && !streaming && m.content && (
@@ -657,6 +716,50 @@ export default function Chat({ auth, convId, go }) {
         </p>
       </Modal>
     </section>
+      <aside className="cuenta" aria-label="Cuenta del mes">
+        <h2>Saldo del mes</h2>
+        <p className="saldo-hero">{fmt(restantePlan)}</p>
+        <p className="saldo-sub">de {fmt(cuotaMes)} tokens · plan {planName}</p>
+
+        <h2>Bolsas por modelo</h2>
+        <ul className="bolsas">
+          {modelos.map((m) => (
+            <li key={m.key}>
+              <span className="b-nombre">
+                {m.label}
+                <span className="b-up">{m.upstream || "OpenRouter"}</span>
+              </span>
+              <span className={"b-rest" + (m.agotado ? " b-vacia" : "")}>
+                {m.agotado ? "agotado" : fmt(m.restantes)}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <h2>Movimientos</h2>
+        {movimientos.length ? (
+          <table className="movimientos">
+            <caption>Movimientos por día del mes en curso</caption>
+            <thead>
+              <tr><th>Día</th><th>Cargo</th><th>Saldo</th></tr>
+            </thead>
+            <tbody>
+              {movimientos.map((r) => (
+                <tr key={r.day}>
+                  <td>{diaEs(r.day)}</td>
+                  <td className={r.cargo ? "m-cargo" : "m-vacia"}>{r.cargo ? `−${fmt(r.cargo)}` : "0"}</td>
+                  <td>{fmt(r.saldo)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="saldo-sub">
+            {auth ? "Todavía no hay movimientos este mes." : "Iniciá sesión para ver tus movimientos."}
+          </p>
+        )}
+      </aside>
+    </div>
 
     {canvasAbierto && piezaActual && (
       <Canvas

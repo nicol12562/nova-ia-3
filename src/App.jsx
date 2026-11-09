@@ -34,6 +34,18 @@ const NAV = [
   { key: "uso-tokens", label: "Uso y tokens", icon: "pulse" },
 ];
 
+// Riel de la app (mundo "El resumen de cuenta"): solo superficies de tarea.
+// Las de persuasión (Inicio, Planes, Login) conservan la barra superior.
+const NAV_APP = [
+  { key: "chat", label: "Nuevo chat", icon: "plusSq" },
+  { key: "historial", label: "Historial", icon: "clock" },
+  { key: "mini-agentes", label: "Agentes", icon: "cpu" },
+  { key: "uso-tokens", label: "Uso", icon: "pulse" },
+  { key: "planes", label: "Planes", icon: "crown" },
+  { key: "ajustes", label: "Ajustes", icon: "sliders" },
+];
+const SUPERFICIE_APP = ["chat", "historial", "mini-agentes", "uso-tokens", "ajustes", "admin"];
+
 const QUOTA_FALLBACK = 1000000; // solo mientras responde el backend
 const fmt = (n) => Math.round(n).toLocaleString("es-AR");
 
@@ -248,9 +260,48 @@ export default function App() {
   const restantes = auth ? fmt(Math.max(0, quota - (used ?? 0))) : fmt(quota);
   const planName = auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis";
   const planLabel = auth ? `Plan ${planName}` : "Sin cuenta";
+  const esApp = SUPERFICIE_APP.includes(base);
 
   return (
-    <div className="app">
+    <div className={"app" + (esApp ? " app-lg" : "")}>
+      {esApp ? (
+        <aside className="rail" aria-label="Navegación de la app">
+          <button className="rail-mark" onClick={() => go("")} aria-label="Nova IA — ir a Inicio">
+            <span className="logo-mark" aria-hidden="true">n</span>
+            <span className="rail-word">novaia</span>
+          </button>
+          {NAV_APP.map((n) => (
+            <button
+              key={n.key}
+              className="rail-btn"
+              aria-current={base === n.key ? "page" : undefined}
+              onClick={() => go(n.key)}
+            >
+              <Icon name={n.icon} size={18} />
+              <span>{n.label}</span>
+              {n.key === "chat" && <span className="kbd-rail">⌘K</span>}
+            </button>
+          ))}
+          {auth?.role === "admin" && (
+            <button className="rail-btn" aria-current={base === "admin" ? "page" : undefined} onClick={() => go("admin")}>
+              <Icon name="lock" size={18} />
+              <span>Panel</span>
+            </button>
+          )}
+          <button className="rail-btn" onClick={toggleTheme} aria-label="Cambiar tema">
+            <Icon name={dark ? "moon" : "sun"} size={18} />
+            <span>{dark ? "Oscuro" : "Claro"}</span>
+          </button>
+          <div className="rail-foot">
+            <span className="rail-saldo">{auth ? restantes : fmt(quota)}</span>
+            <span>tokens del mes</span>
+            {racha > 1 && <span>{racha} días seguidos</span>}
+            <button className="rail-aviso" onClick={() => go(auth ? "ajustes" : "login")}>
+              {auth ? planLabel : "Crear cuenta gratis"}
+            </button>
+          </div>
+        </aside>
+      ) : (
       <header className="topnav">
         <div className="nav-inner">
           <button className="brand" onClick={() => go("")}>
@@ -349,6 +400,7 @@ export default function App() {
           </div>
         </div>
       </header>
+      )}
 
       {menuOpen && (
         <>
