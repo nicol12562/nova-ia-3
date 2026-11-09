@@ -406,3 +406,7 @@ body.app-cuenta::before { display: none; }
    .chat 780, así que el saldo quedaba flotando en el medio. */
 .app-lg .main-chat { max-width: none; }
 .app-lg .chat { max-width: none; }
+
+/* El ErrorBoundary envuelve la vista en su propio div, así que .chat-lg no
+   heredaba la altura de .main-chat y el composer quedaba a media hoja. */
+.app-lg .chat-lg { min-height: 100dvh; }
