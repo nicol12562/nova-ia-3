@@ -80,6 +80,8 @@ export default function Chat({ auth, convId, go }) {
   const [dias, setDias] = useState([]);
   const [totalMes, setTotalMes] = useState(0);
   const asientoRef = useRef(null);
+  const totalRef = useRef(0);
+  const cuotaRef = useRef(null);
   const [prefs] = useState(leerPrefs);
   const [modelKey, setModelKey] = useState(prefs.modelo || "flash");
   const endRef = useRef(null);
@@ -135,6 +137,8 @@ export default function Chat({ auth, convId, go }) {
       if (d.cuota) setCuota(d.cuota);
       setDias(Array.isArray(d.days) ? d.days : []);
       setTotalMes(d.total || 0);
+      totalRef.current = d.total || 0;
+      if (d.cuota) cuotaRef.current = d.cuota;
     } catch {
       /* sin datos, el chip queda en modo simple */
     }
@@ -308,6 +312,8 @@ export default function Chat({ auth, convId, go }) {
               // El asiento del libro: qué modelo contestó, cuánto descontó y desde
               // qué upstream. El servidor ya lo mandaba y el frente lo tiraba.
               else asientoRef.current = { model: json.model, tokens: json.tokens, upstream: json.upstream };
+              // El saldo del asiento se calcula sobre el total del mes que ya
+              // teníamos: el backend todavía no descontó esta respuesta.
               evento = "";
               continue;
             }
@@ -332,13 +338,20 @@ export default function Chat({ auth, convId, go }) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
       flushAcc();
-      if (asientoRef.current) {
-        const asiento = asientoRef.current;
-        asientoRef.current = null;
-        setMsgs((prev) =>
-          prev.map((m, k) => (k === prev.length - 1 && m.role === "assistant" ? { ...m, asiento } : m))
-        );
-      }
+      // Toda respuesta deja asiento, incluso si el evento nova no llegó: si no,
+      // el libro deja de cuadrar justo cuando algo salió mal.
+      const bruto = asientoRef.current || {};
+      asientoRef.current = null;
+      const asiento = {
+        model: bruto.model || null,
+        tokens: bruto.tokens || 0,
+        upstream: bruto.upstream || null,
+        saldo: Math.max(0, (cuotaRef.current ?? 1000000) - totalRef.current - (bruto.tokens || 0)),
+        fallo,
+      };
+      setMsgs((prev) =>
+        prev.map((m, k) => (k === prev.length - 1 && m.role === "assistant" ? { ...m, asiento } : m))
+      );
       if (acc) {
         if (!fallo) actualizarPieza(acc, titulo, content); // la versión completa, sin recortes del throttle
         vivaRef.current = -1;
@@ -441,10 +454,21 @@ export default function Chat({ auth, convId, go }) {
     <div className="chat-lg">
     <section className="chat">
       <div className="banda-venc">
-        <span><b>{auth ? `Plan ${planName}` : "Sin cuenta"}</b> · renueva {renueva}</span>
-        <span className="bv-derecha">
-          <span className="bv-cifra">{fmt(restantePlan)} de {fmt(cuotaMes)} tokens</span>
-        </span>
+        {auth ? (
+          <>
+            <span><b>Plan {planName}</b> · renueva {renueva}</span>
+            <span className="bv-derecha">
+              <span className="bv-cifra">{fmt(restantePlan)} de {fmt(cuotaMes)} tokens</span>
+            </span>
+          </>
+        ) : (
+          <>
+            <span><b>Sin cuenta</b> · {GUEST_LIMIT} mensajes por día, sin tarjeta</span>
+            <span className="bv-derecha">
+              <span className="bv-cifra">te quedan {Math.max(0, GUEST_LIMIT - guest.n)} hoy</span>
+            </span>
+          </>
+        )}
       </div>
       {conversando && (
         <div className="chat-topline">
@@ -462,33 +486,12 @@ export default function Chat({ auth, convId, go }) {
         </div>
       )}
 
-      {!conversando && (
-        <div className="chat-hero">
-          <p className="eyebrow">
-            07 · TU ASISTENTE, A TU MANERA
-          </p>
-          <h1 className="hero">
-            Un espacio para <em>pensar.</em>
-          </h1>
-          <p className="lede">Ideas, respuestas y proyectos. Empezá por lo que tenés en mente.</p>
-        </div>
-      )}
-
       {msgs.length === 0 && (
-        <div className="suggestions">
+        <div className="sugerencias">
           {SUGGESTIONS.map((s) => (
-            <button
-              key={s.t}
-              className="chip-suggestion spot"
-              onPointerMove={spotlight.onPointerMove}
-              onClick={() => send(s.d)}
-            >
-              <span className="sq"><Icon name={s.i} size={17} /></span>
-              <span>
-                <strong>{s.t}</strong>
-                <p>{s.d}</p>
-              </span>
-              <span className="card-arrow"><Icon name="arrowUpRight" size={15} /></span>
+            <button key={s.t} className="sugerencia" onClick={() => send(s.d)}>
+              <span className="sg-t">{s.t}</span>
+              <span className="sg-d">{s.d}</span>
             </button>
           ))}
         </div>
@@ -522,11 +525,13 @@ export default function Chat({ auth, convId, go }) {
                 )}
                 {!isUser && !streaming && m.asiento && (
                   <div className="asiento">
-                    {m.asiento.tokens ? (
-                      <span className="a-cargo">−{fmt(m.asiento.tokens)} tokens</span>
-                    ) : (
-                      <span className="a-vacia">sin cargo registrado</span>
-                    )}
+                    <span className={m.asiento.tokens ? "a-cargo" : "a-vacia"}>
+                      {m.asiento.tokens
+                        ? `−${fmt(m.asiento.tokens)} tokens · saldo ${fmt(m.asiento.saldo)}`
+                        : m.asiento.fallo
+                          ? "sin cargo: no hubo respuesta del modelo"
+                          : "sin cargo registrado"}
+                    </span>
                     <span>
                       {m.asiento.model || "sin modelo"}
                       {m.asiento.upstream ? ` · ${m.asiento.upstream}` : ""}
@@ -719,11 +724,15 @@ export default function Chat({ auth, convId, go }) {
       </Modal>
     </section>
       <aside className="cuenta" aria-label="Cuenta del mes">
-        <h2>Saldo del mes</h2>
-        <p className="saldo-hero">{fmt(restantePlan)}</p>
-        <p className="saldo-sub">de {fmt(cuotaMes)} tokens · plan {planName}</p>
+        <h2>{auth ? "Saldo del mes" : "Tu cupo de hoy"}</h2>
+        <p className="saldo-hero">{auth ? fmt(restantePlan) : Math.max(0, GUEST_LIMIT - guest.n)}</p>
+        <p className="saldo-sub">
+          {auth
+            ? `de ${fmt(cuotaMes)} tokens · plan ${planName}`
+            : `mensajes gratis por día · sin tarjeta. Con cuenta: ${fmt(cuotaMes)} tokens por mes.`}
+        </p>
 
-        <h2>Bolsas por modelo</h2>
+        <h2>{auth ? "Bolsas por modelo" : "Bolsas con una cuenta gratis"}</h2>
         <ul className="bolsas">
           {modelos.map((m) => (
             <li key={m.key}>

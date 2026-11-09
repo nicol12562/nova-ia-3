@@ -301,16 +301,6 @@ body.app-cuenta { background: var(--lg-papel); }
 }
 .app-lg .chat-hero .lede, .app-lg .chat-hero p { color: var(--lg-ink-2); }
 
-.app-lg .chip-suggestion {
-  background: var(--lg-field);
-  border: 1px solid var(--lg-rule);
-  color: var(--lg-ink);
-}
-.app-lg .chip-suggestion:hover { border-color: var(--lg-rail); }
-.app-lg .chip-suggestion .sq { background: var(--lg-rail); color: var(--lg-rail-ink); }
-.app-lg .chip-suggestion p { color: var(--lg-ink-2); }
-.app-lg .chip-suggestion .card-arrow { color: var(--lg-ink-2); }
-
 .app-lg .guest-bar { background: var(--lg-field); border-color: var(--lg-rule); color: var(--lg-ink); }
 
 .app-lg .composer { background: var(--lg-papel); border-top: 1px solid var(--lg-rule); }
@@ -333,3 +323,65 @@ body.app-cuenta { background: var(--lg-papel); }
 .app-lg .msg-actions { border-color: var(--lg-rule); }
 .app-lg .chat-note, .app-lg .chat-topline { color: var(--lg-ink-2); }
 .app-lg .agent-chip { background: var(--lg-field); border-color: var(--lg-rule); color: var(--lg-ink); }
+
+/* ---------- fixes del finish review ---------- */
+
+/* El hilo empuja el composer al pie: sin esto quedaba media hoja vacía abajo. */
+.app-lg .chat-log { flex: 1 1 auto; }
+
+/* Sugerencias: renglones del libro, no cuatro tarjetas iguales con tile de ícono
+   (el primer Refuse del piso de calidad). */
+.app-lg .sugerencias {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--lg-rule);
+  margin: 4px 0 14px;
+}
+.app-lg .sugerencia {
+  display: grid;
+  grid-template-columns: minmax(140px, 210px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+  text-align: left;
+  padding: 11px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--lg-rule);
+  background: none;
+  color: var(--lg-ink);
+  font: inherit;
+  cursor: pointer;
+}
+.app-lg .sugerencia:hover { background: rgba(15, 59, 58, 0.05); }
+.app-lg .sugerencia .sg-t { font-weight: 600; font-size: 14px; }
+.app-lg .sugerencia .sg-d { color: var(--lg-ink-2); font-size: 13.5px; }
+
+/* Campos reglados, no flotando: sin sombra ambiental ni tarjeta dentro de tarjeta. */
+.app-lg .composer {
+  background: var(--lg-field);
+  border: 1px solid var(--lg-rule);
+  border-radius: 6px;
+  box-shadow: none;
+}
+.app-lg .composer textarea { border: 0; background: transparent; }
+.app-lg .bubble-ai, .app-lg .bubble-user { border-radius: 6px; box-shadow: none; }
+
+/* El azul retirado seguía vivo en cuatro superficies del chat. */
+.app-lg .spark { color: var(--lg-amount); }
+.app-lg :focus-visible { outline-color: var(--lg-rail); }
+.app-lg ::selection { background: rgba(15, 59, 58, 0.18); color: var(--lg-ink); }
+.app-lg .spot::before { display: none; }
+.app-lg .spot { background-image: none; }
+
+/* El rojo queda reservado al modelo agotado: "SIN SESIÓN" no es un fallo. */
+.app-lg .guest-bar .tag { color: var(--lg-ink); border-color: var(--lg-rule); background: none; }
+
+@media (max-width: 1023px) {
+  .app-lg .banda-venc { flex-wrap: wrap; gap: 6px 12px; padding: 8px 12px; }
+  .app-lg .sugerencia { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .app-lg .chat, .app-lg .cuenta { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 640px) {
+  .app-lg .saldo-hero { font-size: 32px; }
+}
