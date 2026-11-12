@@ -1566,3 +1566,152 @@ body.mundo-ledger .adm-lista::-webkit-scrollbar-thumb:hover,
 body.mundo-ledger .adm-tabla-wrap::-webkit-scrollbar-thumb:hover,
 body.mundo-ledger .adm-drawer::-webkit-scrollbar-thumb:hover,
 body.mundo-ledger .adm-dialogo::-webkit-scrollbar-thumb:hover { background-image: linear-gradient(180deg, var(--accent), var(--lg-dusk)); }
+
+/* =====================================================================
+   SEGUNDA PASADA · IDENTIDAD POR MODELO + MICRO-VIDA
+   El mundo ya tenía profundidad; ahora cada modelo lleva su propio color
+   (Flash celeste, Pro sol, Pro 3.1 violeta) como una firma que se repite en
+   home, chat y uso, y la interfaz responde al puntero con más intención.
+   Los colores de modelo van sólo en barras, cantos, puntos y brillos (no en
+   texto chico) para no romper contraste. Todo detrás de body.mundo-ledger.
+   ===================================================================== */
+
+body.mundo-ledger {
+  --lg-m1: #38bdf8;
+  --lg-m2: #ffb224;
+  --lg-m3: #8b7bd8;
+}
+
+/* ------------------------------------------- home: cada modelo, su firma */
+
+body.mundo-ledger .home-models .hm-card {
+  position: relative;
+  overflow: hidden;
+  border-top: 2px solid var(--mc, var(--lg-celeste));
+  background-image: linear-gradient(180deg, var(--mc-wash, transparent), transparent 130px);
+}
+body.mundo-ledger .home-models .hm-card:nth-child(1) { --mc: var(--lg-m1); --mc-wash: rgba(56, 189, 248, 0.09); }
+body.mundo-ledger .home-models .hm-card:nth-child(2) { --mc: var(--lg-m2); --mc-wash: rgba(255, 178, 36, 0.09); }
+body.mundo-ledger .home-models .hm-card:nth-child(3) { --mc: var(--lg-m3); --mc-wash: rgba(139, 123, 216, 0.09); }
+body.mundo-ledger .home-models .hm-card::after { background: linear-gradient(180deg, var(--mc), var(--lg-sol)); }
+body.mundo-ledger .home-models .hm-card .plan-bar > span {
+  background-image: linear-gradient(90deg, var(--mc), var(--lg-celeste));
+  animation: none;
+}
+body.mundo-ledger .home-models .hm-card .hm-pct { color: var(--text); font-weight: 700; }
+
+/* ----------------------------------------- bolsas: punto de color por rol */
+
+body.mundo-ledger .bolsas li { position: relative; padding-left: 15px; }
+body.mundo-ledger .bolsas li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  translate: 0 -50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bc, var(--lg-celeste));
+  box-shadow: 0 0 8px var(--bc, var(--lg-celeste));
+}
+body.mundo-ledger .bolsas li:nth-child(1) { --bc: var(--lg-m1); }
+body.mundo-ledger .bolsas li:nth-child(2) { --bc: var(--lg-m2); }
+body.mundo-ledger .bolsas li:nth-child(3) { --bc: var(--lg-m3); }
+
+/* ------------------------------------------- héroe: entrada escalonada */
+
+body.mundo-ledger .home-hero > * { animation: lg-rise 0.55s var(--ease-out) both; }
+body.mundo-ledger .home-hero > :nth-child(1) { animation-delay: 0.03s; }
+body.mundo-ledger .home-hero > :nth-child(2) { animation-delay: 0.08s; }
+body.mundo-ledger .home-hero > :nth-child(3) { animation-delay: 0.14s; }
+body.mundo-ledger .home-hero > :nth-child(4) { animation-delay: 0.2s; }
+body.mundo-ledger .home-hero > :nth-child(5) { animation-delay: 0.26s; }
+body.mundo-ledger .home-hero > :nth-child(6) { animation-delay: 0.32s; }
+/* El resplandor del héroe deriva con el scroll (parallax suave, --lg-par). */
+body.mundo-ledger .home-hero::before { transform: translateY(calc(var(--lg-par, 0) * 0.1px)); }
+
+/* ------------------------------------------- nav: subrayado que crece */
+
+body.mundo-ledger .nav-link { position: relative; }
+body.mundo-ledger .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--lg-celeste), var(--lg-sol));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s var(--ease-out);
+}
+body.mundo-ledger .nav-link:hover::after,
+body.mundo-ledger .nav-link.active::after { transform: scaleX(1); }
+
+/* ------------------------------------------- presión y foco perceptibles */
+
+body.mundo-ledger .btn,
+body.mundo-ledger .send-btn,
+body.mundo-ledger .icon-btn { transition: transform 0.15s var(--ease-out), box-shadow 0.2s, background-color 0.2s, border-color 0.2s; }
+body.mundo-ledger .btn:active,
+body.mundo-ledger .send-btn:active,
+body.mundo-ledger .icon-btn:active { transform: scale(0.96); }
+body.mundo-ledger :focus-visible { outline: 2px solid var(--lg-celeste); outline-offset: 2px; }
+
+/* ------------------------------------------- pie: línea de agua propia */
+
+body.mundo-ledger .footer { position: relative; }
+body.mundo-ledger .footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #0284c7, #38bdf8 30%, #ffb224 68%, #ff8a3d);
+}
+
+/* ------------------------------------------- login: olas que caminan */
+
+body.mundo-ledger .login-left::after { animation: lg-waves 16s linear infinite; opacity: 0.9; }
+@keyframes lg-waves {
+  from { background-position: 0 bottom; }
+  to { background-position: 600px bottom; }
+}
+
+/* ------------------------------------------- chat: presencia pulsante */
+
+body.mundo-ledger .model-chip .spark {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lg-m1);
+  animation: lg-pulse 2.4s ease-out infinite;
+}
+@keyframes lg-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(56, 189, 248, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+}
+
+/* ------------------------------------------- sugerencias: tarjetas con firma */
+
+body.mundo-ledger .sugerencia {
+  border-radius: 12px;
+  background-image: var(--lg-card-wash);
+  box-shadow: var(--lg-edge), var(--lg-depth-1);
+}
+body.mundo-ledger .sugerencia:nth-child(1) { --mc: var(--lg-m1); }
+body.mundo-ledger .sugerencia:nth-child(2) { --mc: var(--lg-m2); }
+body.mundo-ledger .sugerencia:nth-child(3) { --mc: var(--lg-m3); }
+body.mundo-ledger .sugerencia:nth-child(4) { --mc: var(--lg-m1); }
+body.mundo-ledger .sugerencia::after { background: linear-gradient(180deg, var(--mc), var(--lg-sol)); }
+
+@media (prefers-reduced-motion: reduce) {
+  body.mundo-ledger .home-hero > * { animation: none; }
+  body.mundo-ledger .login-left::after,
+  body.mundo-ledger .model-chip .spark { animation: none; }
+  body.mundo-ledger .home-hero::before { transform: none; }
+}

@@ -289,6 +289,28 @@ export default function App() {
     };
   }, [route, mundo]);
 
+  // Parallax suave del halo del hero: --lg-par lleva el scroll a la CSS, que lo
+  // traduce en unos pocos píxeles de deriva. Con reduced-motion no se engancha.
+  useEffect(() => {
+    if (mundo !== "ledger") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let cuadro = 0;
+    const aplicar = () => {
+      cuadro = 0;
+      document.body.style.setProperty("--lg-par", String(window.scrollY));
+    };
+    const pedir = () => {
+      if (!cuadro) cuadro = requestAnimationFrame(aplicar);
+    };
+    window.addEventListener("scroll", pedir, { passive: true });
+    aplicar();
+    return () => {
+      window.removeEventListener("scroll", pedir);
+      if (cuadro) cancelAnimationFrame(cuadro);
+      document.body.style.removeProperty("--lg-par");
+    };
+  }, [mundo]);
+
   // El login es una pantalla completa, sin sidebar ni topbar (como en Floot)
   if (base === "login")
     return (
