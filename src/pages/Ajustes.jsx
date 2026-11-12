@@ -3,7 +3,7 @@ import { Icon } from "../icons.jsx";
 import { showToast } from "../ui.jsx";
 import { IDIOMAS, LARGOS, leerPrefs, escribirPrefs } from "../data/prefs.js";
 
-export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
+export default function Ajustes({ go, auth, setAuth, dark, toggleTheme, mundo = "ledger", setMundo }) {
   const planName = auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis";
   const [prefs, setPrefs] = useState(leerPrefs);
   const [abierto, setAbierto] = useState(false);
@@ -186,6 +186,25 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
               </button>
               <button className={dark ? "on" : ""} onClick={() => !dark && toggleTheme()}>
                 <Icon name="moon" size={14} /> Oscuro
+              </button>
+            </div>
+          </div>
+
+          <div className="settings-row">
+            <div>
+              <strong>Interfaz</strong>
+              <p>
+                Nueva: el saldo y los movimientos, como un extracto de cuenta. Clásica: la vista
+                anterior, zinc y azul. Se elige una vez y queda guardada en esta PC.
+              </p>
+            </div>
+            <div className={"seg" + (mundo === "clasico" ? " is-dark" : "")} role="group" aria-label="Interfaz de la aplicación">
+              <span className="seg-thumb" aria-hidden="true" />
+              <button className={mundo === "ledger" ? "on" : ""} onClick={() => setMundo?.("ledger")}>
+                <Icon name="pulse" size={14} /> Nueva
+              </button>
+              <button className={mundo === "clasico" ? "on" : ""} onClick={() => setMundo?.("clasico")}>
+                <Icon name="grid" size={14} /> Clásica
               </button>
             </div>
           </div>

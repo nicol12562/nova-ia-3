@@ -37,6 +37,7 @@ const NAV = [
 // Riel de la app (mundo "El resumen de cuenta"): solo superficies de tarea.
 // Las de persuasión (Inicio, Planes, Login) conservan la barra superior.
 const NAV_APP = [
+  { key: "", label: "Inicio", icon: "grid" },
   { key: "chat", label: "Nuevo chat", icon: "plusSq" },
   { key: "historial", label: "Historial", icon: "clock" },
   { key: "mini-agentes", label: "Agentes", icon: "cpu" },
@@ -44,7 +45,17 @@ const NAV_APP = [
   { key: "planes", label: "Planes", icon: "crown" },
   { key: "ajustes", label: "Ajustes", icon: "sliders" },
 ];
-const SUPERFICIE_APP = ["chat", "historial", "mini-agentes", "uso-tokens", "ajustes", "admin"];
+// En el mundo ledger el riel manda en toda la app; el remate del login de Google
+// es una pantalla de estado, sin navegación propia.
+const SIN_RIEL = ["google"];
+
+const leerMundo = () => {
+  try {
+    return localStorage.getItem("novaia_mundo") === "clasico" ? "clasico" : "ledger";
+  } catch {
+    return "ledger";
+  }
+};
 
 const QUOTA_FALLBACK = 1000000; // solo mientras responde el backend
 const fmt = (n) => Math.round(n).toLocaleString("es-AR");
@@ -237,6 +248,24 @@ export default function App() {
 
   const [base, param] = route.split("/");
 
+  // Hooks antes de cualquier return temprano: el estado del mundo y su efecto
+  // vivían por debajo del if de /login, así que en esa ruta no corrían y el
+  // conteo de hooks cambiaba entre pantallas (React lo castiga rompiendo).
+  const [mundo, setMundo] = useState(leerMundo);
+
+  // Un solo interruptor para toda la capa visual: body.mundo-ledger es la
+  // condición de cada regla de ledger.css.
+  useEffect(() => {
+    document.body.classList.toggle("mundo-ledger", mundo === "ledger");
+    try {
+      localStorage.setItem("novaia_mundo", mundo);
+    } catch {
+      /* modo privado: la preferencia dura lo que la pestaña */
+    }
+  }, [mundo]);
+
+  const esApp = mundo === "ledger" && !SIN_RIEL.includes(base);
+
   // El login es una pantalla completa, sin sidebar ni topbar (como en Floot)
   if (base === "login")
     return (
@@ -260,14 +289,6 @@ export default function App() {
   const restantes = auth ? fmt(Math.max(0, quota - (used ?? 0))) : fmt(quota);
   const planName = auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis";
   const planLabel = auth ? `Plan ${planName}` : "Sin cuenta";
-  const esApp = SUPERFICIE_APP.includes(base);
-
-  // El fondo del body, no el de .app: .app tiene min-height pisado por una regla
-  // posterior y dejaba una franja blanca bajo el hilo en 1440x900.
-  useEffect(() => {
-    document.body.classList.toggle("app-cuenta", esApp);
-  }, [esApp]);
-
   return (
     <div className={"app" + (esApp ? " app-lg" : "")}>
       {esApp ? (
@@ -446,7 +467,16 @@ export default function App() {
             {base === "chat" ? (
               <Chat key={param || "nuevo"} go={go} auth={auth} setAuth={setAuth} convId={param || null} />
             ) : (
-              <View go={go} auth={auth} setAuth={setAuth} dark={dark} setDark={setDark} toggleTheme={toggleTheme} />
+              <View
+                go={go}
+                auth={auth}
+                setAuth={setAuth}
+                dark={dark}
+                setDark={setDark}
+                toggleTheme={toggleTheme}
+                mundo={mundo}
+                setMundo={setMundo}
+              />
             )}
           </ErrorBoundary>
         </main>

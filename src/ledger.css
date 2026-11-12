@@ -1,14 +1,17 @@
 /* =====================================================================
-   Mundo "El resumen de cuenta" — superficie chat (Operate, desktop primero)
+   MUNDO "EL RESUMEN DE CUENTA"
    Contrato de dirección: .impeccable/surfaces/src-pages-chat-jsx.md
+   Referencia del sistema: DESIGN.md
 
-   Capa nueva y con nombres propios: no reesponde reglas de styles.css ni
-   polish.css, así que no agrega duplicados al problema que ya tenemos. Se
-   carga al final en main.jsx porque es la capa que decide el shell de la app.
+   Toda la capa vive detrás de `body.mundo-ledger`. El interruptor "Interfaz"
+   de #/ajustes prende o apaga ese class: apagado, la app vuelve al mundo
+   zinc + #004de5 anterior sin desarmar nada y sin reglas sueltas peleando.
+   Se carga al final (main.jsx) porque decide el shell de la pantalla.
    ===================================================================== */
 
 :root {
   --lg-papel: #f4f1e8;
+  --lg-campo: #fffdf7;
   --lg-ink: #16211f;
   --lg-ink-2: #4c5a57;
   --lg-rail: #0f3b3a;
@@ -17,12 +20,12 @@
   --lg-rule: #d9d2c1;
   --lg-amount: #175c42;
   --lg-alert: #b3261e;
-  --lg-band: #0f3b3a;
-  --lg-field: #fffdf7;
+  --lg-hover: rgba(15, 59, 58, 0.06);
 }
 
 body.dark {
   --lg-papel: #141a19;
+  --lg-campo: #1a2120;
   --lg-ink: #e9e6df;
   --lg-ink-2: #a9b3b0;
   --lg-rail: #0a2b2a;
@@ -31,21 +34,35 @@ body.dark {
   --lg-rule: #2b3634;
   --lg-amount: #7fd0a6;
   --lg-alert: #ff8778;
-  --lg-band: #0a2b2a;
-  --lg-field: #1a2120;
+  --lg-hover: rgba(220, 236, 230, 0.08);
 }
 
-/* ---------- shell con riel ---------- */
+/* ------------------------------------------------------------------- tierra */
 
-.app-lg {
+body.mundo-ledger { background: var(--lg-papel); color: var(--lg-ink); }
+
+/* El grano de película de polish.css cuelga de body::before sin ámbito y se
+   posaba sobre el riel y los campos reglados. El contrato pide campos planos. */
+body.mundo-ledger::before { display: none; }
+
+body.mundo-ledger .app,
+body.mundo-ledger .content,
+body.mundo-ledger .main,
+body.mundo-ledger .main-chat { background: var(--lg-papel); color: var(--lg-ink); }
+body.mundo-ledger .main-chat { height: 100dvh; max-width: none; }
+body.mundo-ledger .footer { border-top-color: var(--lg-rule); color: var(--lg-ink-2); }
+body.mundo-ledger .footer a { color: var(--lg-amount); }
+
+/* --------------------------------------------------------------------- riel */
+
+body.mundo-ledger .app {
   display: grid;
   grid-template-columns: 108px minmax(0, 1fr);
   min-height: 100vh;
 }
-.app-lg > .content { grid-column: 2; min-height: 100dvh; }
-.app-lg .main-chat { height: 100dvh; }
+body.mundo-ledger .app > .content { grid-column: 2; }
 
-.rail {
+body.mundo-ledger .rail {
   grid-column: 1;
   position: sticky;
   top: 0;
@@ -57,9 +74,8 @@ body.dark {
   flex-direction: column;
   gap: 2px;
   padding: 14px 8px 12px;
-  border-right: 1px solid var(--lg-rail);
 }
-.rail-mark {
+body.mundo-ledger .rail-mark {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -70,10 +86,10 @@ body.dark {
   padding: 4px 0 12px;
   cursor: pointer;
 }
-.rail-mark .logo-mark { background: var(--lg-rail-ink); color: var(--lg-rail); }
-.rail-mark .rail-word { font-size: 12px; font-weight: 600; letter-spacing: -0.01em; }
+body.mundo-ledger .rail-mark .logo-mark { background: var(--lg-rail-ink); color: var(--lg-rail); }
+body.mundo-ledger .rail-word { font-size: 12px; font-weight: 600; letter-spacing: -0.01em; }
 
-.rail-btn {
+body.mundo-ledger .rail-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -88,11 +104,14 @@ body.dark {
   line-height: 1.15;
   cursor: pointer;
 }
-.rail-btn:hover { background: rgba(220, 236, 230, 0.09); color: var(--lg-rail-ink); }
-.rail-btn[aria-current="page"] { background: rgba(220, 236, 230, 0.14); color: #ffffff; font-weight: 600; }
+body.mundo-ledger .rail-btn:hover { background: var(--lg-hover); color: var(--lg-rail-ink); }
+body.mundo-ledger .rail-btn[aria-current="page"] {
+  background: rgba(220, 236, 230, 0.16);
+  color: #ffffff;
+  font-weight: 600;
+}
 
-
-.rail-foot {
+body.mundo-ledger .rail-foot {
   margin-top: auto;
   display: flex;
   flex-direction: column;
@@ -104,241 +123,109 @@ body.dark {
   color: var(--lg-rail-dim);
   text-align: center;
 }
-.rail-saldo { font-variant-numeric: tabular-nums; color: var(--lg-rail-ink); font-weight: 600; font-size: 12px; }
-.rail-aviso {
-  /* No usa --lg-alert: ese rojo está reservado a un modelo agotado. Medido sobre
-     el riel teal daba 1,88:1, y un aviso de cuenta no es un error. */
+body.mundo-ledger .rail-saldo {
+  font-variant-numeric: tabular-nums;
+  color: var(--lg-rail-ink);
+  font-weight: 600;
+  font-size: 13px;
+}
+body.mundo-ledger .rail-aviso {
   border: 1px solid var(--lg-rail-dim);
   color: var(--lg-rail-ink);
   background: none;
   border-radius: 6px;
-  padding: 6px 4px;
+  padding: 6px;
   font: inherit;
-  font-size: 10.5px;
+  font-size: 11.5px;
   width: 100%;
   cursor: pointer;
 }
-.rail-aviso:hover { background: rgba(220, 236, 230, 0.12); }
+body.mundo-ledger .rail-aviso:hover { background: var(--lg-hover); }
 
-/* ---------- banda de vencimiento ---------- */
+/* ------------------------------------------------------ banda de vencimiento */
 
-.banda-venc {
+body.mundo-ledger .banda-venc {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  background: var(--lg-band);
+  background: var(--lg-rail);
   color: var(--lg-rail-ink);
   padding: 9px 20px;
   font-size: 13px;
   flex: none;
 }
-.banda-venc b { font-weight: 600; }
-.banda-venc .bv-cifra { font-variant-numeric: tabular-nums; }
-.banda-venc .bv-derecha { display: flex; align-items: center; gap: 12px; }
+body.mundo-ledger .banda-venc b { font-weight: 600; }
+body.mundo-ledger .bv-cifra { font-variant-numeric: tabular-nums; }
+body.mundo-ledger .bv-derecha { display: flex; align-items: center; gap: 12px; }
 
-/* ---------- chat + columna de cuenta ---------- */
+/* ------------------------------------------------- tipografía y prohibiciones */
 
-.chat-lg {
-  display: flex;
-  min-width: 0;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-.chat-lg > .chat { flex: 1 1 auto; min-width: 0; }
+/* El piso de calidad prohíbe el eyebrow sobre un título y los números de
+   sección que no ordenan nada. */
+body.mundo-ledger .eyebrow { display: none; }
 
-.cuenta {
-  flex: none;
-  width: 320px;
-  background: var(--lg-papel);
-  color: var(--lg-ink);
-  border-left: 1px solid var(--lg-rule);
-  padding: 20px 18px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  font-variant-numeric: tabular-nums;
-}
-.cuenta h2 {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--lg-ink-2);
-  margin: 22px 0 8px;
-}
-.saldo-hero { font-size: 44px; font-weight: 650; line-height: 1; color: var(--lg-amount); margin: 0; }
-.saldo-sub { font-size: 12.5px; color: var(--lg-ink-2); margin: 6px 0 0; }
+body.mundo-ledger h1.hero,
+body.mundo-ledger .hero { color: var(--lg-ink); }
 
-.bolsas { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--lg-rule); }
-.bolsas li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: baseline;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--lg-rule);
-  font-size: 13px;
-}
-.bolsas .b-nombre { min-width: 0; overflow-wrap: anywhere; }
-.bolsas .b-up { display: block; font-size: 11px; color: var(--lg-ink-2); }
-.bolsas .b-rest { font-weight: 600; }
-.bolsas .b-vacia { color: var(--lg-alert); }
-
-.movimientos { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.movimientos th {
-  text-align: right;
-  font-weight: 600;
-  color: var(--lg-ink-2);
-  font-size: 11px;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  padding: 0 0 6px;
-  border-bottom: 1px solid var(--lg-rule);
-}
-.movimientos th:first-child { text-align: left; }
-.movimientos td { padding: 8px 0; border-bottom: 1px solid var(--lg-rule); vertical-align: baseline; }
-.movimientos td:not(:first-child) { text-align: right; }
-.movimientos .m-cargo { color: var(--lg-amount); }
-.movimientos .m-vacia { color: var(--lg-alert); }
-.movimientos caption { display: none; }
-
-/* ---------- el asiento bajo cada respuesta ---------- */
-
-.asiento {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-top: 10px;
-  padding-top: 7px;
-  border-top: 1px solid var(--lg-rule);
-  font-size: 12.5px;
-  color: var(--lg-ink-2);
-  font-variant-numeric: tabular-nums;
-}
-.asiento .a-cargo { color: var(--lg-amount); font-weight: 600; }
-.asiento .a-vacia { color: var(--lg-alert); font-weight: 600; }
-
-/* ---------- responsive ---------- */
-
-@media (max-width: 1279px) {
-  .cuenta { width: 272px; }
-  .saldo-hero { font-size: 36px; }
+/* El degradé no se gana con color: hay que apagar el relleno y el relleno de
+   texto. Además el piso lo prohíbe: el énfasis va en peso. */
+body.mundo-ledger h1 em,
+body.mundo-ledger h2 em {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: currentColor;
+  color: var(--lg-amount);
+  font-style: normal;
+  font-weight: 700;
 }
 
-@media (max-width: 1023px) {
-  /* El riel no desaparece: se acuesta en una tira horizontal. Si no, las
-     superficies de app se quedaban sin navegación al quitar la barra superior. */
-  .app-lg { grid-template-columns: minmax(0, 1fr); }
-  /* Sin esto el .content pedía la columna 2 y el grid se agrandaba con una
-     columna implícita: el hilo desbordaba el teléfono y la banda salía cortada. */
-  .app-lg > .content { grid-column: 1; min-height: 0; }
-  .rail {
-    grid-column: 1;
-    position: sticky;
-    top: 0;
-    height: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-    overflow-x: auto;
-    padding: 8px 10px;
-    border-right: 0;
-    border-bottom: 1px solid var(--lg-rail);
-  }
-  .rail-mark { padding: 0 8px 0 0; flex: none; }
-  .rail-btn { min-width: 62px; flex: none; }
-  .rail-foot {
-    margin-top: 0;
-    margin-left: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    padding-top: 0;
-    padding-left: 12px;
-    border-top: 0;
-    border-left: 1px solid rgba(220, 236, 230, 0.18);
-    white-space: nowrap;
-  }
-  .rail-aviso { width: auto; padding: 6px 10px; }
-  /* El pie repetía el número que la banda ya dice, y su nowrap ensanchaba la
-     tira de navegación. En móvil manda la banda. */
-  .rail-foot { display: none; }
-  .chat-lg { flex-direction: column; }
-  .cuenta {
-    width: auto;
-    border-left: 0;
-    border-top: 1px solid var(--lg-rule);
-    max-height: 40dvh;
-  }
-}
+body.mundo-ledger .lede,
+body.mundo-ledger .section-sub,
+body.mundo-ledger .section-h2,
+body.mundo-ledger .mono-label,
+body.mundo-ledger .stat-label,
+body.mundo-ledger .page-head p { color: var(--lg-ink-2); }
 
-@media (prefers-reduced-motion: reduce) {
-  .rail-btn, .rail-aviso, .banda-venc .bv-burger { transition: none; }
-}
+body.mundo-ledger .stat-num { color: var(--lg-amount); font-variant-numeric: tabular-nums; }
 
-/* ---------- el mundo tiene que llegar al hilo, no solo al marco ----------
-   Sin esto la pantalla quedaba con riel y cuenta en teal/papel y el centro
-   vestido con el zinc+azul anterior: dos mundos en una captura. */
+/* -----------------------------------------------------------------cartas */
 
-body.app-cuenta { background: var(--lg-papel); }
-.app-lg { background: var(--lg-papel); }
-.app-lg .content,
-.app-lg .main-chat,
-.app-lg .chat { background: var(--lg-papel); color: var(--lg-ink); }
-
-
-/* fix 6: .guest-bar .txt traía min-width:180px de styles.css y, con la etiqueta
-   y el botón, empujaba el documento más allá de 390. */
-.app-lg .guest-bar {
-  background: var(--lg-field);
+body.mundo-ledger .card,
+body.mundo-ledger .plan-box,
+body.mundo-ledger .demo-cta,
+body.mundo-ledger .edge-card {
+  background: var(--lg-campo);
   border: 1px solid var(--lg-rule);
-  border-radius: 6px;
+  border-radius: 8px;
   box-shadow: none;
-  color: var(--lg-ink);
-  padding: 10px 12px;
 }
-.app-lg .guest-bar .txt { min-width: 0; flex: 1 1 140px; }
-.app-lg .asiento .a-neutro { color: var(--lg-ink-2); }
-.app-lg .movimientos .m-vacia { color: var(--lg-ink-2); }
-
-.app-lg .composer { background: var(--lg-papel); border-top: 1px solid var(--lg-rule); }
-.app-lg .composer textarea { background: var(--lg-field); border-color: var(--lg-rule); color: var(--lg-ink); }
-.app-lg .composer textarea::placeholder { color: var(--lg-ink-2); }
-.app-lg .send-hint { color: var(--lg-ink-2); }
-.app-lg .model-chip { color: var(--lg-ink-2); background: transparent; }
-.app-lg .model-chip select { background: var(--lg-field); color: var(--lg-ink); border-color: var(--lg-rule); }
-
-.app-lg .btn-primary,
-.app-lg .send-btn { background: var(--lg-rail); color: var(--lg-rail-ink); }
-.app-lg .btn-primary:hover,
-.app-lg .send-btn:hover { background: #14504e; }
-.app-lg .btn-ghost { color: var(--lg-ink); border-color: var(--lg-rule); }
-
-.app-lg .bubble-user { background: var(--lg-rail); color: var(--lg-rail-ink); }
-.app-lg .bubble-ai { background: transparent; color: var(--lg-ink); }
-.app-lg .msg-ava { background: var(--lg-rail); color: var(--lg-rail-ink); }
-.app-lg .msg-act { color: var(--lg-ink-2); }
-.app-lg .msg-actions { border-color: var(--lg-rule); }
-.app-lg .chat-note, .app-lg .chat-topline { color: var(--lg-ink-2); }
-.app-lg .agent-chip { background: var(--lg-field); border-color: var(--lg-rule); color: var(--lg-ink); }
-
-/* ---------- fixes del finish review ---------- */
-
-/* El hilo empuja el composer al pie: sin esto quedaba media hoja vacía abajo. */
-.app-lg .chat-log { flex: 1 1 auto; }
+body.mundo-ledger .plan-box.current { border-color: var(--lg-rail); }
+body.mundo-ledger .plan-box hr,
+body.mundo-ledger .plan-box .top { border-color: var(--lg-rule); }
+body.mundo-ledger .plan-box .desc,
+body.mundo-ledger .plan-box .tokens-sub,
+body.mundo-ledger .plan-box .foot-note,
+body.mundo-ledger .plan-box .mi-title { color: var(--lg-ink-2); }
+body.mundo-ledger .plan-box .price-big { color: var(--lg-amount); font-variant-numeric: tabular-nums; }
+body.mundo-ledger .plan-box .check { color: var(--lg-amount); }
+body.mundo-ledger .plan-box li.no .check { color: var(--lg-alert); }
+body.mundo-ledger .plan-estado {
+  background: var(--lg-hover);
+  color: var(--lg-amount);
+  border: 1px solid var(--lg-rule);
+}
 
 /* Sugerencias: renglones del libro, no cuatro tarjetas iguales con tile de ícono
    (el primer Refuse del piso de calidad). */
-.app-lg .sugerencias {
+body.mundo-ledger .sugerencias {
   display: flex;
   flex-direction: column;
-  gap: 0;
   border-top: 1px solid var(--lg-rule);
   margin: 4px 0 14px;
 }
-.app-lg .sugerencia {
+body.mundo-ledger .sugerencia {
   display: grid;
   grid-template-columns: minmax(140px, 210px) minmax(0, 1fr);
   gap: 16px;
@@ -352,61 +239,253 @@ body.app-cuenta { background: var(--lg-papel); }
   font: inherit;
   cursor: pointer;
 }
-.app-lg .sugerencia:hover { background: rgba(15, 59, 58, 0.05); }
-.app-lg .sugerencia .sg-t { font-weight: 600; font-size: 14px; }
-.app-lg .sugerencia .sg-d { color: var(--lg-ink-2); font-size: 13.5px; }
+body.mundo-ledger .sugerencia:hover { background: var(--lg-hover); }
+body.mundo-ledger .sugerencia .sg-t { font-weight: 600; font-size: 14px; }
+body.mundo-ledger .sugerencia .sg-d { color: var(--lg-ink-2); font-size: 13.5px; }
 
-/* Campos reglados, no flotando: sin sombra ambiental ni tarjeta dentro de tarjeta. */
-.app-lg .composer {
-  background: var(--lg-field);
-  border: 1px solid var(--lg-rule);
+/* El brillo que sigue al puntero es decorado de la capa anterior. */
+body.mundo-ledger .spot::before { display: none; }
+body.mundo-ledger .spot { background-image: none; }
+
+/* -----------------------------------------------------------------controles */
+
+body.mundo-ledger .btn-primary,
+body.mundo-ledger .send-btn {
+  background: var(--lg-rail);
+  color: var(--lg-rail-ink);
+  border: 1px solid var(--lg-rail);
   border-radius: 6px;
   box-shadow: none;
 }
-.app-lg .composer textarea { border: 0; background: transparent; }
-.app-lg .bubble-ai, .app-lg .bubble-user { border-radius: 6px; box-shadow: none; }
+body.mundo-ledger .btn-primary:hover,
+body.mundo-ledger .send-btn:hover { background: #14504e; }
+body.mundo-ledger .btn-ghost,
+body.mundo-ledger .btn-plain,
+body.mundo-ledger .icon-btn {
+  color: var(--lg-ink);
+  border-color: var(--lg-rule);
+  background: none;
+}
+body.mundo-ledger .btn-ghost:hover,
+body.mundo-ledger .btn-plain:hover,
+body.mundo-ledger .icon-btn:hover { background: var(--lg-hover); border-color: var(--lg-rail); }
+body.mundo-ledger .btn-dark { background: var(--lg-ink); color: var(--lg-papel); }
+body.mundo-ledger .btn-google { background: var(--lg-campo); border-color: var(--lg-rule); color: var(--lg-ink); }
+body.mundo-ledger .chip,
+body.mundo-ledger .chip-suggestion,
+body.mundo-ledger .tag {
+  background: var(--lg-campo);
+  border: 1px solid var(--lg-rule);
+  color: var(--lg-ink);
+}
+body.mundo-ledger .chip-plan,
+body.mundo-ledger .chip-active { background: var(--lg-rail); color: var(--lg-rail-ink); border-color: var(--lg-rail); }
 
-/* El azul retirado seguía vivo en cuatro superficies del chat. */
-.app-lg .spark { color: var(--lg-amount); }
-.app-lg :focus-visible { outline-color: var(--lg-rail); }
-.app-lg ::selection { background: rgba(15, 59, 58, 0.18); color: var(--lg-ink); }
-.app-lg .spot::before { display: none; }
-.app-lg .spot { background-image: none; }
+body.mundo-ledger input,
+body.mundo-ledger textarea,
+body.mundo-ledger select {
+  background: var(--lg-campo);
+  border: 1px solid var(--lg-rule);
+  color: var(--lg-ink);
+  border-radius: 6px;
+}
+body.mundo-ledger input::placeholder,
+body.mundo-ledger textarea::placeholder { color: var(--lg-ink-2); }
 
-/* El rojo queda reservado al modelo agotado: "SIN SESIÓN" no es un fallo. */
-.app-lg .guest-bar .tag { color: var(--lg-ink); border-color: var(--lg-rule); background: none; }
+/* Superficies que dibuja el navegador: selección, foco y barra de desplazamiento
+   también pertenecen al sistema, no al azar del motor. */
+body.mundo-ledger ::selection { background: rgba(15, 59, 58, 0.2); color: var(--lg-ink); }
+body.mundo-ledger :focus-visible { outline: 2px solid var(--lg-amount); outline-offset: 2px; }
+body.mundo-ledger .rail :focus-visible { outline-color: var(--lg-rail-ink); }
+body.mundo-ledger * { scrollbar-color: var(--lg-rule) transparent; }
+
+/* ---------------------------------------------------------------------- chat */
+
+body.mundo-ledger .chat { max-width: none; }
+body.mundo-ledger .chat-lg { display: flex; min-width: 0; flex: 1 1 auto; min-height: 0; }
+body.mundo-ledger .chat-lg > .chat { flex: 1 1 auto; min-width: 0; }
+body.mundo-ledger .chat-log { flex: 1 1 auto; min-height: 120px; }
+
+body.mundo-ledger .bubble-user { background: var(--lg-rail); color: var(--lg-rail-ink); border-radius: 6px; box-shadow: none; }
+body.mundo-ledger .bubble-ai { background: transparent; color: var(--lg-ink); border-radius: 6px; box-shadow: none; }
+body.mundo-ledger .msg-ava { background: var(--lg-rail); color: var(--lg-rail-ink); }
+body.mundo-ledger .msg-act { color: var(--lg-ink-2); }
+body.mundo-ledger .msg-actions { border-color: var(--lg-rule); }
+body.mundo-ledger .chat-note,
+body.mundo-ledger .chat-topline { color: var(--lg-ink-2); }
+body.mundo-ledger .agent-chip { background: var(--lg-campo); border: 1px solid var(--lg-rule); color: var(--lg-ink); }
+
+body.mundo-ledger .composer {
+  background: var(--lg-campo);
+  border: 1px solid var(--lg-rule);
+  border-radius: 8px;
+  box-shadow: none;
+}
+body.mundo-ledger .composer textarea { border: 0; background: transparent; }
+body.mundo-ledger .send-hint,
+body.mundo-ledger .model-chip { color: var(--lg-ink-2); background: transparent; }
+body.mundo-ledger .model-chip .spark,
+body.mundo-ledger .spark { color: var(--lg-amount); background: var(--lg-amount); box-shadow: none; }
+body.mundo-ledger .model-chip .mc-warn { color: var(--lg-alert); }
+
+body.mundo-ledger .guest-bar {
+  background: var(--lg-campo);
+  border: 1px solid var(--lg-rule);
+  border-radius: 6px;
+  box-shadow: none;
+  color: var(--lg-ink);
+  padding: 10px 12px;
+}
+/* min-width:180px heredado de styles.css empujaba el documento más allá del
+   teléfono: era el desborde real en 390. */
+body.mundo-ledger .guest-bar .txt { min-width: 0; flex: 1 1 140px; }
+body.mundo-ledger .guest-bar .tag { color: var(--lg-ink); border-color: var(--lg-rule); background: none; }
+body.mundo-ledger .guest-bar.out { border-color: var(--lg-alert); }
+
+/* El asiento: cada respuesta deja cargo y saldo, como en un extracto. */
+body.mundo-ledger .asiento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 10px;
+  padding-top: 7px;
+  border-top: 1px solid var(--lg-rule);
+  font-size: 12.5px;
+  color: var(--lg-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+body.mundo-ledger .asiento .a-cargo { color: var(--lg-amount); font-weight: 600; }
+body.mundo-ledger .asiento .a-neutro { color: var(--lg-ink-2); }
+
+/* -------------------------------------------------------- columna de cuenta */
+
+body.mundo-ledger .cuenta {
+  flex: none;
+  width: 320px;
+  background: var(--lg-papel);
+  color: var(--lg-ink);
+  border-left: 1px solid var(--lg-rule);
+  padding: 20px 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-variant-numeric: tabular-nums;
+}
+body.mundo-ledger .cuenta h2 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lg-ink-2);
+  margin: 22px 0 8px;
+}
+body.mundo-ledger .saldo-hero { font-size: 44px; font-weight: 700; line-height: 1; color: var(--lg-amount); margin: 0; }
+body.mundo-ledger .saldo-sub { font-size: 12.5px; color: var(--lg-ink-2); margin: 6px 0 0; }
+
+body.mundo-ledger .bolsas { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--lg-rule); }
+body.mundo-ledger .bolsas li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--lg-rule);
+  font-size: 13px;
+}
+body.mundo-ledger .bolsas .b-nombre { min-width: 0; overflow-wrap: anywhere; }
+body.mundo-ledger .bolsas .b-up { display: block; font-size: 11px; color: var(--lg-ink-2); }
+body.mundo-ledger .bolsas .b-rest { font-weight: 600; }
+body.mundo-ledger .bolsas .b-vacia { color: var(--lg-alert); }
+
+body.mundo-ledger .movimientos { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+body.mundo-ledger .movimientos th {
+  text-align: right;
+  font-weight: 600;
+  color: var(--lg-ink-2);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0 0 6px;
+  border-bottom: 1px solid var(--lg-rule);
+}
+body.mundo-ledger .movimientos th:first-child { text-align: left; }
+body.mundo-ledger .movimientos td { padding: 8px 0; border-bottom: 1px solid var(--lg-rule); vertical-align: baseline; }
+body.mundo-ledger .movimientos td:not(:first-child) { text-align: right; }
+body.mundo-ledger .movimientos .m-cargo { color: var(--lg-amount); }
+body.mundo-ledger .movimientos .m-vacia { color: var(--lg-ink-2); }
+body.mundo-ledger .movimientos caption { display: none; }
+
+/* ------------------------------------------------------------- otras capas */
+
+body.mundo-ledger table { border-color: var(--lg-rule); }
+body.mundo-ledger th,
+body.mundo-ledger td { border-color: var(--lg-rule); }
+body.mundo-ledger .num { font-variant-numeric: tabular-nums; }
+body.mundo-ledger .muted,
+body.mundo-ledger .sub,
+body.mundo-ledger .hint { color: var(--lg-ink-2); }
+body.mundo-ledger .tick { color: var(--lg-amount); }
+body.mundo-ledger .plan-bar { background: var(--lg-rule); }
+body.mundo-ledger .plan-bar span { background: var(--lg-amount); }
+body.mundo-ledger .avatar { background: var(--lg-rail); color: var(--lg-rail-ink); }
+body.mundo-ledger .user-menu { background: var(--lg-campo); border: 1px solid var(--lg-rule); box-shadow: none; }
+body.mundo-ledger .modal { background: var(--lg-papel); border: 1px solid var(--lg-rule); box-shadow: none; }
+body.mundo-ledger .modal-x { color: var(--lg-ink-2); }
+body.mundo-ledger .toast { background: var(--lg-rail); color: var(--lg-rail-ink); box-shadow: none; }
+body.mundo-ledger .toast-dot { background: var(--lg-amount); }
+body.mundo-ledger .nav-sheet { background: var(--lg-rail); color: var(--lg-rail-ink); }
+body.mundo-ledger .side-item { color: var(--lg-rail-dim); }
+body.mundo-ledger .side-item.active,
+body.mundo-ledger .side-item:hover { background: var(--lg-hover); color: #ffffff; }
+
+/* -------------------------------------------------------------- responsive */
+
+@media (max-width: 1279px) {
+  body.mundo-ledger .cuenta { width: 272px; }
+  body.mundo-ledger .saldo-hero { font-size: 36px; }
+}
 
 @media (max-width: 1023px) {
-  .app-lg .banda-venc { flex-wrap: wrap; gap: 6px 12px; padding: 8px 12px; }
-  .app-lg .sugerencia { grid-template-columns: minmax(0, 1fr); gap: 2px; }
-  .app-lg .chat, .app-lg .cuenta { overflow-wrap: anywhere; }
+  /* El riel se acuesta en una tira horizontal: si no, las superficies de app se
+     quedaban sin navegación al quitar la barra superior. */
+  body.mundo-ledger .app { grid-template-columns: minmax(0, 1fr); }
+  body.mundo-ledger .app > .content { grid-column: 1; }
+  body.mundo-ledger .rail {
+    position: sticky;
+    top: 0;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 8px 10px;
+  }
+  body.mundo-ledger .rail-mark { padding: 0 8px 0 0; flex: none; }
+  body.mundo-ledger .rail-btn { min-width: 64px; flex: none; }
+  /* La tira no repite el número: la banda lo dice primero. */
+  body.mundo-ledger .rail-foot { display: none; }
+  body.mundo-ledger .banda-venc { flex-wrap: wrap; gap: 6px 12px; padding: 8px 12px; }
+  body.mundo-ledger .sugerencia { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  body.mundo-ledger .chat-lg { flex-direction: column; }
+  body.mundo-ledger .cuenta {
+    width: auto;
+    border-left: 0;
+    border-top: 1px solid var(--lg-rule);
+    max-height: 42dvh;
+  }
 }
 
 @media (max-width: 640px) {
-  .app-lg .saldo-hero { font-size: 32px; }
+  body.mundo-ledger .saldo-hero { font-size: 32px; }
+  body.mundo-ledger .main { padding: 20px 16px 32px; }
 }
 
-/* El punto del selector de modelo era el azul retirado; el hilo vacío dejaba el
-   composer a media hoja. */
-.app-lg .model-chip .spark,
-.app-lg .spark { background: var(--lg-amount); color: var(--lg-amount); box-shadow: none; }
-.app-lg .chat-log { min-height: 120px; }
-
-/* ---------- terminando de limpiar el shell ---------- */
-
-/* El grano de película de polish.css vive en body::before sin ámbito y caía
-   encima del riel, la banda y la columna de cuenta: el contrato pide campos
-   planos. Se apaga solo dentro del shell de ledger. */
-body.app-cuenta::before { display: none; }
-
-/* Un solo rojo por pantalla: mc-warn usaba --danger, otro rojo distinto. */
-.app-lg .model-chip .mc-warn { color: var(--lg-alert); }
-
-/* La columna de cuenta va al borde de la ventana: .main traía max-width 1220 y
-   .chat 780, así que el saldo quedaba flotando en el medio. */
-.app-lg .main-chat { max-width: none; }
-.app-lg .chat { max-width: none; }
-
-/* El ErrorBoundary envuelve la vista en su propio div, así que .chat-lg no
-   heredaba la altura de .main-chat y el composer quedaba a media hoja. */
-.app-lg .chat-lg { min-height: 100dvh; }
+@media (prefers-reduced-motion: reduce) {
+  body.mundo-ledger *,
+  body.mundo-ledger *::before,
+  body.mundo-ledger *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
