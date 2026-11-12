@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../icons.jsx";
 import { AGENTS } from "../data/agents.js";
 import { DRAFT_KEY } from "./Chat.jsx";
@@ -7,6 +7,19 @@ const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
 
 export default function Home({ go, auth }) {
   const [q, setQ] = useState("");
+  const caja = useRef(null);
+  const ajustar = () => {
+    const t = caja.current;
+    if (!t) return;
+    t.style.height = "auto";
+    // +2: el mundo ledger le suma un borde de 1 px por lado.
+    t.style.height = Math.min(t.scrollHeight + 2, 140) + "px";
+  };
+  useEffect(ajustar, [q]);
+  useEffect(() => {
+    window.addEventListener("resize", ajustar);
+    return () => window.removeEventListener("resize", ajustar);
+  }, []);
   const [modelos, setModelos] = useState([]);
   const [racha, setRacha] = useState(0);
   const [cuota, setCuota] = useState(null);
@@ -61,6 +74,7 @@ export default function Home({ go, auth }) {
 
         <form className="home-ask" onSubmit={(e) => { e.preventDefault(); empezar(); }}>
           <textarea
+            ref={caja}
             rows={1}
             value={q}
             onChange={(e) => setQ(e.target.value)}
