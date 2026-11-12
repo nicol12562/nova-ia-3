@@ -111,3 +111,21 @@ CREATE TABLE IF NOT EXISTS upstream_health (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 ALTER TABLE upstream_health ADD COLUMN last_reason TEXT;
+
+-- Cola de aprobación del panel. Nada de lo que se edita en #/admin toca la base
+-- hasta que se aprueba acá. before_value es lo que se vio al proponer: si al
+-- aprobar el valor real ya es otro, el cambio queda 'stale' con el motivo.
+CREATE TABLE IF NOT EXISTS admin_changes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind TEXT NOT NULL CHECK (kind IN ('plan','model')),
+  target TEXT NOT NULL,
+  label TEXT NOT NULL,
+  before_value TEXT NOT NULL DEFAULT '',
+  after_value TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','applied','rejected','stale')),
+  actor TEXT,
+  detail TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  decided_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_admin_changes_estado ON admin_changes(status, id);

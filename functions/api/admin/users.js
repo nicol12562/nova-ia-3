@@ -2,7 +2,9 @@
 // Protegido por la cabecera x-admin-key contra el secreto ADMIN_KEY.
 // La clave se guarda solo en el servidor; el rol en localStorage es cosmético.
 
-const P = 1000000; // mismo techo del plan gratis, para el % de avance
+import { CUOTA } from "../../_lib/models.js";
+
+const P = CUOTA; // techos del plan, los mismos que cumple el chat
 
 export async function onRequestGet(context) {
   const { request, env } = context;

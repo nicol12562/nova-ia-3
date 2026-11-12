@@ -489,3 +489,129 @@ body.mundo-ledger .side-item:hover { background: var(--lg-hover); color: #ffffff
     transition-duration: 1ms !important;
   }
 }
+
+/* ------------------------------------------------- mesa de control (#/admin) */
+
+body.mundo-ledger .adm-head h1 { color: var(--lg-ink); }
+body.mundo-ledger .adm-lede,
+body.mundo-ledger .adm-nota,
+body.mundo-ledger .adm-sub,
+body.mundo-ledger .adm-vacio,
+body.mundo-ledger .adm-conteo,
+body.mundo-ledger .adm-cuando,
+body.mundo-ledger .adm-label,
+body.mundo-ledger .adm-cifra span,
+body.mundo-ledger .adm-orden,
+body.mundo-ledger .adm-datos dt,
+body.mundo-ledger .adm-drawer h3 { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-nota b,
+body.mundo-ledger .adm-planos code { color: var(--lg-ink); }
+body.mundo-ledger .adm-error,
+body.mundo-ledger .adm-detalle,
+body.mundo-ledger .adm-resumen.malo { color: var(--lg-alert); }
+body.mundo-ledger .adm-link { color: var(--lg-amount); }
+
+body.mundo-ledger .adm-btn {
+  background: var(--lg-campo);
+  border-color: var(--lg-rule);
+  color: var(--lg-ink);
+}
+body.mundo-ledger .adm-btn:hover:not(:disabled) { background: var(--lg-hover); border-color: var(--lg-rail); }
+body.mundo-ledger .adm-btn.firme { background: var(--lg-rail); border-color: var(--lg-rail); color: var(--lg-rail-ink); }
+body.mundo-ledger .adm-btn.firme:hover:not(:disabled) { background: #14504e; border-color: #14504e; }
+body.mundo-ledger .adm-btn.claro { background: none; border-color: rgba(220, 236, 230, .45); color: var(--lg-rail-ink); }
+body.mundo-ledger .adm-btn.claro:hover:not(:disabled) { background: rgba(220, 236, 230, .14); border-color: var(--lg-rail-ink); }
+
+body.mundo-ledger .adm-chip { background: var(--lg-campo); border-color: var(--lg-rule); color: var(--lg-ink-2); }
+body.mundo-ledger .adm-chip:hover:not(:disabled) { color: var(--lg-ink); border-color: var(--lg-rail); }
+body.mundo-ledger .adm-chip.on { background: var(--lg-rail); border-color: var(--lg-rail); color: var(--lg-rail-ink); }
+
+body.mundo-ledger .adm-gate { background: var(--lg-campo); border-color: var(--lg-rule); }
+body.mundo-ledger .adm-gate-ico { background: var(--lg-rail); color: var(--lg-rail-ink); }
+body.mundo-ledger .adm-check { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-check input { accent-color: var(--lg-rail); }
+
+body.mundo-ledger .adm-cifras { border-color: var(--lg-rule); }
+body.mundo-ledger .adm-cifra { border-color: var(--lg-rule); }
+body.mundo-ledger .adm-cifra b { color: var(--lg-amount); }
+body.mundo-ledger .adm-cifra.viva { background: var(--lg-hover); }
+body.mundo-ledger .adm-cifra.viva b { color: var(--lg-ink); }
+body.mundo-ledger .adm-cifra.viva span { color: var(--lg-ink); font-weight: 600; }
+
+body.mundo-ledger .adm-cola { background: var(--lg-campo); border-color: var(--lg-rule); }
+body.mundo-ledger .adm-cola-head { background: var(--lg-rail); color: var(--lg-rail-ink); }
+body.mundo-ledger .adm-tab { color: var(--lg-rail-dim); }
+body.mundo-ledger .adm-tab:hover { color: #fff; background: rgba(220, 236, 230, .12); }
+body.mundo-ledger .adm-tab.on { background: rgba(220, 236, 230, .18); border-color: rgba(220, 236, 230, .4); color: #fff; }
+body.mundo-ledger .adm-item { border-color: var(--lg-rule); }
+body.mundo-ledger .adm-item:hover { background: var(--lg-hover); }
+body.mundo-ledger .adm-tipo { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-diff .antes,
+body.mundo-ledger .adm-diff .flecha { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-diff .despues { color: var(--lg-amount); }
+body.mundo-ledger .adm-lista.registro .adm-diff .despues { color: var(--lg-ink); }
+body.mundo-ledger .adm-sello { border-color: var(--lg-rule); color: var(--lg-ink-2); }
+body.mundo-ledger .adm-item.estado-applied .adm-sello { color: var(--lg-amount); border-color: var(--lg-amount); }
+body.mundo-ledger .adm-item.estado-stale .adm-sello { color: var(--lg-alert); border-color: var(--lg-alert); }
+body.mundo-ledger .adm-item.estado-rejected .adm-que strong,
+body.mundo-ledger .adm-item.estado-stale .adm-que strong { color: var(--lg-ink-2); }
+
+/* Los bloques dejan de ser tarjetas: son cortes reglados del mismo pliego. */
+body.mundo-ledger .adm-bloque {
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--lg-rule);
+  border-radius: 0;
+  padding: 16px 0 4px;
+}
+body.mundo-ledger .adm-bloque-head h2 { color: var(--lg-ink); }
+body.mundo-ledger .adm-estado { border-color: var(--lg-rule); color: var(--lg-ink-2); }
+body.mundo-ledger .adm-estado.on { background: var(--lg-rail); border-color: var(--lg-rail); color: var(--lg-rail-ink); }
+body.mundo-ledger .adm-encola { background: var(--lg-hover); color: var(--lg-ink); border: 1px solid var(--lg-rule); }
+body.mundo-ledger .adm-resumen { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-resumen.ok { color: var(--lg-amount); }
+body.mundo-ledger .adm-planos,
+body.mundo-ledger .adm-planos li { border-color: var(--lg-rule); }
+body.mundo-ledger .adm-planos span { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-planos li.ok code { color: var(--lg-amount); }
+body.mundo-ledger .adm-planos li.malo code,
+body.mundo-ledger .adm-planos li.malo span { color: var(--lg-alert); }
+
+body.mundo-ledger .adm-buscar { background: var(--lg-campo); border-color: var(--lg-rule); color: var(--lg-ink-2); }
+body.mundo-ledger .adm-buscar input { border: 0; background: none; border-radius: 0; }
+body.mundo-ledger .adm-buscar:focus-within { border-color: var(--lg-rail); }
+body.mundo-ledger .adm-x { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-x:hover { color: var(--lg-ink); background: var(--lg-hover); }
+
+body.mundo-ledger .adm-tabla-wrap { border-color: var(--lg-rule); }
+body.mundo-ledger .adm-tabla th { background: var(--lg-campo); border-color: var(--lg-rule); }
+body.mundo-ledger .adm-tabla td { border-color: var(--lg-rule); }
+body.mundo-ledger .adm-tabla tbody tr:hover { background: var(--lg-hover); }
+body.mundo-ledger .adm-tabla tbody tr.con-propuesta { background: var(--lg-hover); }
+body.mundo-ledger .adm-orden:hover { color: var(--lg-ink); }
+body.mundo-ledger .adm-quien { color: var(--lg-ink); }
+body.mundo-ledger .adm-quien:hover .t strong { color: var(--lg-amount); }
+body.mundo-ledger .adm-rol { background: var(--lg-rail); color: var(--lg-rail-ink); }
+body.mundo-ledger .adm-pend { border-color: var(--lg-amount); color: var(--lg-amount); }
+body.mundo-ledger .adm-pend:hover:not(:disabled) { background: var(--lg-rail); border-color: var(--lg-rail); color: var(--lg-rail-ink); }
+
+body.mundo-ledger .adm-dialogo,
+body.mundo-ledger .adm-drawer { background: var(--lg-papel); border-color: var(--lg-rule); }
+body.mundo-ledger .adm-confirm-lista,
+body.mundo-ledger .adm-confirm-lista li,
+body.mundo-ledger .adm-datos,
+body.mundo-ledger .adm-datos > div { border-color: var(--lg-rule); }
+body.mundo-ledger .adm-aviso { background: var(--lg-hover); border-left-color: var(--lg-amount); color: var(--lg-ink); }
+
+body.mundo-ledger .adm-lista,
+body.mundo-ledger .adm-tabla-wrap,
+body.mundo-ledger .adm-drawer,
+body.mundo-ledger .adm-dialogo { scrollbar-color: var(--lg-rule) transparent; }
+body.mundo-ledger .adm-lista::-webkit-scrollbar-thumb,
+body.mundo-ledger .adm-tabla-wrap::-webkit-scrollbar-thumb,
+body.mundo-ledger .adm-drawer::-webkit-scrollbar-thumb,
+body.mundo-ledger .adm-dialogo::-webkit-scrollbar-thumb { background: var(--lg-rule); border-color: var(--lg-campo); }
+body.mundo-ledger .adm-lista::-webkit-scrollbar-thumb:hover,
+body.mundo-ledger .adm-tabla-wrap::-webkit-scrollbar-thumb:hover,
+body.mundo-ledger .adm-drawer::-webkit-scrollbar-thumb:hover,
+body.mundo-ledger .adm-dialogo::-webkit-scrollbar-thumb:hover { background: var(--lg-rail-dim); }
