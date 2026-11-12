@@ -36,7 +36,7 @@ export default function Agentes({ go, auth }) {
         </div>
       </div>
 
-      <div className="agents-grid">
+      <div className="agents-grid" data-rv>
         {AGENTS.map((a) => (
           <button key={a.id} className={"agent-card" + (pago ? "" : " locked")} onClick={() => abrir(a)}>
             <span className="agent-ico"><Icon name={a.icon} size={18} /></span>
@@ -55,7 +55,7 @@ export default function Agentes({ go, auth }) {
       </div>
 
       {!pago && (
-        <div className="agent-note">
+        <div className="agent-note" data-rv>
           <span className="sq"><Icon name="lock" size={17} /></span>
           <div className="txt">
             <strong>Los mini agentes vienen con Pro o Plus</strong>
@@ -71,7 +71,7 @@ export default function Agentes({ go, auth }) {
       )}
 
       {pago && (
-        <div className="agent-note">
+        <div className="agent-note" data-rv>
           <span className="sq"><Icon name="check" size={17} /></span>
           <div className="txt">
             <strong>Agentes disponibles en tu plan {auth.plan === "plus" ? "Plus" : "Pro"}</strong>

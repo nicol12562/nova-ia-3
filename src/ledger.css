@@ -1,346 +1,843 @@
 /* =====================================================================
-   MUNDO "EL RESUMEN DE CUENTA"
-   Contrato de dirección: .impeccable/surfaces/src-pages-chat-jsx.md
-   Referencia del sistema: DESIGN.md
+   MUNDO "RÍO DE LA PLATA"
+   Dirección: azul profundo del río como campo dominante, celeste de agua
+   para la información y sol ámbar para la acción. Neutrales fríos arriba
+   del papel, un riel oscuro que sostiene la barra superior y el pie.
 
    Toda la capa vive detrás de `body.mundo-ledger`. El interruptor "Interfaz"
    de #/ajustes prende o apaga ese class: apagado, la app vuelve al mundo
-   zinc + #004de5 anterior sin desarmar nada y sin reglas sueltas peleando.
-   Se carga al final (main.jsx) porque decide el shell de la pantalla.
+   zinc + #004de5 anterior sin desarmar nada. Se carga al final (main.jsx)
+   porque redefine los tokens de base y decide el shell de la pantalla.
    ===================================================================== */
 
-:root {
-  --lg-papel: #f4f1e8;
-  --lg-campo: #fffdf7;
-  --lg-ink: #16211f;
-  --lg-ink-2: #4c5a57;
-  --lg-rail: #0f3b3a;
-  --lg-rail-ink: #dcece6;
-  --lg-rail-dim: #9dc0b8;
-  --lg-rule: #d9d2c1;
-  --lg-amount: #175c42;
-  --lg-alert: #b3261e;
-  --lg-hover: rgba(15, 59, 58, 0.06);
+body.mundo-ledger {
+  color-scheme: light;
+
+  --bg: #f5f7fa;
+  --panel: #ffffff;
+  --surface: #edf1f7;
+  --border: #d9e1ec;
+  --border-strong: #b9c6d8;
+  --text: #0c1b2a;
+  --muted: #51606f;
+  /* celeste de agua: #0284c7 no llega a 4.5 como texto chico, el texto usa este */
+  --accent: #0369a1;
+  --accent-soft: #e0f2fe;
+  /* sol: la acción. Tinta oscura encima = 9.66:1 */
+  --accent-solid: #ffb224;
+  --on-accent: #0c1b2a;
+  --danger: #c2362b;
+
+  --ring: 0 0 0 3px rgba(2, 132, 199, 0.18);
+  --mono: "DM Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --display: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+
+  /* Los alias se redeclaran acá: un var() definido en :root resuelve contra
+     :root y queda sordo tanto al tema como a este mundo. */
+  --cream: var(--surface);
+  --dark: var(--text);
+  --accent-deep: var(--accent);
+  --green-bg: var(--accent-soft);
+  --green-text: var(--accent);
+  --orange-border: var(--border-strong);
+  --orange-text: var(--danger);
+
+  --lg-papel: var(--bg);
+  --lg-campo: var(--panel);
+  --lg-ink: var(--text);
+  --lg-ink-2: var(--muted);
+  --lg-rail: #0e2a47;
+  --lg-rail-ink: #dce8f5;
+  --lg-rail-dim: #9fb8d0;
+  --lg-rule: var(--border);
+  --lg-amount: #0369a1;
+  --lg-alert: var(--danger);
+  --lg-hover: rgba(3, 105, 161, 0.07);
+  --lg-ok: #177245;
+  --lg-sol: #ffb224;
+  --lg-sol-ink: #0c1b2a;
+  --lg-celeste: #0284c7;
+  --lg-wash: rgba(2, 132, 199, 0.08);
+  --lg-glow-sol: rgba(255, 178, 36, 0.16);
+  --lg-glow-celeste: rgba(2, 132, 199, 0.1);
+  --lg-sombra: 0 1px 2px rgba(12, 27, 42, 0.05), 0 10px 28px -14px rgba(12, 27, 42, 0.14);
 }
 
-body.dark {
-  --lg-papel: #141a19;
-  --lg-campo: #1a2120;
-  --lg-ink: #e9e6df;
-  --lg-ink-2: #a9b3b0;
-  --lg-rail: #0a2b2a;
-  --lg-rail-ink: #dcece6;
-  --lg-rail-dim: #85a9a2;
-  --lg-rule: #2b3634;
-  --lg-amount: #7fd0a6;
-  --lg-alert: #ff8778;
-  --lg-hover: rgba(220, 236, 230, 0.08);
+body.mundo-ledger.dark {
+  color-scheme: dark;
+
+  --bg: #0a1420;
+  --panel: #101c2c;
+  --surface: #16283c;
+  --border: #24384d;
+  --border-strong: #35506b;
+  --text: #e8eef5;
+  --muted: #9fb0c1;
+  --accent: #7dd3fc;
+  --accent-soft: #0c2a3f;
+  --accent-solid: #ffb224;
+  --on-accent: #0c1b2a;
+  --danger: #ff8778;
+
+  --ring: 0 0 0 3px rgba(125, 211, 252, 0.22);
+
+  --cream: var(--surface);
+  --dark: var(--text);
+  --accent-deep: var(--accent);
+  --green-bg: var(--accent-soft);
+  --green-text: var(--accent);
+  --orange-border: var(--border-strong);
+  --orange-text: var(--danger);
+
+  --lg-rail: #08101c;
+  --lg-rail-dim: #8fa8c0;
+  --lg-amount: #7dd3fc;
+  --lg-hover: rgba(125, 211, 252, 0.08);
+  --lg-ok: #7fd0a6;
+  --lg-celeste: #38bdf8;
+  --lg-wash: rgba(125, 211, 252, 0.06);
+  --lg-glow-sol: rgba(255, 178, 36, 0.07);
+  --lg-glow-celeste: rgba(125, 211, 252, 0.07);
+  --lg-sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
 }
 
 /* ------------------------------------------------------------------- tierra */
 
-body.mundo-ledger { background: var(--lg-papel); color: var(--lg-ink); }
+body.mundo-ledger {
+  background-color: var(--bg);
+  background-image: radial-gradient(1100px 620px at -12% -4%, var(--lg-glow-celeste), transparent 62%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--text);
+}
 
-/* El grano de película de polish.css cuelga de body::before sin ámbito y se
-   posaba sobre el riel y los campos reglados. El contrato pide campos planos. */
-body.mundo-ledger::before { display: none; }
+/* El grano de película de polish.css cuelga de body::before sin ámbito. Acá se
+   convierte en la luz del sol que entra por la derecha y deriva despacio. */
+body.mundo-ledger::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 1;
+  mix-blend-mode: normal;
+  background-image: radial-gradient(760px 460px at 88% -6%, var(--lg-glow-sol), transparent 66%);
+  background-repeat: no-repeat;
+  animation: lg-drift 26s ease-in-out infinite alternate;
+}
 
-body.mundo-ledger .app,
+/* Sin fondo opaco en el shell: la luz tiene que llegar hasta el contenido. */
+body.mundo-ledger .app { position: relative; z-index: 1; background: none; }
 body.mundo-ledger .content,
 body.mundo-ledger .main,
-body.mundo-ledger .main-chat { background: var(--lg-papel); color: var(--lg-ink); }
-body.mundo-ledger .main-chat { height: 100dvh; max-width: none; }
-body.mundo-ledger .footer { border-top-color: var(--lg-rule); color: var(--lg-ink-2); }
-body.mundo-ledger .footer a { color: var(--lg-amount); }
+body.mundo-ledger .main-chat { background: none; color: var(--text); }
+body.mundo-ledger .main-chat { padding: 0; max-width: none; }
 
-/* --------------------------------------------------------------------- riel */
-
-body.mundo-ledger .app {
-  display: grid;
-  grid-template-columns: 108px minmax(0, 1fr);
-  min-height: 100vh;
+body.mundo-ledger .footer {
+  background: var(--lg-rail);
+  border-top: 0;
+  color: var(--lg-rail-dim);
 }
-body.mundo-ledger .app > .content { grid-column: 2; }
+body.mundo-ledger .footer .brand-foot { color: var(--lg-rail-ink); font-weight: 700; }
+body.mundo-ledger .footer a { color: #7dd3fc; }
+body.mundo-ledger .footer a:hover { color: #bae6fd; }
 
-body.mundo-ledger .rail {
-  grid-column: 1;
-  position: sticky;
-  top: 0;
-  align-self: start;
-  height: 100dvh;
+/* ------------------------------------------------------------- barra de arriba */
+
+body.mundo-ledger .topnav {
+  background: var(--lg-rail);
+  backdrop-filter: none;
+  border-bottom: 0;
+}
+/* La firma del mundo: una línea de agua que pasa a sol hacia la derecha. */
+body.mundo-ledger .topnav::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #0284c7, #38bdf8 30%, #ffb224 68%, #ff8a3d);
+}
+
+body.mundo-ledger .topnav .brand { color: var(--lg-rail-ink); padding: 6px 8px; border-radius: 8px; }
+body.mundo-ledger .topnav .brand:hover { background: rgba(255, 255, 255, 0.08); }
+body.mundo-ledger .topnav .wordmark {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--lg-rail-ink);
+}
+body.mundo-ledger .topnav .wordmark b { font-weight: 800; }
+body.mundo-ledger .topnav .logo-mark {
+  background: var(--lg-sol);
+  color: var(--lg-sol-ink);
+  border-radius: 8px;
+}
+
+body.mundo-ledger .nav-link { color: var(--lg-rail-dim); border-radius: 8px; }
+/* Seis enlaces + saldo + acciones no entran en 1220 px con tipo de 14 px: el
+   flexbox encogía la caja pero no el contenido, y los links pintaban encima del
+   chip de saldo. Con este tipo y padding entran justos, sin solaparse. */
+body.mundo-ledger .nav-links { gap: 0; }
+body.mundo-ledger .nav-link { font-size: 13.5px; padding: 7px 10px; gap: 6px; }
+body.mundo-ledger .nav-link:hover { color: var(--lg-rail-ink); background: rgba(255, 255, 255, 0.08); }
+body.mundo-ledger .nav-link.active { color: #ffffff; background: rgba(125, 211, 252, 0.16); font-weight: 600; }
+/* El .kbd de styles.css trae fondo --panel (papel): sobre el riel pintaba un
+   recuadro blanco con texto celeste apagado, 2.05:1. Va traslúcido. */
+body.mundo-ledger .nav-link .kbd {
+  color: var(--lg-rail-ink);
+  border-color: rgba(220, 232, 245, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body.mundo-ledger .topnav .icon-btn,
+body.mundo-ledger .topnav .nav-burger {
+  color: var(--lg-rail-ink);
+  background: none;
+  border-color: transparent;
+}
+body.mundo-ledger .topnav .icon-btn:hover,
+body.mundo-ledger .topnav .nav-burger:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+
+body.mundo-ledger .topnav .help-btn {
+  color: var(--lg-rail-ink);
+  border-color: rgba(220, 232, 245, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+}
+body.mundo-ledger .topnav .help-btn:hover { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
+body.mundo-ledger .topnav .btn-ghost {
+  color: var(--lg-rail-ink);
+  border-color: rgba(220, 232, 245, 0.35);
+  background: none;
+}
+body.mundo-ledger .topnav .btn-ghost:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--lg-rail-ink); color: #ffffff; }
+
+/* El saldo viaja en la barra: es el dato que decide si podés seguir. */
+body.mundo-ledger .saldo-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 13px;
+  border: 1px solid rgba(125, 211, 252, 0.4);
+  border-radius: 99px;
+  background: rgba(2, 132, 199, 0.22);
+  color: var(--lg-rail-ink);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.16s, border-color 0.16s;
+}
+body.mundo-ledger .saldo-chip:hover { background: rgba(2, 132, 199, 0.34); border-color: #7dd3fc; }
+body.mundo-ledger .saldo-chip b {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: #7dd3fc;
+}
+body.mundo-ledger .saldo-chip span {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lg-rail-dim);
+}
+
+body.mundo-ledger .nav-right .user-row {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(220, 232, 245, 0.2);
+}
+body.mundo-ledger .nav-right .user-row:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(220, 232, 245, 0.4); }
+body.mundo-ledger .nav-right .user-row .t strong { color: var(--lg-rail-ink); }
+body.mundo-ledger .nav-right .user-row .t span,
+body.mundo-ledger .nav-right .user-row .chev { color: var(--lg-rail-dim); }
+body.mundo-ledger .topnav .avatar { background: var(--lg-sol); color: var(--lg-sol-ink); }
+
+body.mundo-ledger .user-menu {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--lg-sombra);
+}
+body.mundo-ledger .user-menu > button { color: var(--text); }
+body.mundo-ledger .user-menu > button:hover { background: var(--surface); }
+body.mundo-ledger .user-menu > button.danger { color: var(--danger); }
+body.mundo-ledger .plan-card.compact { background: var(--surface); }
+body.mundo-ledger .plan-card .crown { color: var(--lg-sol); }
+body.mundo-ledger .plan-card .frac b { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+body.mundo-ledger .chip-active { background: var(--lg-rail); color: var(--lg-rail-ink); border-color: var(--lg-rail); }
+
+body.mundo-ledger .sidebar-scrim { background: rgba(8, 16, 28, 0.55); }
+body.mundo-ledger .nav-sheet {
   background: var(--lg-rail);
   color: var(--lg-rail-ink);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 14px 8px 12px;
+  border-left: 0;
 }
-body.mundo-ledger .rail-mark {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: 0;
-  color: var(--lg-rail-ink);
-  padding: 4px 0 12px;
-  cursor: pointer;
-}
-body.mundo-ledger .rail-mark .logo-mark { background: var(--lg-rail-ink); color: var(--lg-rail); }
-body.mundo-ledger .rail-word { font-size: 12px; font-weight: 600; letter-spacing: -0.01em; }
+body.mundo-ledger .nav-sheet .mono-label { color: var(--lg-rail-dim); }
+body.mundo-ledger .nav-sheet .icon-btn { color: var(--lg-rail-ink); background: none; border-color: transparent; }
+body.mundo-ledger .nav-sheet .icon-btn:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+body.mundo-ledger .sheet-sep { border-top-color: rgba(220, 232, 245, 0.18); }
+body.mundo-ledger .side-item { color: var(--lg-rail-dim); }
+body.mundo-ledger .side-item .icon { color: inherit; }
+body.mundo-ledger .side-item:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+body.mundo-ledger .side-item.active { background: rgba(125, 211, 252, 0.16); color: #ffffff; font-weight: 600; }
+body.mundo-ledger .side-item.active .icon,
+body.mundo-ledger .side-item:hover .icon { color: #ffffff; }
 
-body.mundo-ledger .rail-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 9px 2px 8px;
-  border: 0;
-  border-radius: 6px;
-  background: none;
-  color: var(--lg-rail-dim);
-  font: inherit;
-  font-size: 11.5px;
-  line-height: 1.15;
-  cursor: pointer;
+/* ------------------------------------------------- tipografía y micro-rótulos */
+
+body.mundo-ledger h1.hero,
+body.mundo-ledger .hero,
+body.mundo-ledger .page-head h1 {
+  font-family: var(--display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
 }
-body.mundo-ledger .rail-btn:hover { background: var(--lg-hover); color: var(--lg-rail-ink); }
-body.mundo-ledger .rail-btn[aria-current="page"] {
-  background: rgba(220, 236, 230, 0.16);
-  color: #ffffff;
-  font-weight: 600;
+body.mundo-ledger .home-hero .hero-title {
+  font-size: clamp(40px, 6vw, 64px);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  margin: 14px 0 16px;
+}
+body.mundo-ledger .section-h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  margin: 64px 0 6px;
+  color: var(--text);
 }
 
-body.mundo-ledger .rail-foot {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
+/* El énfasis va en peso y color pleno, no en degradé de texto. */
+body.mundo-ledger h1 em,
+body.mundo-ledger h2 em,
+body.mundo-ledger .hero-title .hero-em .reveal-word,
+body.mundo-ledger .login-left h1 .login-em {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: currentColor;
+  color: var(--accent);
+  font-style: normal;
+  font-weight: 800;
+}
+
+body.mundo-ledger .eyebrow {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  align-items: center;
-  padding-top: 12px;
-  border-top: 1px solid rgba(220, 236, 230, 0.18);
-  font-size: 11.5px;
-  color: var(--lg-rail-dim);
-  text-align: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
-body.mundo-ledger .rail-saldo {
+body.mundo-ledger .eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lg-sol);
+  box-shadow: 0 0 0 3px rgba(255, 178, 36, 0.22);
+  flex: none;
+}
+
+body.mundo-ledger .lede { color: var(--muted); font-size: 16px; }
+body.mundo-ledger .section-sub { color: var(--muted); font-size: 15px; max-width: 760px; }
+body.mundo-ledger .page-head p { color: var(--muted); }
+body.mundo-ledger .mono-label,
+body.mundo-ledger .stat-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+body.mundo-ledger .stat-num {
+  font-family: var(--mono);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
-  color: var(--lg-rail-ink);
-  font-weight: 600;
+  color: var(--lg-amount);
+  letter-spacing: -0.02em;
+}
+
+/* ------------------------------------------------------------------- cartas */
+
+body.mundo-ledger .card,
+body.mundo-ledger .plan-box,
+body.mundo-ledger .demo-cta,
+body.mundo-ledger .edge-card,
+body.mundo-ledger .agent-note,
+body.mundo-ledger .settings-card,
+body.mundo-ledger .demo-box,
+body.mundo-ledger .model-budgets,
+body.mundo-ledger .model-card,
+body.mundo-ledger .lock-box,
+body.mundo-ledger .admin-health {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--lg-sombra);
+}
+body.mundo-ledger .card:hover { border-color: var(--border-strong); box-shadow: var(--lg-sombra); }
+body.mundo-ledger .card .sq,
+body.mundo-ledger .demo-cta .sq,
+body.mundo-ledger .empty-state .sq,
+body.mundo-ledger .lock-box .sq,
+body.mundo-ledger .settings-card .head .sq {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+body.mundo-ledger .plan-box.current { border-color: var(--accent); box-shadow: var(--ring), var(--lg-sombra); }
+body.mundo-ledger .plan-box hr,
+body.mundo-ledger .plan-box .top { border-color: var(--border); }
+body.mundo-ledger .plan-box .desc,
+body.mundo-ledger .plan-box .tokens-sub,
+body.mundo-ledger .plan-box .foot-note,
+body.mundo-ledger .plan-box .mi-title { color: var(--muted); }
+body.mundo-ledger .plan-box h2 { font-family: var(--display); font-weight: 700; letter-spacing: -0.02em; }
+body.mundo-ledger .price-big {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  color: var(--lg-amount);
+}
+body.mundo-ledger .plan-box .check { color: var(--lg-ok); }
+body.mundo-ledger .plan-box li.no .check { color: var(--danger); }
+body.mundo-ledger .plan-box li .lim { font-family: var(--mono); font-size: 12px; }
+body.mundo-ledger .plan-estado { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--border); }
+body.mundo-ledger .chip-popular { background: var(--lg-sol); color: var(--lg-sol-ink); }
+body.mundo-ledger .edge-card.featured { border-color: var(--accent); box-shadow: var(--ring); }
+body.mundo-ledger .edge-card li .check { color: var(--lg-ok); }
+
+body.mundo-ledger .plans-grid > * { animation: lg-rise 0.5s cubic-bezier(0.22, 0.7, 0.25, 1) both; }
+body.mundo-ledger .plans-grid > :nth-child(1) { animation-delay: 0.05s; }
+body.mundo-ledger .plans-grid > :nth-child(2) { animation-delay: 0.12s; }
+body.mundo-ledger .plans-grid > :nth-child(3) { animation-delay: 0.19s; }
+body.mundo-ledger .plans-grid > :nth-child(4) { animation-delay: 0.26s; }
+
+/* -------------------------------------------------------------------- inicio */
+
+body.mundo-ledger .home-hero { max-width: 820px; padding-top: 26px; }
+body.mundo-ledger .home-hero > * { animation: lg-rise 0.6s cubic-bezier(0.22, 0.7, 0.25, 1) both; }
+body.mundo-ledger .home-hero > :nth-child(1) { animation-delay: 0.04s; }
+body.mundo-ledger .home-hero > :nth-child(2) { animation-delay: 0.1s; }
+body.mundo-ledger .home-hero > :nth-child(3) { animation-delay: 0.16s; }
+body.mundo-ledger .home-hero > :nth-child(4) { animation-delay: 0.22s; }
+body.mundo-ledger .home-hero > :nth-child(5) { animation-delay: 0.28s; }
+body.mundo-ledger .home-hero > :nth-child(6) { animation-delay: 0.34s; }
+body.mundo-ledger .home-hero > :nth-child(7) { animation-delay: 0.4s; }
+
+body.mundo-ledger .home-racha {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  color: var(--accent);
   font-size: 13px;
 }
-body.mundo-ledger .rail-aviso {
-  border: 1px solid var(--lg-rail-dim);
-  color: var(--lg-rail-ink);
-  background: none;
-  border-radius: 6px;
-  padding: 6px;
-  font: inherit;
-  font-size: 11.5px;
-  width: 100%;
-  cursor: pointer;
-}
-body.mundo-ledger .rail-aviso:hover { background: var(--lg-hover); }
 
-/* ------------------------------------------------------ banda de vencimiento */
+body.mundo-ledger .home-ask {
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: var(--lg-sombra);
+}
+body.mundo-ledger .home-ask:focus-within { border-color: var(--accent); box-shadow: var(--ring), var(--lg-sombra); }
+body.mundo-ledger .home-ask textarea { font-size: 15.5px; }
+
+body.mundo-ledger .home-sug .sug {
+  background: var(--panel);
+  border-color: var(--border);
+  color: var(--muted);
+  transition: color 0.16s, border-color 0.16s, background 0.16s, transform 0.16s;
+}
+body.mundo-ledger .home-sug .sug:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+body.mundo-ledger .home-note { color: var(--muted); }
+
+body.mundo-ledger .home-stats {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  background: none;
+  border: 0;
+  overflow: visible;
+  margin: 44px 0 8px;
+}
+body.mundo-ledger .home-stats > div {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--lg-celeste);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--lg-sombra);
+}
+body.mundo-ledger .home-stats > div:nth-child(2) { border-top-color: var(--lg-sol); }
+body.mundo-ledger .home-stats > div:nth-child(3) { border-top-color: var(--lg-ok); }
+body.mundo-ledger .home-stats b {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+body.mundo-ledger .home-stats span { font-size: 12px; color: var(--muted); }
+
+/* Renglones numerados del libro: el número ordena, no decora. */
+body.mundo-ledger .home-models,
+body.mundo-ledger .home-agents {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+}
+body.mundo-ledger .home-models { counter-reset: lg-modelo; }
+body.mundo-ledger .home-agents { counter-reset: lg-agente; }
+
+body.mundo-ledger .hm-card {
+  counter-increment: lg-modelo;
+  position: relative;
+  padding: 18px 10px 18px 64px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: none;
+  transition: background 0.16s;
+}
+body.mundo-ledger .hm-card:hover { background: var(--lg-hover); }
+body.mundo-ledger .hm-card::before {
+  content: "0" counter(lg-modelo);
+  position: absolute;
+  left: 12px;
+  top: 22px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+}
+body.mundo-ledger .hm-top strong { font-family: var(--display); font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+body.mundo-ledger .hm-pct {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 2px 9px;
+}
+body.mundo-ledger .hm-card .plan-bar.mini { margin: 10px 0; }
+body.mundo-ledger .hm-nums { flex-direction: row; align-items: baseline; gap: 10px; }
+body.mundo-ledger .hm-nums b {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+body.mundo-ledger .hm-nums span { font-size: 12px; color: var(--muted); }
+body.mundo-ledger .hm-desc { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+body.mundo-ledger .hm-up {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 8px 0 0;
+}
+
+body.mundo-ledger .home-agent {
+  counter-increment: lg-agente;
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 38px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 10px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  transition: background 0.16s;
+}
+body.mundo-ledger .home-agent:hover { background: var(--lg-hover); border-color: var(--border); transform: none; }
+body.mundo-ledger .home-agent::before {
+  content: "0" counter(lg-agente);
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+}
+body.mundo-ledger .home-agent .ico { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); }
+body.mundo-ledger .home-agent.more .ico { background: var(--surface); color: var(--muted); }
+body.mundo-ledger .home-agent .t strong { font-size: 14.5px; font-weight: 650; }
+body.mundo-ledger .home-agent .t p { font-size: 12.5px; color: var(--muted); }
+body.mundo-ledger .home-agent .go { color: var(--muted); }
+body.mundo-ledger .home-agent:hover .go { color: var(--accent); }
+
+body.mundo-ledger .home-links { margin-top: 36px; }
+body.mundo-ledger .home-links button {
+  background: var(--panel);
+  border-color: var(--border);
+  transition: border-color 0.16s, color 0.16s, transform 0.16s, background 0.16s;
+}
+body.mundo-ledger .home-links button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+
+/* ------------------------------------------------------------- mini agentes */
+
+body.mundo-ledger .agents-grid { gap: 12px; }
+body.mundo-ledger .agent-card {
+  background: var(--panel);
+  border-radius: 12px;
+  box-shadow: none;
+  transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+}
+body.mundo-ledger .agent-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--lg-sombra); }
+body.mundo-ledger .agent-ico { width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); }
+body.mundo-ledger .agent-body strong { font-size: 14.5px; font-weight: 650; }
+body.mundo-ledger .agent-body p { font-size: 12.5px; color: var(--muted); }
+body.mundo-ledger .agent-sample {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+body.mundo-ledger .agent-go { color: var(--muted); }
+body.mundo-ledger .agent-card:hover .agent-go { color: var(--accent); }
+
+body.mundo-ledger .agents-grid > * { animation: lg-rise 0.5s cubic-bezier(0.22, 0.7, 0.25, 1) both; }
+body.mundo-ledger .agents-grid > :nth-child(1) { animation-delay: 0.03s; }
+body.mundo-ledger .agents-grid > :nth-child(2) { animation-delay: 0.06s; }
+body.mundo-ledger .agents-grid > :nth-child(3) { animation-delay: 0.09s; }
+body.mundo-ledger .agents-grid > :nth-child(4) { animation-delay: 0.12s; }
+body.mundo-ledger .agents-grid > :nth-child(5) { animation-delay: 0.15s; }
+body.mundo-ledger .agents-grid > :nth-child(6) { animation-delay: 0.18s; }
+body.mundo-ledger .agents-grid > :nth-child(7) { animation-delay: 0.21s; }
+body.mundo-ledger .agents-grid > :nth-child(8) { animation-delay: 0.24s; }
+body.mundo-ledger .agents-grid > :nth-child(9) { animation-delay: 0.27s; }
+body.mundo-ledger .agents-grid > :nth-child(10) { animation-delay: 0.3s; }
+body.mundo-ledger .agents-grid > :nth-child(11) { animation-delay: 0.33s; }
+body.mundo-ledger .agents-grid > :nth-child(12) { animation-delay: 0.36s; }
+
+body.mundo-ledger .agent-note { display: flex; align-items: center; gap: 14px; padding: 16px 18px; }
+body.mundo-ledger .agent-note .sq {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+body.mundo-ledger .agent-note .txt p { color: var(--muted); }
+
+/* -----------------------------------------------------------------controles */
+
+body.mundo-ledger .btn-primary,
+body.mundo-ledger .send-btn {
+  background: linear-gradient(180deg, #ffc65c, #ffb224);
+  color: var(--lg-sol-ink);
+  border: 1px solid #e69c00;
+  border-radius: 10px;
+  box-shadow: none;
+  font-weight: 650;
+  transition: transform 0.16s, box-shadow 0.16s, filter 0.16s;
+}
+body.mundo-ledger .btn-primary:hover,
+body.mundo-ledger .send-btn:hover:not([disabled]) {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -8px rgba(255, 178, 36, 0.7);
+}
+body.mundo-ledger .btn-primary:active,
+body.mundo-ledger .send-btn:active { transform: translateY(0); }
+body.mundo-ledger .btn-primary[disabled],
+body.mundo-ledger .send-btn[disabled] { filter: saturate(0.4); }
+
+body.mundo-ledger .btn-ghost,
+body.mundo-ledger .btn-plain,
+body.mundo-ledger .icon-btn {
+  color: var(--text);
+  border-color: var(--border);
+  background: none;
+}
+body.mundo-ledger .btn-ghost:hover,
+body.mundo-ledger .btn-plain:hover,
+body.mundo-ledger .icon-btn:hover { background: var(--lg-hover); border-color: var(--border-strong); color: var(--text); }
+body.mundo-ledger .btn-dark { background: var(--text); color: var(--bg); }
+body.mundo-ledger .btn-google { background: var(--panel); border-color: var(--border); color: var(--text); }
+body.mundo-ledger .linklike { color: var(--accent); }
+
+body.mundo-ledger .chip,
+body.mundo-ledger .chip-suggestion,
+body.mundo-ledger .tag,
+body.mundo-ledger .chip-inline,
+body.mundo-ledger .filter-pill {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+body.mundo-ledger .chip-plan { background: var(--lg-rail); color: var(--lg-rail-ink); border-color: var(--lg-rail); }
+body.mundo-ledger .chip-inline.ok { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+body.mundo-ledger .filter-pill.on { background: var(--lg-rail); border-color: var(--lg-rail); color: var(--lg-rail-ink); }
+body.mundo-ledger .filter-pill.on b { background: rgba(255, 255, 255, 0.18); color: var(--lg-rail-ink); }
+
+body.mundo-ledger input,
+body.mundo-ledger textarea,
+body.mundo-ledger select {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+}
+body.mundo-ledger input::placeholder,
+body.mundo-ledger textarea::placeholder { color: var(--muted); }
+
+body.mundo-ledger .plan-bar { background: var(--surface); }
+body.mundo-ledger .plan-bar > span { background: linear-gradient(90deg, var(--lg-celeste), #7dd3fc); }
+body.mundo-ledger .mb-row.out .plan-bar.mini > span { background: var(--danger); }
+body.mundo-ledger .mb-nums,
+body.mundo-ledger .dc-meta,
+body.mundo-ledger .gm-count { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+body.mundo-ledger .gm-dots span.used { background: var(--lg-celeste); }
+body.mundo-ledger .gm-list .tick { background: var(--accent-soft); color: var(--accent); }
+
+/* Superficies que dibuja el navegador: también pertenecen al sistema. */
+body.mundo-ledger ::selection { background: rgba(2, 132, 199, 0.25); color: var(--text); }
+body.mundo-ledger.dark ::selection { background: rgba(125, 211, 252, 0.3); }
+body.mundo-ledger :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+body.mundo-ledger .topnav :focus-visible,
+body.mundo-ledger .nav-sheet :focus-visible { outline-color: #7dd3fc; }
+
+body.mundo-ledger * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+body.mundo-ledger *::-webkit-scrollbar { width: 10px; height: 10px; }
+body.mundo-ledger *::-webkit-scrollbar-track { background: transparent; }
+body.mundo-ledger *::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+body.mundo-ledger *::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; }
+body.mundo-ledger *::-webkit-scrollbar-corner { background: transparent; }
+
+/* ---------------------------------------------------------------------- chat */
+
+body.mundo-ledger .chat { max-width: none; padding: 0; }
+body.mundo-ledger .chat-lg { display: flex; min-width: 0; flex: 1 1 auto; min-height: 0; }
+body.mundo-ledger .chat-lg > .chat { flex: 1 1 auto; min-width: 0; }
 
 body.mundo-ledger .banda-venc {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  background: var(--lg-rail);
-  color: var(--lg-rail-ink);
-  padding: 9px 20px;
-  font-size: 13px;
   flex: none;
+  background: var(--accent-soft);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  padding: 9px 22px;
+  font-size: 13px;
 }
-body.mundo-ledger .banda-venc b { font-weight: 600; }
-body.mundo-ledger .bv-cifra { font-variant-numeric: tabular-nums; }
+body.mundo-ledger .banda-venc b { font-weight: 650; }
+body.mundo-ledger .bv-cifra {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--lg-amount);
+}
 body.mundo-ledger .bv-derecha { display: flex; align-items: center; gap: 12px; }
 
-/* ------------------------------------------------- tipografía y prohibiciones */
-
-/* El piso de calidad prohíbe el eyebrow sobre un título y los números de
-   sección que no ordenan nada. */
-body.mundo-ledger .eyebrow { display: none; }
-
-body.mundo-ledger h1.hero,
-body.mundo-ledger .hero { color: var(--lg-ink); }
-
-/* El degradé no se gana con color: hay que apagar el relleno y el relleno de
-   texto. Además el piso lo prohíbe: el énfasis va en peso. */
-body.mundo-ledger h1 em,
-body.mundo-ledger h2 em {
-  background: none;
-  -webkit-background-clip: border-box;
-  background-clip: border-box;
-  -webkit-text-fill-color: currentColor;
-  color: var(--lg-amount);
-  font-style: normal;
-  font-weight: 700;
+body.mundo-ledger .chat-topline {
+  color: var(--muted);
+  border-bottom-color: var(--border);
+  margin: 12px 22px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
 }
+body.mundo-ledger .chat-log { flex: 1 1 auto; min-height: 120px; padding: 16px 22px 6px; }
 
-body.mundo-ledger .lede,
-body.mundo-ledger .section-sub,
-body.mundo-ledger .section-h2,
-body.mundo-ledger .mono-label,
-body.mundo-ledger .stat-label,
-body.mundo-ledger .page-head p { color: var(--lg-ink-2); }
-
-body.mundo-ledger .stat-num { color: var(--lg-amount); font-variant-numeric: tabular-nums; }
-
-/* -----------------------------------------------------------------cartas */
-
-body.mundo-ledger .card,
-body.mundo-ledger .plan-box,
-body.mundo-ledger .demo-cta,
-body.mundo-ledger .edge-card {
-  background: var(--lg-campo);
-  border: 1px solid var(--lg-rule);
-  border-radius: 8px;
-  box-shadow: none;
-}
-body.mundo-ledger .plan-box.current { border-color: var(--lg-rail); }
-body.mundo-ledger .plan-box hr,
-body.mundo-ledger .plan-box .top { border-color: var(--lg-rule); }
-body.mundo-ledger .plan-box .desc,
-body.mundo-ledger .plan-box .tokens-sub,
-body.mundo-ledger .plan-box .foot-note,
-body.mundo-ledger .plan-box .mi-title { color: var(--lg-ink-2); }
-body.mundo-ledger .plan-box .price-big { color: var(--lg-amount); font-variant-numeric: tabular-nums; }
-body.mundo-ledger .plan-box .check { color: var(--lg-amount); }
-body.mundo-ledger .plan-box li.no .check { color: var(--lg-alert); }
-body.mundo-ledger .plan-estado {
-  background: var(--lg-hover);
-  color: var(--lg-amount);
-  border: 1px solid var(--lg-rule);
-}
-
-/* Sugerencias: renglones del libro, no cuatro tarjetas iguales con tile de ícono
-   (el primer Refuse del piso de calidad). */
+/* Sugerencias: renglones numerados, no cuatro tarjetas iguales. */
 body.mundo-ledger .sugerencias {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--lg-rule);
-  margin: 4px 0 14px;
+  counter-reset: lg-sug;
+  border-top: 1px solid var(--border);
+  margin: 14px 22px;
 }
 body.mundo-ledger .sugerencia {
+  counter-increment: lg-sug;
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(140px, 210px) minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: 40px minmax(140px, 210px) minmax(0, 1fr);
+  gap: 14px;
   align-items: baseline;
   text-align: left;
-  padding: 11px 2px;
+  padding: 11px 6px;
   border: 0;
-  border-bottom: 1px solid var(--lg-rule);
+  border-bottom: 1px solid var(--border);
   background: none;
-  color: var(--lg-ink);
+  color: var(--text);
   font: inherit;
   cursor: pointer;
+  transition: background 0.16s;
 }
 body.mundo-ledger .sugerencia:hover { background: var(--lg-hover); }
+body.mundo-ledger .sugerencia::before {
+  content: "0" counter(lg-sug);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--accent);
+}
 body.mundo-ledger .sugerencia .sg-t { font-weight: 600; font-size: 14px; }
-body.mundo-ledger .sugerencia .sg-d { color: var(--lg-ink-2); font-size: 13.5px; }
+body.mundo-ledger .sugerencia .sg-d { color: var(--muted); font-size: 13.5px; }
 
-/* El brillo que sigue al puntero es decorado de la capa anterior. */
-body.mundo-ledger .spot::before { display: none; }
-body.mundo-ledger .spot { background-image: none; }
-
-/* -----------------------------------------------------------------controles */
-
-body.mundo-ledger .btn-primary,
-body.mundo-ledger .send-btn {
+body.mundo-ledger .bubble-user {
   background: var(--lg-rail);
   color: var(--lg-rail-ink);
-  border: 1px solid var(--lg-rail);
-  border-radius: 6px;
+  border-radius: 12px 12px 4px 12px;
   box-shadow: none;
 }
-body.mundo-ledger .btn-primary:hover,
-body.mundo-ledger .send-btn:hover { background: #14504e; }
-body.mundo-ledger .btn-ghost,
-body.mundo-ledger .btn-plain,
-body.mundo-ledger .icon-btn {
-  color: var(--lg-ink);
-  border-color: var(--lg-rule);
-  background: none;
-}
-body.mundo-ledger .btn-ghost:hover,
-body.mundo-ledger .btn-plain:hover,
-body.mundo-ledger .icon-btn:hover { background: var(--lg-hover); border-color: var(--lg-rail); }
-body.mundo-ledger .btn-dark { background: var(--lg-ink); color: var(--lg-papel); }
-body.mundo-ledger .btn-google { background: var(--lg-campo); border-color: var(--lg-rule); color: var(--lg-ink); }
-body.mundo-ledger .chip,
-body.mundo-ledger .chip-suggestion,
-body.mundo-ledger .tag {
-  background: var(--lg-campo);
-  border: 1px solid var(--lg-rule);
-  color: var(--lg-ink);
-}
-body.mundo-ledger .chip-plan,
-body.mundo-ledger .chip-active { background: var(--lg-rail); color: var(--lg-rail-ink); border-color: var(--lg-rail); }
-
-body.mundo-ledger input,
-body.mundo-ledger textarea,
-body.mundo-ledger select {
-  background: var(--lg-campo);
-  border: 1px solid var(--lg-rule);
-  color: var(--lg-ink);
-  border-radius: 6px;
-}
-body.mundo-ledger input::placeholder,
-body.mundo-ledger textarea::placeholder { color: var(--lg-ink-2); }
-
-/* Superficies que dibuja el navegador: selección, foco y barra de desplazamiento
-   también pertenecen al sistema, no al azar del motor. */
-body.mundo-ledger ::selection { background: rgba(15, 59, 58, 0.2); color: var(--lg-ink); }
-body.mundo-ledger :focus-visible { outline: 2px solid var(--lg-amount); outline-offset: 2px; }
-body.mundo-ledger .rail :focus-visible { outline-color: var(--lg-rail-ink); }
-body.mundo-ledger * { scrollbar-color: var(--lg-rule) transparent; }
-
-/* ---------------------------------------------------------------------- chat */
-
-body.mundo-ledger .chat { max-width: none; }
-body.mundo-ledger .chat-lg { display: flex; min-width: 0; flex: 1 1 auto; min-height: 0; }
-body.mundo-ledger .chat-lg > .chat { flex: 1 1 auto; min-width: 0; }
-body.mundo-ledger .chat-log { flex: 1 1 auto; min-height: 120px; }
-
-body.mundo-ledger .bubble-user { background: var(--lg-rail); color: var(--lg-rail-ink); border-radius: 6px; box-shadow: none; }
-body.mundo-ledger .bubble-ai { background: transparent; color: var(--lg-ink); border-radius: 6px; box-shadow: none; }
-body.mundo-ledger .msg-ava { background: var(--lg-rail); color: var(--lg-rail-ink); }
-body.mundo-ledger .msg-act { color: var(--lg-ink-2); }
-body.mundo-ledger .msg-actions { border-color: var(--lg-rule); }
-body.mundo-ledger .chat-note,
-body.mundo-ledger .chat-topline { color: var(--lg-ink-2); }
-body.mundo-ledger .agent-chip { background: var(--lg-campo); border: 1px solid var(--lg-rule); color: var(--lg-ink); }
-
-body.mundo-ledger .composer {
-  background: var(--lg-campo);
-  border: 1px solid var(--lg-rule);
-  border-radius: 8px;
+body.mundo-ledger .bubble-ai {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
   box-shadow: none;
+  padding: 12px 16px;
 }
-body.mundo-ledger .composer textarea { border: 0; background: transparent; }
-body.mundo-ledger .send-hint,
-body.mundo-ledger .model-chip { color: var(--lg-ink-2); background: transparent; }
-body.mundo-ledger .model-chip .spark,
-body.mundo-ledger .spark { color: var(--lg-amount); background: var(--lg-amount); box-shadow: none; }
-body.mundo-ledger .model-chip .mc-warn { color: var(--lg-alert); }
-
-body.mundo-ledger .guest-bar {
-  background: var(--lg-campo);
-  border: 1px solid var(--lg-rule);
-  border-radius: 6px;
-  box-shadow: none;
-  color: var(--lg-ink);
-  padding: 10px 12px;
-}
-/* min-width:180px heredado de styles.css empujaba el documento más allá del
-   teléfono: era el desborde real en 390. */
-body.mundo-ledger .guest-bar .txt { min-width: 0; flex: 1 1 140px; }
-body.mundo-ledger .guest-bar .tag { color: var(--lg-ink); border-color: var(--lg-rule); background: none; }
-body.mundo-ledger .guest-bar.out { border-color: var(--lg-alert); }
+body.mundo-ledger .msg-ava { background: var(--lg-sol); color: var(--lg-sol-ink); box-shadow: none; }
+body.mundo-ledger .msg-act { color: var(--muted); }
+body.mundo-ledger .msg-act:hover { color: var(--accent); background: var(--lg-hover); }
+body.mundo-ledger .msg-actions { border-color: var(--border); }
+body.mundo-ledger .chat-note { color: var(--muted); margin: 0 22px 14px; }
+body.mundo-ledger .agent-chip { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
+body.mundo-ledger .agent-chip .ac-ico { color: var(--accent); }
+body.mundo-ledger .typing .dots i { background: var(--accent); }
+body.mundo-ledger .typing.thinking .dots i { background: var(--muted); }
+body.mundo-ledger .typing-label { color: var(--muted); }
 
 /* El asiento: cada respuesta deja cargo y saldo, como en un extracto. */
 body.mundo-ledger .asiento {
@@ -351,134 +848,283 @@ body.mundo-ledger .asiento {
   align-items: baseline;
   margin-top: 10px;
   padding-top: 7px;
-  border-top: 1px solid var(--lg-rule);
-  font-size: 12.5px;
-  color: var(--lg-ink-2);
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
-body.mundo-ledger .asiento .a-cargo { color: var(--lg-amount); font-weight: 600; }
-body.mundo-ledger .asiento .a-neutro { color: var(--lg-ink-2); }
+body.mundo-ledger .asiento .a-cargo { color: var(--lg-amount); font-weight: 500; }
+body.mundo-ledger .asiento .a-neutro { color: var(--muted); }
+
+body.mundo-ledger .composer {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--lg-sombra);
+  margin: 10px 22px 8px;
+  padding: 14px 16px 12px;
+}
+body.mundo-ledger .composer:focus-within { border-color: var(--accent); box-shadow: var(--ring), var(--lg-sombra); }
+body.mundo-ledger .composer textarea { border: 0; background: transparent; }
+body.mundo-ledger .send-hint { color: var(--muted); background: transparent; }
+body.mundo-ledger .model-chip { color: var(--muted); background: var(--surface); border-color: var(--border); }
+body.mundo-ledger .model-chip select { color: var(--text); }
+body.mundo-ledger .model-chip .spark,
+body.mundo-ledger .spark { color: var(--lg-sol); background: var(--lg-sol); box-shadow: none; }
+body.mundo-ledger .model-chip .mc-warn { color: var(--danger); }
+
+body.mundo-ledger .guest-bar {
+  background: var(--accent-soft);
+  border: 1px solid rgba(2, 132, 199, 0.3);
+  border-radius: 10px;
+  box-shadow: none;
+  color: var(--text);
+  padding: 10px 12px;
+  margin: 10px 22px 0;
+}
+/* min-width:180px heredado de styles.css empujaba el documento más allá del
+   teléfono: era el desborde real en 390. */
+body.mundo-ledger .guest-bar .txt { min-width: 0; flex: 1 1 140px; }
+body.mundo-ledger .guest-bar .tag { color: var(--accent); border-color: rgba(2, 132, 199, 0.35); background: var(--panel); }
+body.mundo-ledger .guest-bar.out { border-color: var(--danger); background: rgba(194, 54, 43, 0.08); }
+body.mundo-ledger.dark .guest-bar.out { background: rgba(255, 135, 120, 0.1); }
+body.mundo-ledger .guest-bar.out .tag { color: var(--danger); border-color: var(--danger); }
 
 /* -------------------------------------------------------- columna de cuenta */
 
 body.mundo-ledger .cuenta {
   flex: none;
   width: 320px;
-  background: var(--lg-papel);
-  color: var(--lg-ink);
-  border-left: 1px solid var(--lg-rule);
-  padding: 20px 18px;
+  background-color: var(--panel);
+  background-image: linear-gradient(180deg, var(--lg-wash), transparent 180px);
+  color: var(--text);
+  border-left: 1px solid var(--border);
+  padding: 22px 20px;
   overflow-y: auto;
   overscroll-behavior: contain;
   font-variant-numeric: tabular-nums;
 }
 body.mundo-ledger .cuenta h2 {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--lg-ink-2);
-  margin: 22px 0 8px;
+  color: var(--muted);
+  margin: 24px 0 8px;
 }
-body.mundo-ledger .saldo-hero { font-size: 44px; font-weight: 700; line-height: 1; color: var(--lg-amount); margin: 0; }
-body.mundo-ledger .saldo-sub { font-size: 12.5px; color: var(--lg-ink-2); margin: 6px 0 0; }
+body.mundo-ledger .cuenta h2:first-child { margin-top: 0; }
+body.mundo-ledger .saldo-hero {
+  font-family: var(--mono);
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--lg-amount);
+  margin: 0;
+}
+body.mundo-ledger .saldo-sub { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
 
-body.mundo-ledger .bolsas { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--lg-rule); }
+body.mundo-ledger .bolsas { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border); }
 body.mundo-ledger .bolsas li {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   align-items: baseline;
   padding: 9px 0;
-  border-bottom: 1px solid var(--lg-rule);
+  border-bottom: 1px solid var(--border);
   font-size: 13px;
 }
 body.mundo-ledger .bolsas .b-nombre { min-width: 0; overflow-wrap: anywhere; }
-body.mundo-ledger .bolsas .b-up { display: block; font-size: 11px; color: var(--lg-ink-2); }
-body.mundo-ledger .bolsas .b-rest { font-weight: 600; }
-body.mundo-ledger .bolsas .b-vacia { color: var(--lg-alert); }
+body.mundo-ledger .bolsas .b-up {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+body.mundo-ledger .bolsas .b-rest { font-family: var(--mono); font-weight: 500; }
+body.mundo-ledger .bolsas .b-vacia { color: var(--danger); }
 
 body.mundo-ledger .movimientos { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 body.mundo-ledger .movimientos th {
   text-align: right;
-  font-weight: 600;
-  color: var(--lg-ink-2);
-  font-size: 11px;
-  letter-spacing: 0.03em;
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0 0 6px;
-  border-bottom: 1px solid var(--lg-rule);
+  border-bottom: 1px solid var(--border);
 }
 body.mundo-ledger .movimientos th:first-child { text-align: left; }
-body.mundo-ledger .movimientos td { padding: 8px 0; border-bottom: 1px solid var(--lg-rule); vertical-align: baseline; }
+body.mundo-ledger .movimientos td {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: baseline;
+}
 body.mundo-ledger .movimientos td:not(:first-child) { text-align: right; }
 body.mundo-ledger .movimientos .m-cargo { color: var(--lg-amount); }
-body.mundo-ledger .movimientos .m-vacia { color: var(--lg-ink-2); }
+body.mundo-ledger .movimientos .m-vacia { color: var(--muted); }
 body.mundo-ledger .movimientos caption { display: none; }
 
-/* ------------------------------------------------------------- otras capas */
+/* ------------------------------------------------- pieza, login y otras capas */
 
-body.mundo-ledger table { border-color: var(--lg-rule); }
+body.mundo-ledger .canvas-panel { border-radius: 12px; box-shadow: var(--lg-sombra); }
+body.mundo-ledger .cv-head,
+body.mundo-ledger .cv-foot { background: var(--surface); }
+body.mundo-ledger .cv-kicker { font-family: var(--mono); color: var(--accent); letter-spacing: 0.12em; }
+body.mundo-ledger .cv-step { font-family: var(--mono); color: var(--muted); }
+
+body.mundo-ledger .login-left { background: var(--lg-rail); color: var(--lg-rail-ink); }
+body.mundo-ledger .login-left h1,
+body.mundo-ledger .login-left .brand { color: var(--lg-rail-ink); }
+body.mundo-ledger .login-left h1 { font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; }
+body.mundo-ledger .login-left h1 em,
+body.mundo-ledger .login-left h1 .login-em { color: #7dd3fc; }
+body.mundo-ledger .login-left .eyebrow { color: var(--lg-rail-dim); }
+body.mundo-ledger .login-left .lede,
+body.mundo-ledger .login-left .note,
+body.mundo-ledger .login-left .minifoot { color: var(--lg-rail-dim); }
+body.mundo-ledger .login-left .sep { border-top-color: rgba(220, 232, 245, 0.24); }
+body.mundo-ledger .login-left .brand .logo-mark { background: var(--lg-sol); color: var(--lg-sol-ink); }
+body.mundo-ledger .login-left .note .star { background: var(--lg-sol); }
+/* La lista de ventajas heredaba --muted del papel (2.26:1 sobre el riel). */
+body.mundo-ledger .login-feats li { color: var(--lg-rail-ink); }
+body.mundo-ledger .login-feats svg { color: #7dd3fc; }
+body.mundo-ledger .login-right { background: var(--bg); }
+body.mundo-ledger .login-box h2 { font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; }
+body.mundo-ledger .tabs { background: var(--surface); }
+body.mundo-ledger .tab.active { background: var(--panel); color: var(--text); box-shadow: var(--lg-sombra); }
+body.mundo-ledger.dark .tab.active { background: var(--surface); }
+
+body.mundo-ledger .history-item { background: var(--panel); border-radius: 10px; }
+body.mundo-ledger .history-item:hover { border-color: var(--accent); }
+body.mundo-ledger .history-item .meta { font-family: var(--mono); font-size: 11.5px; }
+body.mundo-ledger .searchbox input { border-radius: 10px; }
+body.mundo-ledger .hi-pin { color: var(--lg-sol); }
+
+body.mundo-ledger .seg { background: var(--surface); }
+body.mundo-ledger .seg-thumb { background: var(--panel); box-shadow: var(--lg-sombra); }
+body.mundo-ledger.dark .seg { background: var(--bg); border: 1px solid var(--border); }
+body.mundo-ledger.dark .seg-thumb {
+  background: var(--accent-soft);
+  border: 1px solid rgba(125, 211, 252, 0.34);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+body.mundo-ledger .perfil-campo textarea { border-radius: 8px; }
+
+body.mundo-ledger table { border-color: var(--border); }
 body.mundo-ledger th,
-body.mundo-ledger td { border-color: var(--lg-rule); }
+body.mundo-ledger td { border-color: var(--border); }
+body.mundo-ledger table.comparison th { background: var(--accent-soft); color: var(--text); }
+body.mundo-ledger table.comparison th.col-current { color: var(--accent); }
 body.mundo-ledger .num { font-variant-numeric: tabular-nums; }
 body.mundo-ledger .muted,
 body.mundo-ledger .sub,
-body.mundo-ledger .hint { color: var(--lg-ink-2); }
-body.mundo-ledger .tick { color: var(--lg-amount); }
-body.mundo-ledger .plan-bar { background: var(--lg-rule); }
-body.mundo-ledger .plan-bar span { background: var(--lg-amount); }
-body.mundo-ledger .avatar { background: var(--lg-rail); color: var(--lg-rail-ink); }
-body.mundo-ledger .user-menu { background: var(--lg-campo); border: 1px solid var(--lg-rule); box-shadow: none; }
-body.mundo-ledger .modal { background: var(--lg-papel); border: 1px solid var(--lg-rule); box-shadow: none; }
-body.mundo-ledger .modal-x { color: var(--lg-ink-2); }
-body.mundo-ledger .toast { background: var(--lg-rail); color: var(--lg-rail-ink); box-shadow: none; }
-body.mundo-ledger .toast-dot { background: var(--lg-amount); }
-body.mundo-ledger .nav-sheet { background: var(--lg-rail); color: var(--lg-rail-ink); }
-body.mundo-ledger .side-item { color: var(--lg-rail-dim); }
-body.mundo-ledger .side-item.active,
-body.mundo-ledger .side-item:hover { background: var(--lg-hover); color: #ffffff; }
+body.mundo-ledger .hint,
+body.mundo-ledger .foot-note { color: var(--muted); }
+body.mundo-ledger .tick { color: var(--lg-ok); }
+body.mundo-ledger .avatar { background: var(--lg-sol); color: var(--lg-sol-ink); }
+body.mundo-ledger .plan-tag.p-plus { background: var(--lg-rail); color: var(--lg-rail-ink); border-color: var(--lg-rail); }
+body.mundo-ledger .plan-tag.p-pro { background: var(--accent-soft); color: var(--accent); }
+
+body.mundo-ledger .modal-backdrop { background: rgba(8, 16, 28, 0.5); }
+body.mundo-ledger .modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--lg-sombra);
+}
+body.mundo-ledger .modal h2 { font-family: var(--display); font-weight: 800; letter-spacing: -0.02em; }
+body.mundo-ledger .modal-x { color: var(--muted); }
+body.mundo-ledger .modal-note { color: var(--muted); }
+body.mundo-ledger .modal-links button { background: var(--surface); border-radius: 10px; }
+body.mundo-ledger .modal-links button:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+body.mundo-ledger .toast { background: var(--lg-rail); color: var(--lg-rail-ink); box-shadow: var(--lg-sombra); border-color: rgba(220, 232, 245, 0.16); }
+body.mundo-ledger.dark .toast { background: var(--surface); color: var(--text); }
+body.mundo-ledger .toast-dot { background: var(--lg-sol); }
+body.mundo-ledger .toast-error .toast-dot { background: var(--danger); }
+
+/* ------------------------------------------------------- revelado y movimiento */
+
+body.mundo-ledger.rv-listo [data-rv] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 0.7, 0.25, 1);
+}
+body.mundo-ledger.rv-listo [data-rv].rv-in { opacity: 1; transform: none; }
+
+@keyframes lg-rise {
+  from { opacity: 0; transform: translateY(16px); }
+}
+@keyframes lg-drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(2%, 2%, 0) scale(1.08); }
+}
 
 /* -------------------------------------------------------------- responsive */
 
+/* Con los seis enlaces visibles la hamburguesa sobra: abre la misma hoja que
+   ya está a la vista en la barra. */
+@media (min-width: 1024px) {
+  body.mundo-ledger .topnav .nav-burger { display: none; }
+}
+
 @media (max-width: 1279px) {
   body.mundo-ledger .cuenta { width: 272px; }
-  body.mundo-ledger .saldo-hero { font-size: 36px; }
+  body.mundo-ledger .saldo-hero { font-size: 34px; }
+  body.mundo-ledger .nav-right .user-row .t,
+  body.mundo-ledger .nav-right .user-row .chev { display: none; }
+  body.mundo-ledger .nav-right .user-row { padding: 5px; }
+}
+
+@media (max-width: 1100px) {
+  body.mundo-ledger .nav-right > .btn-ghost { display: none; }
+  body.mundo-ledger .nav-right .help-txt { display: none; }
+  body.mundo-ledger .nav-right .help-btn { padding: 8px 10px; }
 }
 
 @media (max-width: 1023px) {
-  /* El riel se acuesta en una tira horizontal: si no, las superficies de app se
-     quedaban sin navegación al quitar la barra superior. */
-  body.mundo-ledger .app { grid-template-columns: minmax(0, 1fr); }
-  body.mundo-ledger .app > .content { grid-column: 1; }
-  body.mundo-ledger .rail {
-    position: sticky;
-    top: 0;
-    height: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-    overflow-x: auto;
-    padding: 8px 10px;
-  }
-  body.mundo-ledger .rail-mark { padding: 0 8px 0 0; flex: none; }
-  body.mundo-ledger .rail-btn { min-width: 64px; flex: none; }
-  /* La tira no repite el número: la banda lo dice primero. */
-  body.mundo-ledger .rail-foot { display: none; }
-  body.mundo-ledger .banda-venc { flex-wrap: wrap; gap: 6px 12px; padding: 8px 12px; }
-  body.mundo-ledger .sugerencia { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   body.mundo-ledger .chat-lg { flex-direction: column; }
   body.mundo-ledger .cuenta {
     width: auto;
     border-left: 0;
-    border-top: 1px solid var(--lg-rule);
-    max-height: 42dvh;
+    border-top: 1px solid var(--border);
+    max-height: 34dvh;
+    background-image: none;
   }
+  body.mundo-ledger .banda-venc { flex-wrap: wrap; gap: 6px 12px; padding: 8px 14px; }
+  body.mundo-ledger .sugerencia { grid-template-columns: 32px minmax(0, 1fr); gap: 4px 10px; }
+  body.mundo-ledger .sugerencia .sg-d { grid-column: 2; }
+  body.mundo-ledger .hm-card { padding-left: 52px; }
+  body.mundo-ledger .home-agent { grid-template-columns: 32px 34px minmax(0, 1fr) auto; gap: 10px; }
+}
+
+@media (max-width: 700px) {
+  body.mundo-ledger .saldo-chip { display: none; }
 }
 
 @media (max-width: 640px) {
-  body.mundo-ledger .saldo-hero { font-size: 32px; }
   body.mundo-ledger .main { padding: 20px 16px 32px; }
+  body.mundo-ledger .home-stats { grid-template-columns: 1fr; }
+  body.mundo-ledger .saldo-hero { font-size: 30px; }
+  body.mundo-ledger .chat-log { padding: 14px 14px 6px; }
+  body.mundo-ledger .composer { margin: 8px 14px; }
+  body.mundo-ledger .sugerencias { margin: 12px 14px; }
+  body.mundo-ledger .chat-topline { margin: 10px 14px 0; }
+  body.mundo-ledger .chat-note { margin: 0 14px 12px; }
+  body.mundo-ledger .guest-bar { margin: 8px 14px 0; }
+  body.mundo-ledger .cuenta { padding: 16px 14px; }
+  body.mundo-ledger .hm-card { padding-left: 46px; }
+  body.mundo-ledger .hm-card::before { left: 8px; }
+  body.mundo-ledger .section-h2 { margin-top: 48px; font-size: 24px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -486,13 +1132,15 @@ body.mundo-ledger .side-item:hover { background: var(--lg-hover); color: #ffffff
   body.mundo-ledger *::before,
   body.mundo-ledger *::after {
     animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
   }
+  body.mundo-ledger.rv-listo [data-rv] { opacity: 1; transform: none; }
 }
 
 /* ------------------------------------------------- mesa de control (#/admin) */
 
-body.mundo-ledger .adm-head h1 { color: var(--lg-ink); }
+body.mundo-ledger .adm-head h1 { font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; color: var(--text); }
 body.mundo-ledger .adm-lede,
 body.mundo-ledger .adm-nota,
 body.mundo-ledger .adm-sub,
@@ -503,114 +1151,103 @@ body.mundo-ledger .adm-label,
 body.mundo-ledger .adm-cifra span,
 body.mundo-ledger .adm-orden,
 body.mundo-ledger .adm-datos dt,
-body.mundo-ledger .adm-drawer h3 { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-drawer h3 { color: var(--muted); }
 body.mundo-ledger .adm-nota b,
-body.mundo-ledger .adm-planos code { color: var(--lg-ink); }
+body.mundo-ledger .adm-planos code { color: var(--text); }
 body.mundo-ledger .adm-error,
 body.mundo-ledger .adm-detalle,
-body.mundo-ledger .adm-resumen.malo { color: var(--lg-alert); }
+body.mundo-ledger .adm-resumen.malo { color: var(--danger); }
 body.mundo-ledger .adm-link { color: var(--lg-amount); }
 
-body.mundo-ledger .adm-btn {
-  background: var(--lg-campo);
-  border-color: var(--lg-rule);
-  color: var(--lg-ink);
-}
+body.mundo-ledger .adm-btn { background: var(--panel); border-color: var(--border); color: var(--text); }
 body.mundo-ledger .adm-btn:hover:not(:disabled) { background: var(--lg-hover); border-color: var(--lg-rail); }
 body.mundo-ledger .adm-btn.firme { background: var(--lg-rail); border-color: var(--lg-rail); color: var(--lg-rail-ink); }
-body.mundo-ledger .adm-btn.firme:hover:not(:disabled) { background: #14504e; border-color: #14504e; }
-body.mundo-ledger .adm-btn.claro { background: none; border-color: rgba(220, 236, 230, .45); color: var(--lg-rail-ink); }
-body.mundo-ledger .adm-btn.claro:hover:not(:disabled) { background: rgba(220, 236, 230, .14); border-color: var(--lg-rail-ink); }
+body.mundo-ledger .adm-btn.firme:hover:not(:disabled) { background: #123a63; border-color: #123a63; }
+body.mundo-ledger .adm-btn.claro { background: none; border-color: rgba(220, 232, 245, 0.45); color: var(--lg-rail-ink); }
+body.mundo-ledger .adm-btn.claro:hover:not(:disabled) { background: rgba(220, 232, 245, 0.14); border-color: var(--lg-rail-ink); }
 
-body.mundo-ledger .adm-chip { background: var(--lg-campo); border-color: var(--lg-rule); color: var(--lg-ink-2); }
-body.mundo-ledger .adm-chip:hover:not(:disabled) { color: var(--lg-ink); border-color: var(--lg-rail); }
+body.mundo-ledger .adm-chip { background: var(--panel); border-color: var(--border); color: var(--muted); }
+body.mundo-ledger .adm-chip:hover:not(:disabled) { color: var(--text); border-color: var(--lg-rail); }
 body.mundo-ledger .adm-chip.on { background: var(--lg-rail); border-color: var(--lg-rail); color: var(--lg-rail-ink); }
 
-body.mundo-ledger .adm-gate { background: var(--lg-campo); border-color: var(--lg-rule); }
+body.mundo-ledger .adm-gate { background: var(--panel); border-color: var(--border); }
 body.mundo-ledger .adm-gate-ico { background: var(--lg-rail); color: var(--lg-rail-ink); }
-body.mundo-ledger .adm-check { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-check { color: var(--muted); }
 body.mundo-ledger .adm-check input { accent-color: var(--lg-rail); }
 
-body.mundo-ledger .adm-cifras { border-color: var(--lg-rule); }
-body.mundo-ledger .adm-cifra { border-color: var(--lg-rule); }
-body.mundo-ledger .adm-cifra b { color: var(--lg-amount); }
+body.mundo-ledger .adm-cifras { border-color: var(--border); }
+body.mundo-ledger .adm-cifra { border-color: var(--border); }
+body.mundo-ledger .adm-cifra b { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--lg-amount); }
 body.mundo-ledger .adm-cifra.viva { background: var(--lg-hover); }
-body.mundo-ledger .adm-cifra.viva b { color: var(--lg-ink); }
-body.mundo-ledger .adm-cifra.viva span { color: var(--lg-ink); font-weight: 600; }
+body.mundo-ledger .adm-cifra.viva b { color: var(--text); }
+body.mundo-ledger .adm-cifra.viva span { color: var(--text); font-weight: 600; }
 
-body.mundo-ledger .adm-cola { background: var(--lg-campo); border-color: var(--lg-rule); }
+body.mundo-ledger .adm-cola { background: var(--panel); border-color: var(--border); }
 body.mundo-ledger .adm-cola-head { background: var(--lg-rail); color: var(--lg-rail-ink); }
 body.mundo-ledger .adm-tab { color: var(--lg-rail-dim); }
-body.mundo-ledger .adm-tab:hover { color: #fff; background: rgba(220, 236, 230, .12); }
-body.mundo-ledger .adm-tab.on { background: rgba(220, 236, 230, .18); border-color: rgba(220, 236, 230, .4); color: #fff; }
-body.mundo-ledger .adm-item { border-color: var(--lg-rule); }
+body.mundo-ledger .adm-tab:hover { color: #fff; background: rgba(220, 232, 245, 0.12); }
+body.mundo-ledger .adm-tab.on { background: rgba(220, 232, 245, 0.18); border-color: rgba(220, 232, 245, 0.4); color: #fff; }
+body.mundo-ledger .adm-item { border-color: var(--border); }
 body.mundo-ledger .adm-item:hover { background: var(--lg-hover); }
-body.mundo-ledger .adm-tipo { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-tipo { font-family: var(--mono); color: var(--muted); }
 body.mundo-ledger .adm-diff .antes,
-body.mundo-ledger .adm-diff .flecha { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-diff .flecha { color: var(--muted); }
 body.mundo-ledger .adm-diff .despues { color: var(--lg-amount); }
-body.mundo-ledger .adm-lista.registro .adm-diff .despues { color: var(--lg-ink); }
-body.mundo-ledger .adm-sello { border-color: var(--lg-rule); color: var(--lg-ink-2); }
+body.mundo-ledger .adm-lista.registro .adm-diff .despues { color: var(--text); }
+body.mundo-ledger .adm-sello { border-color: var(--border); color: var(--muted); }
 body.mundo-ledger .adm-item.estado-applied .adm-sello { color: var(--lg-amount); border-color: var(--lg-amount); }
-body.mundo-ledger .adm-item.estado-stale .adm-sello { color: var(--lg-alert); border-color: var(--lg-alert); }
+body.mundo-ledger .adm-item.estado-stale .adm-sello { color: var(--danger); border-color: var(--danger); }
 body.mundo-ledger .adm-item.estado-rejected .adm-que strong,
-body.mundo-ledger .adm-item.estado-stale .adm-que strong { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-item.estado-stale .adm-que strong { color: var(--muted); }
 
-/* Los bloques dejan de ser tarjetas: son cortes reglados del mismo pliego. */
-body.mundo-ledger .adm-bloque {
-  background: none;
-  border: 0;
-  border-top: 1px solid var(--lg-rule);
-  border-radius: 0;
-  padding: 16px 0 4px;
-}
-body.mundo-ledger .adm-bloque-head h2 { color: var(--lg-ink); }
-body.mundo-ledger .adm-estado { border-color: var(--lg-rule); color: var(--lg-ink-2); }
+body.mundo-ledger .adm-bloque { border-radius: 12px; box-shadow: var(--lg-sombra); }
+body.mundo-ledger .adm-bloque-head h2 { color: var(--text); }
+body.mundo-ledger .adm-estado { border-color: var(--border); color: var(--muted); }
 body.mundo-ledger .adm-estado.on { background: var(--lg-rail); border-color: var(--lg-rail); color: var(--lg-rail-ink); }
-body.mundo-ledger .adm-encola { background: var(--lg-hover); color: var(--lg-ink); border: 1px solid var(--lg-rule); }
-body.mundo-ledger .adm-resumen { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-encola { background: var(--lg-hover); color: var(--text); border: 1px solid var(--border); }
+body.mundo-ledger .adm-resumen { color: var(--muted); }
 body.mundo-ledger .adm-resumen.ok { color: var(--lg-amount); }
 body.mundo-ledger .adm-planos,
-body.mundo-ledger .adm-planos li { border-color: var(--lg-rule); }
-body.mundo-ledger .adm-planos span { color: var(--lg-ink-2); }
+body.mundo-ledger .adm-planos li { border-color: var(--border); }
+body.mundo-ledger .adm-planos span { color: var(--muted); }
 body.mundo-ledger .adm-planos li.ok code { color: var(--lg-amount); }
 body.mundo-ledger .adm-planos li.malo code,
-body.mundo-ledger .adm-planos li.malo span { color: var(--lg-alert); }
+body.mundo-ledger .adm-planos li.malo span { color: var(--danger); }
 
-body.mundo-ledger .adm-buscar { background: var(--lg-campo); border-color: var(--lg-rule); color: var(--lg-ink-2); }
+body.mundo-ledger .adm-buscar { background: var(--panel); border-color: var(--border); color: var(--muted); }
 body.mundo-ledger .adm-buscar input { border: 0; background: none; border-radius: 0; }
 body.mundo-ledger .adm-buscar:focus-within { border-color: var(--lg-rail); }
-body.mundo-ledger .adm-x { color: var(--lg-ink-2); }
-body.mundo-ledger .adm-x:hover { color: var(--lg-ink); background: var(--lg-hover); }
+body.mundo-ledger .adm-x { color: var(--muted); }
+body.mundo-ledger .adm-x:hover { color: var(--text); background: var(--lg-hover); }
 
-body.mundo-ledger .adm-tabla-wrap { border-color: var(--lg-rule); }
-body.mundo-ledger .adm-tabla th { background: var(--lg-campo); border-color: var(--lg-rule); }
-body.mundo-ledger .adm-tabla td { border-color: var(--lg-rule); }
+body.mundo-ledger .adm-tabla-wrap { border-color: var(--border); }
+body.mundo-ledger .adm-tabla th { background: var(--panel); border-color: var(--border); font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; }
+body.mundo-ledger .adm-tabla td { border-color: var(--border); }
 body.mundo-ledger .adm-tabla tbody tr:hover { background: var(--lg-hover); }
 body.mundo-ledger .adm-tabla tbody tr.con-propuesta { background: var(--lg-hover); }
-body.mundo-ledger .adm-orden:hover { color: var(--lg-ink); }
-body.mundo-ledger .adm-quien { color: var(--lg-ink); }
+body.mundo-ledger .adm-orden:hover { color: var(--text); }
+body.mundo-ledger .adm-quien { color: var(--text); }
 body.mundo-ledger .adm-quien:hover .t strong { color: var(--lg-amount); }
 body.mundo-ledger .adm-rol { background: var(--lg-rail); color: var(--lg-rail-ink); }
 body.mundo-ledger .adm-pend { border-color: var(--lg-amount); color: var(--lg-amount); }
 body.mundo-ledger .adm-pend:hover:not(:disabled) { background: var(--lg-rail); border-color: var(--lg-rail); color: var(--lg-rail-ink); }
 
 body.mundo-ledger .adm-dialogo,
-body.mundo-ledger .adm-drawer { background: var(--lg-papel); border-color: var(--lg-rule); }
+body.mundo-ledger .adm-drawer { background: var(--bg); border-color: var(--border); }
 body.mundo-ledger .adm-confirm-lista,
 body.mundo-ledger .adm-confirm-lista li,
 body.mundo-ledger .adm-datos,
-body.mundo-ledger .adm-datos > div { border-color: var(--lg-rule); }
-body.mundo-ledger .adm-aviso { background: var(--lg-hover); border-left-color: var(--lg-amount); color: var(--lg-ink); }
+body.mundo-ledger .adm-datos > div { border-color: var(--border); }
+body.mundo-ledger .adm-aviso { background: var(--lg-hover); border-left-color: var(--lg-amount); color: var(--text); }
 
 body.mundo-ledger .adm-lista,
 body.mundo-ledger .adm-tabla-wrap,
 body.mundo-ledger .adm-drawer,
-body.mundo-ledger .adm-dialogo { scrollbar-color: var(--lg-rule) transparent; }
+body.mundo-ledger .adm-dialogo { scrollbar-color: var(--border) transparent; }
 body.mundo-ledger .adm-lista::-webkit-scrollbar-thumb,
 body.mundo-ledger .adm-tabla-wrap::-webkit-scrollbar-thumb,
 body.mundo-ledger .adm-drawer::-webkit-scrollbar-thumb,
-body.mundo-ledger .adm-dialogo::-webkit-scrollbar-thumb { background: var(--lg-rule); border-color: var(--lg-campo); }
+body.mundo-ledger .adm-dialogo::-webkit-scrollbar-thumb { background: var(--border); border-color: var(--panel); }
 body.mundo-ledger .adm-lista::-webkit-scrollbar-thumb:hover,
 body.mundo-ledger .adm-tabla-wrap::-webkit-scrollbar-thumb:hover,
 body.mundo-ledger .adm-drawer::-webkit-scrollbar-thumb:hover,

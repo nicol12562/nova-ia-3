@@ -194,8 +194,8 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme, mundo = 
             <div>
               <strong>Interfaz</strong>
               <p>
-                Nueva: el saldo y los movimientos, como un extracto de cuenta. Clásica: la vista
-                anterior, zinc y azul. Se elige una vez y queda guardada en esta PC.
+                Nueva: río, celeste y sol, con el saldo siempre a la vista y la navegación arriba.
+                Clásica: la vista anterior, zinc y azul. Se elige una vez y queda guardada en esta PC.
               </p>
             </div>
             <div className={"seg" + (mundo === "clasico" ? " is-dark" : "")} role="group" aria-label="Interfaz de la aplicación">

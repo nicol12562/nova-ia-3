@@ -110,19 +110,19 @@ export default function Home({ go, auth }) {
         )}
       </div>
 
-      <div className="home-stats">
+      <div className="home-stats" data-rv>
         <div><b>{cuota ? fmt(cuota) : "1.000.000"}</b><span>tokens por mes para empezar, sin tarjeta</span></div>
         <div><b>{modelos.length || 3}</b><span>modelos bajo una sola cuenta y un saldo visible</span></div>
         <div><b>{AGENTS.length}</b><span>mini agentes con instrucciones ya cargadas</span></div>
       </div>
 
-      <h2 className="section-h2">Tres formas de responder</h2>
-      <p className="section-sub">
+      <h2 className="section-h2" data-rv>Tres formas de responder</h2>
+      <p className="section-sub" data-rv>
         {forzado
           ? "En este momento un ajuste global del panel dirige los tres roles al mismo proveedor: cambia el saldo disponible y el largo de la respuesta, no el modelo. Lo publicamos acá en vez de disimularlo."
           : "Flash para lo rápido y largo, Pro para texto y código, Pro 3.1 para lo difícil. Cada uno consume de su propia bolsa, y al lado del nombre está el proveedor que lo atiende hoy."}
       </p>
-      <div className="home-models">
+      <div className="home-models" data-rv>
         {modelos.map((m) => (
           <div key={m.key} className="hm-card">
             <div className="hm-top">
@@ -140,11 +140,11 @@ export default function Home({ go, auth }) {
         ))}
       </div>
 
-      <h2 className="section-h2">Mini agentes</h2>
-      <p className="section-sub">
+      <h2 className="section-h2" data-rv>Mini agentes</h2>
+      <p className="section-sub" data-rv>
         {`${AGENTS.length} tareas concretas con las instrucciones ya cargadas —de responderle a un cliente por WhatsApp a revisar código—, sin que tengas que escribir el prompt. Se activan con Pro o Plus.`}
       </p>
-      <div className="home-agents">
+      <div className="home-agents" data-rv>
         {destacados.map((a) => (
           <button key={a.id} className="home-agent locked" onClick={() => go(pago ? "chat" : "planes")}>
             <span className="ico"><Icon name={pago ? a.icon : "lock"} size={16} /></span>
@@ -165,7 +165,7 @@ export default function Home({ go, auth }) {
         </button>
       </div>
 
-      <div className="home-links">
+      <div className="home-links" data-rv>
         <button onClick={() => go("planes")}>
           <Icon name="crown" size={16} /> Comparar planes
         </button>

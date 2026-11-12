@@ -34,21 +34,6 @@ const NAV = [
   { key: "uso-tokens", label: "Uso y tokens", icon: "pulse" },
 ];
 
-// Riel de la app (mundo "El resumen de cuenta"): solo superficies de tarea.
-// Las de persuasión (Inicio, Planes, Login) conservan la barra superior.
-const NAV_APP = [
-  { key: "", label: "Inicio", icon: "grid" },
-  { key: "chat", label: "Nuevo chat", icon: "plusSq" },
-  { key: "historial", label: "Historial", icon: "clock" },
-  { key: "mini-agentes", label: "Agentes", icon: "cpu" },
-  { key: "uso-tokens", label: "Uso", icon: "pulse" },
-  { key: "planes", label: "Planes", icon: "crown" },
-  { key: "ajustes", label: "Ajustes", icon: "sliders" },
-];
-// En el mundo ledger el riel manda en toda la app; el remate del login de Google
-// es una pantalla de estado, sin navegación propia.
-const SIN_RIEL = ["google"];
-
 const leerMundo = () => {
   try {
     return localStorage.getItem("novaia_mundo") === "clasico" ? "clasico" : "ledger";
@@ -264,7 +249,45 @@ export default function App() {
     }
   }, [mundo]);
 
-  const esApp = mundo === "ledger" && !SIN_RIEL.includes(base);
+  // Revelado al scroll del mundo Nueva: con reduced-motion, todo visible.
+  useEffect(() => {
+    if (mundo !== "ledger") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    document.body.classList.add("rv-listo");
+    let pendientes = Array.from(document.querySelectorAll("main [data-rv]"));
+    let cuadro = 0;
+    // Un salto de scroll (End, un ancla, restaurar posición) lleva un bloque de
+    // abajo del pliegue a arriba sin cruzar el viewport: con IntersectionObserver
+    // ese bloque no recibía evento y quedaba invisible para siempre.
+    const revisar = () => {
+      cuadro = 0;
+      const limite = window.innerHeight * 0.94;
+      pendientes = pendientes.filter((el) => {
+        if (el.getBoundingClientRect().top < limite) {
+          el.classList.add("rv-in");
+          return false;
+        }
+        return true;
+      });
+      if (!pendientes.length) parar();
+    };
+    const pedir = () => {
+      if (!cuadro && pendientes.length) cuadro = requestAnimationFrame(revisar);
+    };
+    const parar = () => {
+      window.removeEventListener("scroll", pedir);
+      window.removeEventListener("resize", pedir);
+      if (cuadro) cancelAnimationFrame(cuadro);
+      cuadro = 0;
+    };
+    window.addEventListener("scroll", pedir, { passive: true });
+    window.addEventListener("resize", pedir);
+    revisar();
+    return () => {
+      parar();
+      document.body.classList.remove("rv-listo");
+    };
+  }, [route, mundo]);
 
   // El login es una pantalla completa, sin sidebar ni topbar (como en Floot)
   if (base === "login")
@@ -290,44 +313,7 @@ export default function App() {
   const planName = auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis";
   const planLabel = auth ? `Plan ${planName}` : "Sin cuenta";
   return (
-    <div className={"app" + (esApp ? " app-lg" : "")}>
-      {esApp ? (
-        <aside className="rail" aria-label="Navegación de la app">
-          <button className="rail-mark" onClick={() => go("")} aria-label="Nova IA — ir a Inicio">
-            <span className="logo-mark" aria-hidden="true">n</span>
-            <span className="rail-word">novaia</span>
-          </button>
-          {NAV_APP.map((n) => (
-            <button
-              key={n.key}
-              className="rail-btn"
-              aria-current={base === n.key ? "page" : undefined}
-              onClick={() => go(n.key)}
-            >
-              <Icon name={n.icon} size={18} />
-              <span>{n.label}</span>
-            </button>
-          ))}
-          {auth?.role === "admin" && (
-            <button className="rail-btn" aria-current={base === "admin" ? "page" : undefined} onClick={() => go("admin")}>
-              <Icon name="lock" size={18} />
-              <span>Panel</span>
-            </button>
-          )}
-          <button className="rail-btn" onClick={toggleTheme} aria-label="Cambiar tema">
-            <Icon name={dark ? "moon" : "sun"} size={18} />
-            <span>Tema</span>
-          </button>
-          <div className="rail-foot">
-            <span className="rail-saldo">{auth ? restantes : GUEST_LIMIT}</span>
-            <span>{auth ? "tokens del mes" : "mensajes por día"}</span>
-            {racha > 1 && <span>{racha} días seguidos</span>}
-            <button className="rail-aviso" onClick={() => go(auth ? "ajustes" : "login")}>
-              {auth ? planLabel : "Crear cuenta gratis"}
-            </button>
-          </div>
-        </aside>
-      ) : (
+    <div className="app">
       <header className="topnav">
         <div className="nav-inner">
           <button className="brand" onClick={() => go("")}>
@@ -351,6 +337,16 @@ export default function App() {
           </nav>
 
           <div className="nav-right">
+            {mundo === "ledger" && (
+              <button
+                className="saldo-chip"
+                onClick={() => go(auth ? "uso-tokens" : "planes")}
+                title={auth ? "Ver uso y tokens del mes" : "Ver planes y límites"}
+              >
+                <b>{auth ? restantes : GUEST_LIMIT}</b>
+                <span>{auth ? "tokens" : "msjs/día"}</span>
+              </button>
+            )}
             {!auth && (
               <button className="btn btn-ghost btn-sm" onClick={() => go("login")}>
                 Iniciar sesión
@@ -426,7 +422,6 @@ export default function App() {
           </div>
         </div>
       </header>
-      )}
 
       {menuOpen && (
         <>
