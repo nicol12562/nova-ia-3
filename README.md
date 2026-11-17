@@ -6,7 +6,7 @@ Pages Functions como API y D1 (SQLite) como base de datos. Todo sale en un únic
 ## Estructura
 
 - `index.html` — punto de entrada
-- `src/` — app React (las 8 pantallas, replicadas de Floot)
+- `src/` — app React (8 pantallas); estilos en `src/nova.css` (ver `DESIGN.md`)
 - `src/data/plans.js` — datos de los 3 planes (fuente de verdad)
 - `functions/api/auth.js` — registro e inicio de sesión (PBKDF2)
 - `functions/api/chat.js` — proxy SSE a OpenRouter, modelo según plan

@@ -3,7 +3,7 @@ import { Icon } from "../icons.jsx";
 import Md from "../md.jsx";
 import { plans, comparison, notes } from "../data/plans.js";
 import { AGENTS } from "../data/agents.js";
-import { showToast, spotlight } from "../ui.jsx";
+import { showToast } from "../ui.jsx";
 
 // Venta manual por WhatsApp. Formato internacional argentino: 54 + 9 + área + línea.
 const WHATS = "5493416116096";
@@ -110,35 +110,32 @@ export default function Planes({ go, auth }) {
   const porPlan = Object.fromEntries((techos?.planes || []).map((p) => [p.plan, p]));
 
   return (
-    <section>
-      <p className="eyebrow">02 · PLANES Y MODELOS</p>
-      <h1 className="hero">Elegí por uso, no por promesas.</h1>
-      <p className="lede">
-        Los tres planes atienden con los mismos modelos. Lo que cambia es cuánto los podés usar, qué
-        tan larga sale cada respuesta y si tenés mini agentes. Todo en pesos, y se activa escribiendo
-        al mismo WhatsApp que te responde después.
-      </p>
+    <section className="page page-planes">
+      <header className="page-head">
+        <h1>Planes</h1>
+        <p>
+          Los tres planes usan los mismos modelos. Cambia cuánto los podés usar, qué tan larga sale
+          cada respuesta y si tenés mini agentes. Todo en pesos, y se activa escribiendo al mismo
+          WhatsApp que te contesta después.
+        </p>
+      </header>
 
       <div className="plans-grid">
         {plans.map((p) => (
           <div
             key={p.id}
-            className={"plan-box spot" + (p.isCurrent ? " current" : "")}
-            onPointerMove={spotlight.onPointerMove}
+            className={"plan-box plan-" + p.id + (auth?.plan === p.id || (!auth && p.id === "gratis") ? " current" : "")}
           >
             <div className="top">
-              <span className="crown-lg"><Icon name="crown" size={21} /></span>
-              <div className="chips">
-                <span className="chip">{p.badge}</span>
-                {auth?.plan === p.id && <span className="chip chip-plan">tu plan</span>}
-              </div>
+              <h2>{p.name}</h2>
+              {auth?.plan === p.id ? <span className="chip chip-plan">Tu plan</span> : p.badge ? <span className="chip">{p.badge}</span> : null}
             </div>
-            <h2>{p.name}</h2>
+            <div className="price-big">
+              {p.price === "Gratis" ? <>$0<small>para siempre</small></> : <>{p.price.replace(/\/.*$/, "").replace(/ ?ARS/, "")}<small>por mes</small></>}
+            </div>
+            <p className="tokens-sub">{p.tokensPerMonth} tokens por mes</p>
             <p className="desc">{p.description}</p>
-            <div className="price-big">{p.tokensPerMonth}</div>
-            <p className="tokens-sub">tokens/mes</p>
-            <hr />
-            <div className="mi-title">Modelos incluidos</div>
+            <div className="mi-title">Tope por modelo</div>
             <ul>
               {p.models.map(([m, lim]) => (
                 <li key={m}>
@@ -162,7 +159,7 @@ export default function Planes({ go, auth }) {
               })}
             </ul>
             {p.id === "gratis" ? (
-              <button className="btn btn-primary btn-block btn-sheen" onClick={() => go("chat")}>
+              <button className="btn btn-primary btn-block" onClick={() => go("chat")}>
                 {p.cta}
               </button>
             ) : !auth ? (
@@ -298,16 +295,15 @@ export default function Planes({ go, auth }) {
 
             {!auth ? (
               <div className="demo-cta">
-                <span className="sq"><Icon name="lock" size={17} /></span>
-                <p>Iniciá sesión para correr la comparación. Crear la cuenta toma un minuto.</p>
+                                <p>Iniciá sesión para correr la comparación. Crear la cuenta toma un minuto.</p>
                 <button className="btn btn-primary" onClick={() => go("login")}>
-                  Iniciar sesión <Icon name="arrowUpRight" size={13} />
+                  Iniciar sesión
                 </button>
               </div>
             ) : (
               <>
                 <button
-                  className="btn btn-ghost demo-run"
+                  className="btn btn-quiet demo-run"
                   disabled={demo.cargando || !demo.elegida || (demo.restantes ?? 0) <= 0}
                   onClick={correrDemo}
                 >
@@ -359,7 +355,7 @@ export default function Planes({ go, auth }) {
       )}
 
       <h2 className="section-h2">Qué incluye cada plan</h2>
-      <p className="section-sub">Compará las diferencias principales antes de elegir. Sin letra chica.</p>
+      <p className="section-sub">Las diferencias principales, una al lado de la otra.</p>
       <div className="table-wrap">
         <table className="comparison">
           <thead>

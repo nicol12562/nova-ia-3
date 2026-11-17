@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Icon } from "../icons.jsx";
-import { showToast, spotlight } from "../ui.jsx";
+import { showToast } from "../ui.jsx";
 
 function fmtDate(value) {
   if (!value) return "";
@@ -8,7 +8,7 @@ function fmtDate(value) {
   const iso = raw.includes("T") ? raw : raw.replace(" ", "T") + "Z";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return raw.slice(0, 16).replace("T", " ");
-  return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
+  return d.toLocaleDateString("es-AR", { day: "numeric", month: "short" }).replace(/[-.]/g, " ").trim();
 }
 
 export default function Historial({ go, auth }) {
@@ -35,15 +35,17 @@ export default function Historial({ go, auth }) {
 
   async function removeOne(id) {
     await fetch(`/api/history?id=${id}`, { method: "DELETE" });
-    showToast("Conversación eliminada.");
+    showToast("Conversación borrada.");
     load();
+    window.dispatchEvent(new Event("novaia:historial"));
   }
 
   async function removeAll() {
-    if (!confirm("¿Seguro que querés eliminar todo tu historial? Esta acción no se puede deshacer.")) return;
+    if (!confirm("¿Borrar todo tu historial? No se puede deshacer.")) return;
     await fetch(`/api/history`, { method: "DELETE" });
-    showToast("Historial eliminado.");
+    showToast("Historial borrado.");
     load();
+    window.dispatchEvent(new Event("novaia:historial"));
   }
 
   const visibles = items.filter((c) => (c.title || "").toLowerCase().includes(q.toLowerCase()));
@@ -80,6 +82,7 @@ export default function Historial({ go, auth }) {
         body: JSON.stringify({ accion: "fijar", conv_id: id }),
       });
       load();
+      window.dispatchEvent(new Event("novaia:historial"));
     } catch {
       showToast("No se pudo actualizar la conversación.", { tone: "error" });
     }
@@ -88,33 +91,29 @@ export default function Historial({ go, auth }) {
   const lista = buscados ?? visibles;
 
   return (
-    <section>
-      <div className="page-head">
+    <section className="page">
+      <header className="page-head page-head-acc">
         <div>
-          <h1 className="hero">Tu historial</h1>
-          <p className="lede">Volvé a conversaciones guardadas o eliminá las que ya no necesitás.</p>
+          <h1>Historial</h1>
+          <p>Buscá en todo lo que charlaste, no solo en los títulos. Fijá arriba lo que usás seguido.</p>
         </div>
         {auth && (
           <div className="actions">
-            <button
-              className="btn-plain"
-              disabled={items.length === 0}
-              onClick={removeAll}
-              style={{ opacity: items.length === 0 ? 0.5 : 1 }}
-            >
-              <Icon name="x" size={15} /> Eliminar todo
+            <button className="btn btn-quiet btn-danger" disabled={items.length === 0} onClick={removeAll}>
+              <Icon name="trash" size={15} /> Borrar todo
             </button>
             <button className="btn btn-primary" onClick={() => go("chat")}>
               <Icon name="plusSq" size={15} /> Nuevo chat
             </button>
           </div>
         )}
-      </div>
+      </header>
 
       <div className="searchbox">
         <span className="icon"><Icon name="search" size={17} /></span>
         <input
-          placeholder="Buscar conversaciones…"
+          aria-label="Buscar en tus conversaciones"
+          placeholder="Buscar en tus conversaciones"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -126,13 +125,11 @@ export default function Historial({ go, auth }) {
       </div>
 
       {!auth ? (
-        <div className="empty-state">
-          <span className="sq"><Icon name="lock" size={22} /></span>
-          <h3>Iniciá sesión para ver tu historial</h3>
-          <p>Las conversaciones se guardan de forma privada en tu cuenta.</p>
-          <button className="linklike" onClick={() => go("login")}>
-            Iniciar sesión <Icon name="arrowUpRight" size={13} />
-          </button>
+        <div className="empty">
+          <Icon name="lock" size={22} />
+          <h2>Iniciá sesión para ver tu historial</h2>
+          <p>Las conversaciones se guardan en tu cuenta y solo las ves vos.</p>
+          <button className="btn btn-primary" onClick={() => go("login")}>Iniciar sesión</button>
         </div>
       ) : (
         <>
@@ -150,54 +147,49 @@ export default function Historial({ go, auth }) {
             </div>
           )}
           {!loading && lista.length === 0 && (
-            <div className="empty-state">
-              <span className="sq"><Icon name="chat" size={22} /></span>
-              <h3>{items.length === 0 ? "Todavía no tenés conversaciones" : "Sin resultados"}</h3>
+            <div className="empty">
+              <Icon name="chat" size={22} />
+              <h2>{items.length === 0 ? "Todavía no hay conversaciones" : "Nada coincide"}</h2>
               <p>
                 {items.length === 0
-                  ? "Empezá una conversación desde Nuevo chat y te la guardamos acá."
-                  : "Ninguna conversación coincide con la búsqueda."}
+                  ? "Cada chat que empieces se guarda acá solo."
+                  : "Probá con otra palabra: la búsqueda mira adentro de los mensajes."}
               </p>
-              <button className="linklike" onClick={() => (items.length === 0 ? go("chat") : setQ(""))}>
-                {items.length === 0 ? "Nuevo chat" : "Limpiar búsqueda"}{" "}
-                <Icon name="arrowUpRight" size={13} />
+              <button className="btn btn-quiet" onClick={() => (items.length === 0 ? go("chat") : setQ(""))}>
+                {items.length === 0 ? "Empezar un chat" : "Limpiar la búsqueda"}
               </button>
             </div>
           )}
           <ul className="history-list">
             {lista.map((c) => (
               <li key={c.id}>
-                <button
-                  className="history-item spot"
-                  onPointerMove={spotlight.onPointerMove}
-                  onClick={() => go(`chat/${c.id}`)}
-                >
-                  <span className="hi-sq"><Icon name="chat" size={15} /></span>
+                <button className="history-item" onClick={() => go(`chat/${c.id}`)}>
                   <strong>
-                    {!!c.pinned && <span className="hi-pin" title="Fijada">★</span>}
-                    {c.title}
-                    {c.extracto && <span className="hi-extracto">…{c.extracto}</span>}
+                    {!!c.pinned && <Icon name="pin" size={14} />}
+                    <span>{c.title}</span>
                   </strong>
+                  {c.extracto && <span className="hi-extracto">…{c.extracto}</span>}
                   <span className="meta">
-                    {c.mensajes != null ? `${c.mensajes} mensajes · ` : ""}
                     {fmtDate(c.created_at)}
+                    {c.mensajes != null ? `, ${c.mensajes} mensajes` : ""}
                   </span>
                 </button>
                 <button
                   className={"icon-btn" + (c.pinned ? " fijada" : "")}
-                  title={c.pinned ? "Desfijar conversación" : "Fijar arriba"}
-                  aria-label={c.pinned ? "Desfijar conversación" : "Fijar arriba"}
+                  title={c.pinned ? "Desfijar" : "Fijar arriba"}
+                  aria-label={c.pinned ? `Desfijar ${c.title}` : `Fijar ${c.title} arriba`}
+                  aria-pressed={!!c.pinned}
                   onClick={() => fijar(c.id)}
                 >
-                  <Icon name="crown" size={16} />
+                  <Icon name="pin" size={16} />
                 </button>
                 <button
-                  className="icon-danger"
-                  title="Eliminar conversación"
-                  aria-label="Eliminar conversación"
+                  className="icon-btn icon-danger"
+                  title="Borrar"
+                  aria-label={`Borrar ${c.title}`}
                   onClick={() => removeOne(c.id)}
                 >
-                  <Icon name="x" size={16} />
+                  <Icon name="trash" size={16} />
                 </button>
               </li>
             ))}

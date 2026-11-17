@@ -28,18 +28,15 @@ export default function GoogleFinish({ go, setAuth, ticket }) {
   }, [ticket]);
 
   return (
-    <div className="login-right" style={{ minHeight: "100vh", justifyContent: "center" }}>
-      <div className="login-box gf-card" style={{ paddingTop: 0 }}>
+    <div className="gf-screen">
+      <div className="gf-card">
         {!error ? (
           <>
-            <span className="spinner spinner-dark spinner-lg" aria-hidden="true" />
-            <p className="eyebrow" style={{ justifyContent: "center" }}>
-              CONECTANDO CON GOOGLE
-            </p>
-            <h1 className="hero" style={{ fontSize: 38, margin: "8px 0 0" }}>
+            <span className="spinner spinner-lg" aria-hidden="true" />
+            <h1>
               Un segundo…
             </h1>
-            <p className="lede" style={{ marginTop: 12 }}>
+            <p>
               Estamos entrando a tu espacio de Nova.
             </p>
           </>
@@ -48,19 +45,16 @@ export default function GoogleFinish({ go, setAuth, ticket }) {
             <span className="gf-error-icon" aria-hidden="true">
               <Icon name="x" size={24} />
             </span>
-            <p className="eyebrow" style={{ justifyContent: "center" }}>
-              ALGO NO SALIÓ COMO ESPERÁBAMOS
-            </p>
-            <h1 className="hero" style={{ fontSize: 38, margin: "8px 0 0" }}>
+            <h1>
               Ups.
             </h1>
-            <p className="lede" style={{ margin: "12px 0 24px" }}>
+            <p>
               {error}
             </p>
-            <button className="btn btn-primary btn-sheen" onClick={() => go("login")}>
-              Volver a iniciar sesión <Icon name="arrowUpRight" size={13} />
+            <button className="btn btn-primary" onClick={() => go("login")}>
+              Volver a iniciar sesión
             </button>
-            <p className="foot-note" style={{ marginTop: 16 }}>
+            <p className="foot-note">
               Si el problema sigue, probá con tu email y contraseña.
             </p>
           </>

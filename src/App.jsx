@@ -12,6 +12,7 @@ import Ajustes from "./pages/Ajustes.jsx";
 import Admin from "./pages/Admin.jsx";
 import { Icon } from "./icons.jsx";
 import { Modal, Toaster, useFocoAtrapado } from "./ui.jsx";
+import Palette from "./palette.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 
 const VIEWS = [
@@ -26,25 +27,17 @@ const VIEWS = [
 ];
 
 const NAV = [
-  { key: "", label: "Inicio", icon: "grid" },
-  { key: "chat", label: "Nuevo chat", icon: "plusSq" },
-  { key: "planes", label: "Planes", icon: "crown" },
+  { key: "", label: "Inicio", icon: "home" },
   { key: "historial", label: "Historial", icon: "clock" },
   { key: "mini-agentes", label: "Mini agentes", icon: "cpu" },
   { key: "uso-tokens", label: "Uso y tokens", icon: "pulse" },
+  { key: "planes", label: "Planes", icon: "crown" },
 ];
-
-const leerMundo = () => {
-  try {
-    return localStorage.getItem("novaia_mundo") === "clasico" ? "clasico" : "ledger";
-  } catch {
-    return "ledger";
-  }
-};
 
 const QUOTA_FALLBACK = 1000000; // solo mientras responde el backend
 const fmt = (n) => Math.round(n).toLocaleString("es-AR");
-
+const esMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
+const MOD = esMac ? "⌘" : "Ctrl";
 export default function App() {
   const [route, setRoute] = useState(() => (location.hash || "#/").replace(/^#\//, ""));
   const [auth, setAuth] = useState(() => {
@@ -67,9 +60,11 @@ export default function App() {
   const [racha, setRacha] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const sheetRef = useRef(null);
-  // La hoja de navegación es un diálogo: sin foco atrapado,
+  // En móvil la barra lateral es un diálogo: sin foco atrapado,
   // Tab se escapa a la página que queda detrás del scrim.
   useFocoAtrapado(sheetRef, menuOpen, () => setMenuOpen(false));
+  const [paletaOpen, setPaletaOpen] = useState(false);
+  const [chats, setChats] = useState([]);
   const [helpOpen, setHelpOpen] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
 
@@ -114,10 +109,15 @@ export default function App() {
     setDark(next);
   };
 
-  // ⌘K / Ctrl+K → nuevo chat
+  // ⌘K abre la paleta (su primera opción es "Nuevo chat"); ⌘⇧O va directo
+  // a un chat nuevo, como en otros asistentes.
   useEffect(() => {
     const onKey = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletaOpen((v) => !v);
+      } else if (mod && e.shiftKey && e.key.toLowerCase() === "o") {
         e.preventDefault();
         location.hash = "#/chat";
       }
@@ -126,6 +126,27 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Chats recientes de la barra lateral. Chat avisa con "novaia:historial"
+  // cuando crea una conversación, así aparece sin recargar.
+  useEffect(() => {
+    if (!auth?.id) {
+      setChats([]);
+      return;
+    }
+    let vivo = true;
+    const cargar = () =>
+      fetch("/api/history")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => vivo && Array.isArray(d) && setChats(d))
+        .catch(() => {});
+    cargar();
+    window.addEventListener("novaia:historial", cargar);
+    return () => {
+      vivo = false;
+      window.removeEventListener("novaia:historial", cargar);
+    };
+  }, [auth?.id]);
+
   // Consumo del mes actual (para la tarjeta del plan) y racha de días seguidos.
   useEffect(() => {
     if (!auth) {
@@ -133,16 +154,22 @@ export default function App() {
       setRacha(0);
       return;
     }
-    const today = new Date().toISOString().slice(0, 10);
-    fetch(`/api/usage?from=${today.slice(0, 8)}01&to=${today}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (!d) return;
-        setUsed(d.total);
-        setRacha(d.racha || 0);
-        if (d.cuota) setCuota(d.cuota);
-      })
-      .catch(() => {});
+    const cargar = () => {
+      const today = new Date().toISOString().slice(0, 10);
+      fetch(`/api/usage?from=${today.slice(0, 8)}01&to=${today}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (!d) return;
+          setUsed(d.total);
+          setRacha(d.racha || 0);
+          if (d.cuota) setCuota(d.cuota);
+        })
+        .catch(() => {});
+    };
+    cargar();
+    // Chat avisa al terminar cada respuesta: el saldo de la barra baja en vivo.
+    window.addEventListener("novaia:saldo", cargar);
+    return () => window.removeEventListener("novaia:saldo", cargar);
   }, [auth?.id, auth?.plan]);
 
   // La cuenta se lee del servidor: si el admin cambia un plan, se ve sin recargar.
@@ -233,85 +260,7 @@ export default function App() {
 
   const [base, param] = route.split("/");
 
-  // Hooks antes de cualquier return temprano: el estado del mundo y su efecto
-  // vivían por debajo del if de /login, así que en esa ruta no corrían y el
-  // conteo de hooks cambiaba entre pantallas (React lo castiga rompiendo).
-  const [mundo, setMundo] = useState(leerMundo);
-
-  // Un solo interruptor para toda la capa visual: body.mundo-ledger es la
-  // condición de cada regla de ledger.css.
-  useEffect(() => {
-    document.body.classList.toggle("mundo-ledger", mundo === "ledger");
-    try {
-      localStorage.setItem("novaia_mundo", mundo);
-    } catch {
-      /* modo privado: la preferencia dura lo que la pestaña */
-    }
-  }, [mundo]);
-
-  // Revelado al scroll del mundo Nueva: con reduced-motion, todo visible.
-  useEffect(() => {
-    if (mundo !== "ledger") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    document.body.classList.add("rv-listo");
-    let pendientes = Array.from(document.querySelectorAll("main [data-rv]"));
-    let cuadro = 0;
-    // Un salto de scroll (End, un ancla, restaurar posición) lleva un bloque de
-    // abajo del pliegue a arriba sin cruzar el viewport: con IntersectionObserver
-    // ese bloque no recibía evento y quedaba invisible para siempre.
-    const revisar = () => {
-      cuadro = 0;
-      const limite = window.innerHeight * 0.94;
-      pendientes = pendientes.filter((el) => {
-        if (el.getBoundingClientRect().top < limite) {
-          el.classList.add("rv-in");
-          return false;
-        }
-        return true;
-      });
-      if (!pendientes.length) parar();
-    };
-    const pedir = () => {
-      if (!cuadro && pendientes.length) cuadro = requestAnimationFrame(revisar);
-    };
-    const parar = () => {
-      window.removeEventListener("scroll", pedir);
-      window.removeEventListener("resize", pedir);
-      if (cuadro) cancelAnimationFrame(cuadro);
-      cuadro = 0;
-    };
-    window.addEventListener("scroll", pedir, { passive: true });
-    window.addEventListener("resize", pedir);
-    revisar();
-    return () => {
-      parar();
-      document.body.classList.remove("rv-listo");
-    };
-  }, [route, mundo]);
-
-  // Parallax suave del halo del hero: --lg-par lleva el scroll a la CSS, que lo
-  // traduce en unos pocos píxeles de deriva. Con reduced-motion no se engancha.
-  useEffect(() => {
-    if (mundo !== "ledger") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let cuadro = 0;
-    const aplicar = () => {
-      cuadro = 0;
-      document.body.style.setProperty("--lg-par", String(window.scrollY));
-    };
-    const pedir = () => {
-      if (!cuadro) cuadro = requestAnimationFrame(aplicar);
-    };
-    window.addEventListener("scroll", pedir, { passive: true });
-    aplicar();
-    return () => {
-      window.removeEventListener("scroll", pedir);
-      if (cuadro) cancelAnimationFrame(cuadro);
-      document.body.style.removeProperty("--lg-par");
-    };
-  }, [mundo]);
-
-  // El login es una pantalla completa, sin sidebar ni topbar (como en Floot)
+  // El login es una pantalla completa, sin barra lateral.
   if (base === "login")
     return (
       <ErrorBoundary>
@@ -327,159 +276,182 @@ export default function App() {
       </ErrorBoundary>
     );
 
-  const { title, Comp: View } = VIEWS.find((v) => v.key === base) ?? VIEWS[0];
+  const { Comp: View } = VIEWS.find((v) => v.key === base) ?? VIEWS[0];
 
   const quota = cuota ?? QUOTA_FALLBACK;
   const pct = auth && used != null && quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
-  const restantes = auth ? fmt(Math.max(0, quota - (used ?? 0))) : fmt(quota);
+  const restantes = fmt(Math.max(0, quota - (used ?? 0)));
   const planName = auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis";
-  const planLabel = auth ? `Plan ${planName}` : "Sin cuenta";
+  const inicial = auth ? ((auth.name || auth.email || "N")[0] || "N").toUpperCase() : "?";
+
+  const acciones = [
+    { id: "nuevo", label: "Nuevo chat", icon: "plusSq", atajo: `${MOD} ⇧ O`, run: () => go("chat") },
+    ...NAV.map((n) => ({ id: "nav-" + n.key, label: n.label, icon: n.icon, run: () => go(n.key) })),
+    { id: "ajustes", label: "Ajustes", icon: "sliders", run: () => go("ajustes") },
+    { id: "tema", label: dark ? "Pasar a tema claro" : "Pasar a tema oscuro", icon: dark ? "sun" : "moon", run: toggleTheme },
+    ...(auth?.role === "admin" ? [{ id: "admin", label: "Panel de control", icon: "lock", run: () => go("admin") }] : []),
+    ...(auth ? [] : [{ id: "login", label: "Iniciar sesión o crear cuenta", icon: "logout", run: () => go("login") }]),
+  ];
+
+  const recientes = chats.slice(0, 12);
+  const convActual = base === "chat" && param ? Number(param) : null;
+
   return (
     <div className="app">
-      <header className="topnav">
-        <div className="nav-inner">
-          <button className="brand" onClick={() => go("")}>
-            <span className="logo-mark" aria-hidden="true">n</span>
-            <span className="wordmark">
-              <b>nova</b>ia
-            </span>
+      <header className="topbar">
+        <button className="icon-btn" aria-label="Abrir menú" onClick={() => setMenuOpen(true)}>
+          <Icon name="menu" size={20} />
+        </button>
+        <button className="wordmark" onClick={() => go("")} aria-label="Nova IA, ir al inicio">novaia</button>
+        <button className="icon-btn" aria-label="Nuevo chat" onClick={() => go("chat")}>
+          <Icon name="plusSq" size={20} />
+        </button>
+      </header>
+
+      {menuOpen && <button className="side-scrim" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)} tabIndex={-1} />}
+
+      <aside
+        className={"side" + (menuOpen ? " open" : "")}
+        ref={sheetRef}
+        aria-label="Navegación"
+        {...(menuOpen ? { role: "dialog", "aria-modal": "true", tabIndex: -1 } : {})}
+      >
+        <div className="side-head">
+          <button className="wordmark" onClick={() => go("")} aria-label="Nova IA, ir al inicio">novaia</button>
+          <button className="icon-btn side-close" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)}>
+            <Icon name="x" size={18} />
+          </button>
+        </div>
+
+        <button className="side-new" onClick={() => go("chat")}>
+          <Icon name="plusSq" size={17} /> Nuevo chat
+        </button>
+        <button className="side-search" onClick={() => { setMenuOpen(false); setPaletaOpen(true); }}>
+          <Icon name="search" size={16} /> Buscar
+          <kbd>{MOD} K</kbd>
+        </button>
+
+        <nav className="side-nav" aria-label="Secciones">
+          {NAV.map((n) => (
+            <button
+              key={n.key}
+              className={"side-link" + (base === n.key ? " on" : "")}
+              aria-current={base === n.key ? "page" : undefined}
+              onClick={() => go(n.key)}
+            >
+              <Icon name={n.icon} size={17} /> {n.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="side-chats">
+          {auth ? (
+            <>
+              <h2 className="side-h">Recientes</h2>
+              {recientes.length === 0 ? (
+                <p className="side-empty">Tus conversaciones van a aparecer acá.</p>
+              ) : (
+                <ul>
+                  {recientes.map((c) => (
+                    <li key={c.id}>
+                      <button
+                        className={"side-chat" + (convActual === c.id ? " on" : "")}
+                        aria-current={convActual === c.id ? "page" : undefined}
+                        onClick={() => go(`chat/${c.id}`)}
+                        title={c.title}
+                      >
+                        {!!c.pinned && <Icon name="pin" size={13} />}
+                        <span>{c.title || "Sin título"}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {chats.length > recientes.length && (
+                <button className="side-more" onClick={() => go("historial")}>
+                  Ver las {chats.length} conversaciones
+                </button>
+              )}
+            </>
+          ) : (
+            <p className="side-empty">Con una cuenta, tus charlas quedan guardadas acá.</p>
+          )}
+        </div>
+
+        <div className="side-foot">
+          <button
+            className="saldo"
+            onClick={() => go(auth ? "uso-tokens" : "planes")}
+            title={auth ? "Ver el uso del mes" : "Ver planes y límites"}
+          >
+            {auth ? (
+              <>
+                <span className="saldo-t">
+                  <b>{restantes}</b> tokens
+                  <em>Plan {planName}</em>
+                </span>
+                <span className="saldo-bar" aria-hidden="true"><i style={{ width: 100 - pct + "%" }} /></span>
+                <span className="saldo-sub">quedan de {fmt(quota)} este mes</span>
+              </>
+            ) : (
+              <>
+                <span className="saldo-t">
+                  <b>{GUEST_LIMIT}</b> mensajes por día
+                  <em>Sin cuenta</em>
+                </span>
+                <span className="saldo-sub">Con cuenta gratis: {fmt(QUOTA_FALLBACK)} tokens por mes</span>
+              </>
+            )}
           </button>
 
-          <nav className="nav-links" aria-label="Navegación principal">
-            {NAV.map((n) => (
+          <div className="side-user">
+            <div className={"user-wrap" + (userMenu ? " open" : "")}>
               <button
-                key={n.key}
-                className={"nav-link" + (base === n.key ? " active" : "")}
-                onClick={() => go(n.key)}
+                className="user-btn"
+                onClick={() => (auth ? setUserMenu((v) => !v) : go("login"))}
+                aria-expanded={auth ? userMenu : undefined}
+                aria-haspopup={auth ? "menu" : undefined}
               >
-                {n.label}
-                {n.key === "chat" && <span className="kbd">⌘K</span>}
-              </button>
-            ))}
-          </nav>
-
-          <div className="nav-right">
-            {mundo === "ledger" && (
-              <button
-                className="saldo-chip"
-                onClick={() => go(auth ? "uso-tokens" : "planes")}
-                title={auth ? "Ver uso y tokens del mes" : "Ver planes y límites"}
-              >
-                <b>{auth ? restantes : GUEST_LIMIT}</b>
-                <span>{auth ? "tokens" : "msjs/día"}</span>
-              </button>
-            )}
-            {!auth && (
-              <button className="btn btn-ghost btn-sm" onClick={() => go("login")}>
-                Iniciar sesión
-              </button>
-            )}
-            <button className="icon-btn" title="Cambiar tema" aria-label="Cambiar tema" onClick={toggleTheme}>
-              <Icon name={dark ? "moon" : "sun"} size={17} />
-            </button>
-            <button className="help-btn" onClick={() => setHelpOpen(true)}>
-              <Icon name="help" size={16} /> <span className="help-txt">Ayuda</span>
-            </button>
-
-            <div className={"user-menu-wrap" + (userMenu ? " open" : "")}>
-              <button
-                className="user-row"
-                onClick={() => setUserMenu((v) => !v)}
-                aria-expanded={userMenu}
-                aria-haspopup="menu"
-              >
-                <span className="avatar">
-                  {auth ? ((auth.name || auth.email || "N")[0] || "N").toUpperCase() : "N"}
+                <span className="avatar">{inicial}</span>
+                <span className="user-t">
+                  <strong>{auth ? auth.name || auth.email : "Iniciar sesión"}</strong>
+                  <span>{auth ? (racha >= 2 ? `${racha} días seguidos` : auth.email) : "o crear una cuenta"}</span>
                 </span>
-                <span className="t">
-                  <strong>{auth ? auth.name || auth.email : "Invitado"}</strong>
-                  <span>{planLabel}</span>
-                </span>
-                <span className="chev"><Icon name="chevronDown" size={15} /></span>
               </button>
-              {userMenu && (
+              {userMenu && auth && (
                 <>
                   <button className="user-scrim" onClick={() => setUserMenu(false)} tabIndex={-1} aria-label="Cerrar menú de usuario" />
                   <div className="user-menu" role="menu">
-                    <div className="plan-card compact">
-                      <div className="row">
-                        <span className="crown"><Icon name="crown" size={15} /></span>
-                        <strong>Plan {planName}</strong>
-                        <span className="chip-active" style={{ marginLeft: "auto" }}>ACTIVO</span>
-                      </div>
-                      <div className="frac"><b>{auth ? fmt(used ?? 0) : "0"} / {fmt(quota)}</b></div>
-                      <div className="plan-bar" aria-hidden="true"><span style={{ width: pct + "%" }} /></div>
-                      <div className="rest">{auth ? restantes + " tokens restantes" : fmt(quota) + " tokens gratis por mes"}</div>
-                    </div>
-                    {auth ? (
-                      <>
-                        <button role="menuitem" onClick={() => { setUserMenu(false); go("ajustes"); }}>
-                          <Icon name="sliders" size={14} /> Ajustes
-                        </button>
-                        <button role="menuitem" onClick={() => { setUserMenu(false); go("uso-tokens"); }}>
-                          <Icon name="pulse" size={14} /> Uso y tokens
-                        </button>
-                        {auth.role === "admin" && (
-                          <button role="menuitem" onClick={() => { setUserMenu(false); go("admin"); }}>
-                            <Icon name="lock" size={14} /> Panel de control
-                          </button>
-                        )}
-                        <button role="menuitem" className="danger" onClick={logout}>
-                          <Icon name="logout" size={14} /> Cerrar sesión
-                        </button>
-                      </>
-                    ) : (
-                      <button role="menuitem" onClick={() => { setUserMenu(false); go("login"); }}>
-                        <Icon name="logout" size={14} /> Iniciar sesión
+                    <button role="menuitem" onClick={() => go("ajustes")}>
+                      <Icon name="sliders" size={15} /> Ajustes
+                    </button>
+                    <button role="menuitem" onClick={() => go("uso-tokens")}>
+                      <Icon name="pulse" size={15} /> Uso y tokens
+                    </button>
+                    {auth.role === "admin" && (
+                      <button role="menuitem" onClick={() => go("admin")}>
+                        <Icon name="lock" size={15} /> Panel de control
                       </button>
                     )}
+                    <button role="menuitem" className="danger" onClick={logout}>
+                      <Icon name="logout" size={15} /> Cerrar sesión
+                    </button>
                   </div>
                 </>
               )}
             </div>
-
-            <button className="icon-btn nav-burger" aria-label="Abrir menú" onClick={() => setMenuOpen(true)}>
-              <Icon name="menu" size={19} />
+            <button className="icon-btn" title="Cambiar tema" aria-label={dark ? "Pasar a tema claro" : "Pasar a tema oscuro"} onClick={toggleTheme}>
+              <Icon name={dark ? "sun" : "moon"} size={17} />
+            </button>
+            <button className="icon-btn" title="Ayuda y atajos" aria-label="Ayuda y atajos" onClick={() => setHelpOpen(true)}>
+              <Icon name="help" size={17} />
             </button>
           </div>
         </div>
-      </header>
-
-      {menuOpen && (
-        <>
-          <button className="sidebar-scrim open" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)} />
-          <div className="nav-sheet" role="dialog" aria-label="Navegación" aria-modal="true" tabIndex={-1} ref={sheetRef}>
-            <div className="sheet-head">
-              <span className="mono-label" style={{ margin: 0 }}>NAVEGACIÓN</span>
-              <button className="icon-btn" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)}>
-                <Icon name="x" size={18} />
-              </button>
-            </div>
-            {NAV.map((n) => (
-              <button
-                key={n.key}
-                className={"side-item" + (base === n.key ? " active" : "")}
-                onClick={() => { setMenuOpen(false); go(n.key); }}
-              >
-                <span className="icon"><Icon name={n.icon} size={17} /></span>
-                {n.label}
-              </button>
-            ))}
-            <hr className="sheet-sep" />
-            <button className={"side-item" + (base === "ajustes" ? " active" : "")} onClick={() => { setMenuOpen(false); go("ajustes"); }}>
-              <span className="icon"><Icon name="sliders" size={17} /></span> Ajustes
-            </button>
-            {auth?.role === "admin" && (
-              <button className={"side-item" + (base === "admin" ? " active" : "")} onClick={() => { setMenuOpen(false); go("admin"); }}>
-                <span className="icon"><Icon name="lock" size={17} /></span> Panel de control
-              </button>
-            )}
-          </div>
-        </>
-      )}
+      </aside>
 
       <div className="content">
-        <main className={"main" + (base === "chat" ? " main-chat" : "")}>
+        <main className={"main" + (base === "chat" ? " main-chat" : "") + (base === "admin" ? " main-wide" : "")}>
           <ErrorBoundary key={base + "/" + (param || "")}>
             {base === "chat" ? (
               <Chat key={param || "nuevo"} go={go} auth={auth} setAuth={setAuth} convId={param || null} />
@@ -491,48 +463,49 @@ export default function App() {
                 dark={dark}
                 setDark={setDark}
                 toggleTheme={toggleTheme}
-                mundo={mundo}
-                setMundo={setMundo}
+                racha={racha}
               />
             )}
           </ErrorBoundary>
         </main>
 
-        <footer className="footer">
-          <span className="brand-foot">novaia</span>
-          <span className="mid">
-            IA en español, hecha en Argentina.{" "}
-            <a href="/privacidad.html">Privacidad</a> · <a href="/terminos.html">Términos</a>
-          </span>
-          <span>Hecho por una persona · 2026</span>
-        </footer>
+        {base !== "chat" && (
+          <footer className="footer">
+            <span>Nova IA, hecha en Argentina por una persona.</span>
+            <span className="footer-links">
+              <a href="/privacidad.html">Privacidad</a>
+              <a href="/terminos.html">Términos</a>
+            </span>
+          </footer>
+        )}
       </div>
 
-      <Modal
-        open={helpOpen}
-        onClose={() => setHelpOpen(false)}
-        eyebrow="SOPORTE"
-        title="¿En qué te damos una mano?"
-      >
-        <p style={{ margin: "0 0 4px" }}>
-          Nova IA está en versión inicial. Estos atajos te mueven rápido por la app:
-        </p>
+      <Palette
+        open={paletaOpen}
+        onClose={() => setPaletaOpen(false)}
+        acciones={acciones}
+        chats={chats}
+        auth={auth}
+        go={go}
+      />
+
+      <Modal open={helpOpen} onClose={() => setHelpOpen(false)} title="Ayuda y atajos">
+        <p>Nova IA está en versión inicial. Si algo no anda, escribinos por WhatsApp desde Planes: contesta una persona.</p>
+        <dl className="atajos">
+          <div><dt><kbd>{MOD}</kbd><kbd>K</kbd></dt><dd>Buscar pantallas y conversaciones</dd></div>
+          <div><dt><kbd>{MOD}</kbd><kbd>⇧</kbd><kbd>O</kbd></dt><dd>Nuevo chat</dd></div>
+          <div><dt><kbd>Enter</kbd></dt><dd>Mandar el mensaje</dd></div>
+          <div><dt><kbd>⇧</kbd><kbd>Enter</kbd></dt><dd>Salto de línea</dd></div>
+          <div><dt><kbd>Esc</kbd></dt><dd>Detener la respuesta mientras se escribe</dd></div>
+        </dl>
         <div className="modal-links">
-          <button onClick={() => go("chat")}>
-            <Icon name="plusSq" size={16} /> Empezar un chat nuevo <span>⌘ K</span>
-          </button>
           <button onClick={() => go("planes")}>
-            <Icon name="crown" size={16} /> Ver planes y límites
-            <Icon name="arrowUpRight" size={14} style={{ marginLeft: "auto" }} />
+            <Icon name="crown" size={16} /> Ver planes y escribir por WhatsApp
           </button>
           <button onClick={() => go("uso-tokens")}>
             <Icon name="pulse" size={16} /> Revisar tu consumo
           </button>
         </div>
-        <p className="modal-note">
-          Estamos preparando un canal de soporte dentro de la app. Mientras tanto, tus conversaciones
-          quedan guardadas en tu cuenta.
-        </p>
       </Modal>
 
       <Toaster />

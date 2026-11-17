@@ -2,29 +2,35 @@ import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../icons.jsx";
 import { AGENTS } from "../data/agents.js";
 import { DRAFT_KEY } from "./Chat.jsx";
+import Filete from "../filete.jsx";
 
 const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
 
-export default function Home({ go, auth }) {
+// Cada rol tiene su color de filete; se repite en el chat y en Uso.
+export const COLOR_MODELO = { flash: "oro", pro: "celeste", pro31: "verde" };
+
+// Arranques concretos de los tres públicos reales: estudiar, vender, programar.
+const ARRANQUES = [
+  { t: "Contestale a un cliente", p: "Un cliente me escribió por WhatsApp: «hola, tenés la 42 en negro? cuánto sale con envío a Santa Fe?». Respondele corto y amable." },
+  { t: "Explicame un tema", p: "Explicame qué es la oferta y la demanda como si tuviera 15 años, con un ejemplo argentino." },
+  { t: "Revisá mi código", p: "Revisá este código y decime dónde falla:\n\n" },
+  { t: "Armá un presupuesto", p: "Armá un presupuesto prolijo con seña del 50% y envío a cargo del cliente para: " },
+];
+
+export default function Home({ go, auth, racha = 0 }) {
   const [q, setQ] = useState("");
   const caja = useRef(null);
-  const ajustar = () => {
-    const t = caja.current;
-    if (!t) return;
-    t.style.height = "auto";
-    // +2: el mundo ledger le suma un borde de 1 px por lado.
-    t.style.height = Math.min(t.scrollHeight + 2, 140) + "px";
-  };
-  useEffect(ajustar, [q]);
-  useEffect(() => {
-    window.addEventListener("resize", ajustar);
-    return () => window.removeEventListener("resize", ajustar);
-  }, []);
   const [modelos, setModelos] = useState([]);
-  const [racha, setRacha] = useState(0);
   const [cuota, setCuota] = useState(null);
   const [forzado, setForzado] = useState(false);
   const pago = !!auth && (auth.plan === "pro" || auth.plan === "plus");
+
+  useEffect(() => {
+    const t = caja.current;
+    if (!t) return;
+    t.style.height = "auto";
+    t.style.height = Math.min(t.scrollHeight, 220) + "px";
+  }, [q]);
 
   // Los techos los sirve el backend; así el Inicio no duplica números que pueden desactualizarse.
   useEffect(() => {
@@ -36,7 +42,6 @@ export default function Home({ go, auth }) {
         if (Array.isArray(d.modelos)) setModelos(d.modelos);
         if (d.cuota) setCuota(d.cuota);
         setForzado(!!d.forzado);
-        setRacha(d.racha || 0);
       })
       .catch(() => {});
   }, []);
@@ -52,130 +57,133 @@ export default function Home({ go, auth }) {
     go("chat");
   };
 
-  const destacados = AGENTS.slice(0, 3);
+  // Un arranque que termina en ":" o salto de línea pide que el usuario complete:
+  // va al cuadro de texto en vez de mandarse solo.
+  const usarArranque = (a) => {
+    if (/[:\n]\s*$/.test(a.p)) {
+      setQ(a.p);
+      requestAnimationFrame(() => {
+        const t = caja.current;
+        if (!t) return;
+        t.focus();
+        t.setSelectionRange(t.value.length, t.value.length);
+      });
+    } else empezar(a.p);
+  };
+
+  const nombre = auth?.name ? auth.name.split(" ")[0] : null;
 
   return (
     <section className="home">
-      <div className="home-hero">
-        <p className="eyebrow">Nova IA · Hecho en Argentina</p>
-        <h1 className="hero hero-title">
-          {auth && racha >= 2 ? `Otro día, ${racha} seguidos.` : "IA en español. Precios en pesos."}
+      <header className="home-hero">
+        <Filete className="home-filete" />
+        <h1 className="letrero">
+          {nombre ? <>Hola, {nombre}.</> : <>Preguntá en criollo.</>}
         </h1>
-        {auth && racha >= 2 && (
-          <p className="home-racha">
-            <Icon name="pulse" size={13} />
-            Venís usando Nova {racha} días seguidos. La memoria hace que cada charla arranque más atrás.
-          </p>
-        )}
-        <p className="lede">
-          Un asistente para estudiar, programar, trabajar y crear. Responde en español rioplatense por
-          defecto, te muestra el saldo que te queda y lo atiende una persona, no un formulario de soporte.
+        <p className="home-lede">
+          {auth && racha >= 2
+            ? `Van ${racha} días seguidos. Pegá la duda y seguimos.`
+            : "Un asistente que responde en español rioplatense, cobra en pesos y te muestra cuánto saldo te queda en cada respuesta."}
         </p>
+      </header>
 
-        <form className="home-ask" onSubmit={(e) => { e.preventDefault(); empezar(); }}>
-          <textarea
-            ref={caja}
-            rows={1}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                empezar();
-              }
-            }}
-            placeholder="Pegá la duda, el enunciado o el mensaje del cliente…"
-            aria-label="Escribí tu primera pregunta"
-          />
-          <button type="submit" className="btn btn-primary" disabled={!q.trim()}>
-            <Icon name="send" size={15} /> Preguntar
-          </button>
-        </form>
-
-        <div className="home-sug">
-          {[
-            "Respondé como el vendedor del negocio",
-            "Explicame un tema difícil",
-            "Revisá este código y decime dónde falla",
-            "Armá un presupuesto con seña y envío",
-          ].map((s) => (
-            <button key={s} className="sug" onClick={() => empezar(s)}>{s}</button>
-          ))}
-        </div>
-
-        {!auth && (
-          <p className="home-note">
-            <Icon name="lock" size={13} /> Probar no pide tarjeta: 3 mensajes por día sin cuenta. Crearla lleva un minuto.
-          </p>
-        )}
-      </div>
-
-      <div className="home-stats" data-rv>
-        <div><b>{cuota ? fmt(cuota) : "1.000.000"}</b><span>tokens por mes para empezar, sin tarjeta</span></div>
-        <div><b>{modelos.length || 3}</b><span>modelos bajo una sola cuenta y un saldo visible</span></div>
-        <div><b>{AGENTS.length}</b><span>mini agentes con instrucciones ya cargadas</span></div>
-      </div>
-
-      <h2 className="section-h2" data-rv>Tres formas de responder</h2>
-      <p className="section-sub" data-rv>
-        {forzado
-          ? "En este momento un ajuste global del panel dirige los tres roles al mismo proveedor: cambia el saldo disponible y el largo de la respuesta, no el modelo. Lo publicamos acá en vez de disimularlo."
-          : "Flash para lo rápido y largo, Pro para texto y código, Pro 3.1 para lo difícil. Cada uno consume de su propia bolsa, y al lado del nombre está el proveedor que lo atiende hoy."}
-      </p>
-      <div className="home-models" data-rv>
-        {modelos.map((m) => (
-          <div key={m.key} className="hm-card">
-            <div className="hm-top">
-              <strong>{m.label}</strong>
-              <span className="hm-pct">{m.pct}%</span>
-            </div>
-            <div className="plan-bar mini" aria-hidden="true"><span style={{ width: m.pct + "%" }} /></div>
-            <div className="hm-nums">
-              <b>{fmt(m.techo)}</b>
-              <span>tokens/mes en Gratis</span>
-            </div>
-            <p className="hm-desc">{m.desc}</p>
-            {m.upstream && <p className="hm-up" title="Proveedor que atiende este rol en el plan Gratis">{m.upstream}</p>}
-          </div>
-        ))}
-      </div>
-
-      <h2 className="section-h2" data-rv>Mini agentes</h2>
-      <p className="section-sub" data-rv>
-        {`${AGENTS.length} tareas concretas con las instrucciones ya cargadas —de responderle a un cliente por WhatsApp a revisar código—, sin que tengas que escribir el prompt. Se activan con Pro o Plus.`}
-      </p>
-      <div className="home-agents" data-rv>
-        {destacados.map((a) => (
-          <button key={a.id} className="home-agent locked" onClick={() => go(pago ? "chat" : "planes")}>
-            <span className="ico"><Icon name={pago ? a.icon : "lock"} size={16} /></span>
-            <span className="t">
-              <strong>{a.name}</strong>
-              <p>{a.desc}</p>
-            </span>
-            <span className="go"><Icon name={pago ? "arrowUpRight" : "lock"} size={14} /></span>
-          </button>
-        ))}
-        <button className="home-agent more" onClick={() => go("mini-agentes")}>
-          <span className="ico"><Icon name="plusSq" size={16} /></span>
-          <span className="t">
-            <strong>Ver los {AGENTS.length}</strong>
-            <p>{pago ? "Elegí uno y empezá." : "Compará planes para desbloquearlos."}</p>
+      <form className="ask" onSubmit={(e) => { e.preventDefault(); empezar(); }}>
+        <textarea
+          ref={caja}
+          rows={2}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              if (q.trim()) empezar();
+            }
+          }}
+          placeholder="Pegá la duda, el enunciado o el mensaje del cliente"
+          aria-label="Escribí tu primera pregunta"
+        />
+        <div className="ask-row">
+          <span className="ask-hint">
+            {auth ? "Enter para mandar, Shift + Enter para otra línea" : "Sin cuenta: 3 mensajes por día, sin tarjeta"}
           </span>
-          <span className="go"><Icon name="arrowUpRight" size={14} /></span>
-        </button>
-      </div>
+          <button type="submit" className="btn btn-primary" disabled={!q.trim()}>
+            Preguntar <Icon name="send" size={15} />
+          </button>
+        </div>
+      </form>
 
-      <div className="home-links" data-rv>
-        <button onClick={() => go("planes")}>
-          <Icon name="crown" size={16} /> Comparar planes
+      <ul className="arranques" aria-label="Ideas para arrancar">
+        {ARRANQUES.map((a) => (
+          <li key={a.t}>
+            <button onClick={() => usarArranque(a)}>{a.t}</button>
+          </li>
+        ))}
+      </ul>
+
+      <section className="home-sec" aria-labelledby="h-modelos">
+        <div className="sec-head">
+          <h2 id="h-modelos">Tres modelos, tres saldos</h2>
+          <p>
+            {forzado
+              ? "Ahora mismo un ajuste del panel manda los tres roles al mismo proveedor: cambia el saldo y el largo de la respuesta, no el modelo. Lo decimos acá en vez de esconderlo."
+              : "Cada uno descuenta de su propia bolsa mensual. Abajo de cada nombre está quién lo atiende hoy."}
+          </p>
+        </div>
+        <ul className="modelos">
+          {(modelos.length ? modelos : []).map((m) => (
+            <li key={m.key} className={"modelo m-" + (COLOR_MODELO[m.key] || "oro")}>
+              <span className="modelo-nombre">{m.label}</span>
+              <span className="modelo-desc">{m.desc}</span>
+              <span className="modelo-cifra">
+                <b>{fmt(auth ? m.restantes : m.techo)}</b>
+                {auth ? "tokens te quedan" : "tokens por mes, gratis"}
+              </span>
+              {m.upstream && <span className="modelo-up">{m.upstream}</span>}
+            </li>
+          ))}
+          {!modelos.length && (
+            <li className="modelo modelo-cargando">Cargando los saldos…</li>
+          )}
+        </ul>
+      </section>
+
+      <section className="home-sec" aria-labelledby="h-agentes">
+        <div className="sec-head">
+          <h2 id="h-agentes">Mini agentes</h2>
+          <p>
+            {`${AGENTS.length} tareas con las instrucciones ya cargadas, de contestarle a un cliente a revisar código. Vienen con Plus o Pro.`}
+          </p>
+        </div>
+        <ul className="agentes-lista">
+          {AGENTS.slice(0, 4).map((a) => (
+            <li key={a.id}>
+              <button onClick={() => go(pago ? "mini-agentes" : "planes")}>
+                <Icon name={a.icon} size={17} />
+                <span>
+                  <strong>{a.name}</strong>
+                  <small>{a.desc}</small>
+                </span>
+                {!pago && <Icon name="lock" size={14} />}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button className="link" onClick={() => go("mini-agentes")}>
+          Ver los {AGENTS.length} agentes
         </button>
-        <button onClick={() => go("historial")}>
-          <Icon name="clock" size={16} /> Mi historial
-        </button>
-        <button onClick={() => go("uso-tokens")}>
-          <Icon name="pulse" size={16} /> Uso y tokens
-        </button>
-      </div>
+      </section>
+
+      {!auth && (
+        <aside className="home-cuenta">
+          <div>
+            <h2>Una cuenta gratis guarda todo</h2>
+            <p>
+              {`${cuota ? fmt(cuota) : "1.000.000"} tokens por mes, historial con búsqueda y una memoria que Nova lee en cada charla. Sin tarjeta.`}
+            </p>
+          </div>
+          <button className="btn btn-primary" onClick={() => go("login")}>Crear mi cuenta</button>
+        </aside>
+      )}
     </section>
   );
 }

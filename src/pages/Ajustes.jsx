@@ -3,7 +3,7 @@ import { Icon } from "../icons.jsx";
 import { showToast } from "../ui.jsx";
 import { IDIOMAS, LARGOS, leerPrefs, escribirPrefs } from "../data/prefs.js";
 
-export default function Ajustes({ go, auth, setAuth, dark, toggleTheme, mundo = "ledger", setMundo }) {
+export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
   const planName = auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis";
   const [prefs, setPrefs] = useState(leerPrefs);
   const [abierto, setAbierto] = useState(false);
@@ -23,9 +23,11 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme, mundo = 
   }
 
   return (
-    <section>
-      <h1 className="hero">Ajustes</h1>
-      <p className="lede">Configurá tu experiencia en Nova IA.</p>
+    <section className="page">
+      <header className="page-head">
+        <h1>Ajustes</h1>
+        <p>Tu cuenta, cómo te responde Nova, qué recuerda de vos y cómo se ve.</p>
+      </header>
 
       <div className="settings-stack">
         <div className="settings-card">
@@ -40,7 +42,7 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme, mundo = 
           <div className="settings-row">
             <div>
               <strong>Perfil</strong>
-              <p>{auth ? `${auth.name || "Sin nombre"} · ${auth.email} · Plan ${planName}` : "Nombre visible y datos de la cuenta"}</p>
+              <p>{auth ? `${auth.name || "Sin nombre"}, ${auth.email}. Plan ${planName}.` : "Nombre visible y datos de la cuenta"}</p>
             </div>
             <button
               className="btn btn-ghost"
@@ -78,8 +80,8 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme, mundo = 
             <div>
               <strong>Preferencias de respuesta</strong>
               <p>
-                {IDIOMAS.find((i) => i.id === prefs.idioma)?.label} ·{" "}
-                {LARGOS.find((l) => l.id === prefs.largo)?.label}
+                {IDIOMAS.find((i) => i.id === prefs.idioma)?.label},{" "}
+                {LARGOS.find((l) => l.id === prefs.largo)?.label.toLowerCase()}
               </p>
             </div>
             <button
@@ -94,7 +96,7 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme, mundo = 
           {abierto && (
             <div className="prefs-panel">
               <div className="prefs-group">
-                <span className="mono-label">IDIOMA DE RESPUESTA</span>
+                <span className="prefs-label">Idioma de la respuesta</span>
                 <div className="opt-row">
                   {IDIOMAS.map((i) => (
                     <button
@@ -110,7 +112,7 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme, mundo = 
               </div>
 
               <div className="prefs-group">
-                <span className="mono-label">LARGO DE LA RESPUESTA</span>
+                <span className="prefs-label">Largo de la respuesta</span>
                 <div className="opt-row">
                   {LARGOS.map((l) => (
                     <button
@@ -130,7 +132,7 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme, mundo = 
               </div>
 
               <div className="prefs-group">
-                <span className="mono-label" htmlFor="pref-modelo">MODELO PREFERIDO</span>
+                <label className="prefs-label" htmlFor="pref-modelo">Modelo preferido</label>
                 <select
                   id="pref-modelo"
                   className="prefs-select"
@@ -190,24 +192,6 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme, mundo = 
             </div>
           </div>
 
-          <div className="settings-row">
-            <div>
-              <strong>Interfaz</strong>
-              <p>
-                Nueva: río, celeste y sol, con el saldo siempre a la vista y la navegación arriba.
-                Clásica: la vista anterior, zinc y azul. Se elige una vez y queda guardada en esta PC.
-              </p>
-            </div>
-            <div className={"seg" + (mundo === "clasico" ? " is-dark" : "")} role="group" aria-label="Interfaz de la aplicación">
-              <span className="seg-thumb" aria-hidden="true" />
-              <button className={mundo === "ledger" ? "on" : ""} onClick={() => setMundo?.("ledger")}>
-                <Icon name="pulse" size={14} /> Nueva
-              </button>
-              <button className={mundo === "clasico" ? "on" : ""} onClick={() => setMundo?.("clasico")}>
-                <Icon name="grid" size={14} /> Clásica
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </section>
