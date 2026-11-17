@@ -8,6 +8,13 @@ const MOTIVOS = {
   "error-token_invalido": "No pudimos validar tu identidad con Google. Volvé a intentar.",
   "error-token_vencido": "La sesión de Google venció antes de completar el ingreso. Volvé a intentar.",
   "error-email_no_verificado": "Tu email de Google no está verificado. Verificalo y probá de nuevo.",
+  "error-cancelado": "Cancelaste el ingreso con Google. Podés volver a intentar cuando quieras.",
+  "error-cliente_invalido": "Google rechazó las credenciales del servidor: el GOOGLE_CLIENT_SECRET cargado en Cloudflare no coincide con el de la consola de Google.",
+  "error-codigo_vencido": "El código de Google ya se había usado o venció. Volvé a intentar.",
+  "error-redirect_uri": "Google no tiene registrada esta dirección de retorno. Hay que agregarla en la consola de Google.",
+  "error-sin_conexion": "El servidor no pudo hablar con Google. Probá de nuevo en un rato.",
+  "error-servidor": "Algo falló en el servidor durante el ingreso. Probá de nuevo; si sigue, entrá con email y contraseña.",
+  "error-google_admin_policy_enforced": "Tu organización no permite usar Google para entrar a apps externas.",
 };
 
 export default function GoogleFinish({ go, setAuth, ticket }) {

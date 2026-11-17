@@ -1,8 +1,21 @@
 // GET /api/auth/google/callback?code&state
 // Intercambia el código con Google, valida el id_token, crea/recupera el usuario
 // en D1 y devuelve un ticket de un solo uso que el frontend canjea en /#/google/<ticket>.
+// Si el login empezó en una vista previa, el ticket vuelve a esa dirección.
+
+import { origenPermitido } from "../../../_lib/oauth.js";
 
 export async function onRequestGet({ request, env }) {
+  try {
+    return await callback(request, env);
+  } catch (e) {
+    // Sin esto, un error de D1 o de red deja una página 500 en blanco.
+    console.error("google callback:", e?.message || e);
+    return Response.redirect(`${new URL(request.url).origin}/#/google/error-servidor`, 302);
+  }
+}
+
+async function callback(request, env) {
   const url = new URL(request.url);
   const origin = url.origin;
   const code = url.searchParams.get("code");
@@ -10,7 +23,27 @@ export async function onRequestGet({ request, env }) {
   const clientId = env.GOOGLE_CLIENT_ID;
   const clientSecret = env.GOOGLE_CLIENT_SECRET;
 
-  const fail = (motivo) => Response.redirect(`${origin}/#/google/error-${motivo}`, 302);
+  // El origen de vuelta va dentro del state (ver start.js). Solo se usa si es
+  // propio; ante cualquier duda, el ticket se queda en esta dirección.
+  const volverDe = (st) => {
+    const parte = String(st || "").split(".")[1];
+    if (!parte) return origin;
+    try {
+      const o = atob(parte.replace(/-/g, "+").replace(/_/g, "/"));
+      return origenPermitido(o, env) ? new URL(o).origin : origin;
+    } catch {
+      return origin;
+    }
+  };
+  let destino = origin;
+  const fail = (motivo) => Response.redirect(`${destino}/#/google/error-${motivo}`, 302);
+
+  // Google vuelve con ?error= cuando el usuario cancela o la app no está habilitada.
+  const errorGoogle = url.searchParams.get("error");
+  if (errorGoogle) {
+    destino = volverDe(state);
+    return fail(errorGoogle === "access_denied" ? "cancelado" : "google_" + errorGoogle.replace(/[^a-z_]/gi, ""));
+  }
 
   if (!clientId || !clientSecret) return fail("no_config");
   if (!code || !state) return fail("faltan_datos");
@@ -22,6 +55,7 @@ export async function onRequestGet({ request, env }) {
     .first();
   if (!row) return fail("estado_invalido");
   await env.DB.prepare("DELETE FROM sessions WHERE id = ?").bind(row.id).run();
+  destino = volverDe(state);
 
   // Intercambio de código por tokens
   let tokens;
@@ -37,10 +71,21 @@ export async function onRequestGet({ request, env }) {
         grant_type: "authorization_code",
       }),
     });
-    tokens = await tokenRes.json();
-    if (!tokenRes.ok || !tokens?.id_token) return fail("token_invalido");
+    tokens = await tokenRes.json().catch(() => ({}));
+    if (!tokenRes.ok || !tokens?.id_token) {
+      // El motivo exacto de Google es lo que permite arreglarlo: un secreto mal
+      // copiado (invalid_client) no se resuelve igual que un código vencido.
+      console.error("google token:", tokenRes.status, tokens?.error, tokens?.error_description);
+      const motivo = {
+        invalid_client: "cliente_invalido",
+        unauthorized_client: "cliente_invalido",
+        invalid_grant: "codigo_vencido",
+        redirect_uri_mismatch: "redirect_uri",
+      }[tokens?.error];
+      return fail(motivo || "token_invalido");
+    }
   } catch {
-    return fail("token_invalido");
+    return fail("sin_conexion");
   }
 
   // Validamos el id_token (audience + vencimiento). El token es auténtico porque
@@ -73,7 +118,7 @@ export async function onRequestGet({ request, env }) {
     .bind(ticket, user.id)
     .run();
 
-  return Response.redirect(`${origin}/#/google/${ticket}`, 302);
+  return Response.redirect(`${destino}/#/google/${ticket}`, 302);
 }
 
 // Decodifica el payload de un JWT base64url

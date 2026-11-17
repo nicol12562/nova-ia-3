@@ -1,8 +1,23 @@
 // GET /api/auth/google/start → manda a Google para iniciar sesión o crear cuenta.
 // Requiere secretos: GOOGLE_CLIENT_ID (y en callback GOOGLE_CLIENT_SECRET).
+//
+// Desde una vista previa o un alias, rebota a la dirección canónica con
+// ?volver=<origen>: ahí están los secretos y la URI que Google tiene registrada.
+
+import { origenCanonico, origenPermitido } from "../../../_lib/oauth.js";
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
+  const canon = origenCanonico(env);
+
+  if (url.origin !== canon && origenPermitido(url.origin, env)) {
+    return Response.redirect(`${canon}/api/auth/google/start?volver=${encodeURIComponent(url.origin)}`, 302);
+  }
+
+  // A dónde vuelve el ticket al final. Lo que no sea una dirección propia se ignora.
+  const pedido = url.searchParams.get("volver");
+  const volver = pedido && pedido !== url.origin && origenPermitido(pedido, env) ? new URL(pedido).origin : "";
+
   const clientId = env.GOOGLE_CLIENT_ID;
 
   if (!clientId) {
@@ -19,8 +34,10 @@ export async function onRequestGet({ request, env }) {
     );
   }
 
-  // State anti-CSRF de un solo uso
-  const state = crypto.randomUUID() + crypto.randomUUID().replaceAll("-", "");
+  // State anti-CSRF de un solo uso. Lleva el origen de vuelta adentro: como se
+  // guarda entero en D1 y se busca exacto, no se puede cambiar en el camino.
+  const azar = crypto.randomUUID() + crypto.randomUUID().replaceAll("-", "");
+  const state = volver ? `${azar}.${b64url(volver)}` : azar;
   await env.DB
     .prepare("INSERT INTO sessions (kind, token, expires_at) VALUES ('oauth_state', ?, datetime('now', '+10 minutes'))")
     .bind(state)
@@ -36,4 +53,8 @@ export async function onRequestGet({ request, env }) {
   authUrl.searchParams.set("prompt", "select_account");
 
   return Response.redirect(authUrl.toString(), 302);
+}
+
+function b64url(texto) {
+  return btoa(texto).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
