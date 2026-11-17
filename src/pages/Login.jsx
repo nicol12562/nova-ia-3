@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Icon } from "../icons.jsx";
 import { showToast } from "../ui.jsx";
+import Filete from "../filete.jsx";
 
 export default function Login({ go, setAuth }) {
   const [mode, setMode] = useState("login"); // "login" | "register"
@@ -38,65 +39,26 @@ export default function Login({ go, setAuth }) {
   return (
     <div className="login-page">
       <div className="login-left">
-        <div className="brand">
-          <span className="logo-mark" aria-hidden="true">
-            n
-          </span>
-          <span className="wordmark">
-            <b>nova</b>ia
-          </span>
-        </div>
-        <div className="center">
-          <p className="eyebrow">Nova IA · Hecho en Argentina</p>
-          <h1>
-            <span className="line">
-              <span className="reveal-word" style={{ "--i": 0 }}>Preguntalo</span>{" "}
-              <span className="reveal-word" style={{ "--i": 1 }}>en</span>{" "}
-              <span className="reveal-word" style={{ "--i": 2 }}>español.</span>
-            </span>
-            <span className="line">
-              <span className="reveal-word" style={{ "--i": 3 }}>Te responde</span>{" "}
-              <span className="reveal-word login-em" style={{ "--i": 4 }}>acá.</span>
-            </span>
-          </h1>
-          <p className="lede">
-            Estudiar, programar, trabajar, vender. Nova arranca en español rioplatense, te muestra el
-            saldo que te queda y no te cobra en dólares.
-          </p>
+        <button className="wordmark" onClick={() => go("")} aria-label="Nova IA, ir al inicio">novaia</button>
+        <div className="login-center">
+          <Filete className="login-filete" />
+          <h1 className="letrero">Preguntá en criollo.</h1>
           <ul className="login-feats">
-            <li>
-              <Icon name="pulse" size={15} /> Respuestas en vivo, mientras las leés
-            </li>
-            <li>
-              <Icon name="clock" size={15} /> Historial, búsqueda y memoria en tu cuenta
-            </li>
-            <li>
-              <Icon name="crown" size={15} /> Tres formas de responder, un saldo que se ve
-            </li>
-            <li>
-              <Icon name="chat" size={15} /> Soporte: una persona, por WhatsApp
-            </li>
+            <li>Responde en español rioplatense, con voseo y sin vueltas.</li>
+            <li>Cada respuesta dice qué modelo contestó y cuánto saldo te queda.</li>
+            <li>Historial con búsqueda y una memoria que Nova lee en cada charla.</li>
+            <li>Precios en pesos. Si algo falla, te contesta una persona por WhatsApp.</li>
           </ul>
-          <hr className="sep" />
-          <p className="note">
-            <span className="star" aria-hidden="true" />
-            <span>
-              Sin tarjeta para empezar.
-              <br />
-              Sin dólares. Sin letra chica.
-            </span>
-          </p>
         </div>
-        <p className="minifoot">Nova IA · Desarrollado en Argentina</p>
+        <p className="login-pie">Hecho en Argentina por una persona.</p>
       </div>
 
       <div className="login-right">
         <button className="back" onClick={() => go("chat")}>
-          ← Volver al chat
+          Volver al chat
         </button>
 
         <div className="login-box">
-          <p className="eyebrow">{mode === "login" ? "QUÉ BUENO VERTE" : "UN MINUTO, SIN TARJETA"}</p>
           <h2>{mode === "login" ? "Bienvenido de vuelta." : "Creá tu cuenta."}</h2>
           <p className="sub">
             {mode === "login"
@@ -221,7 +183,7 @@ export default function Login({ go, setAuth }) {
               <>
                 ¿Todavía no tenés cuenta?{" "}
                 <button className="linklike" onClick={() => { setMode("register"); setError(""); }}>
-                  Crear una cuenta <Icon name="arrowUpRight" size={13} />
+                  Crear una cuenta
                 </button>
               </>
             ) : (

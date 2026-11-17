@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "../icons.jsx";
-import { showToast, spotlight, useCountUp } from "../ui.jsx";
+import { showToast, useCountUp } from "../ui.jsx";
+import { COLOR_MODELO } from "./Home.jsx";
 
 const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
+const diaEs = (iso) => (iso || "").slice(8, 10) + "/" + (iso || "").slice(5, 7);
 
 export default function Uso({ auth, go }) {
   const today = new Date().toISOString().slice(0, 10);
@@ -10,11 +12,8 @@ export default function Uso({ auth, go }) {
   const [to, setTo] = useState(today);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [consultado, setConsultado] = useState(false);
 
   const total = useCountUp(data?.total ?? 0);
-  const totalIn = useCountUp(data?.totalIn ?? 0);
-  const totalOut = useCountUp(data?.totalOut ?? 0);
   // La cuota la define el servidor según el plan real de la cuenta.
   const quota = data?.cuota ?? 0;
   const pct = data && quota ? Math.min(100, Math.round((data.total / quota) * 100)) : 0;
@@ -25,142 +24,116 @@ export default function Uso({ auth, go }) {
       const res = await fetch(`/api/usage?from=${from}&to=${to}`);
       if (!res.ok) throw new Error("respuesta inválida");
       setData(await res.json());
-      setConsultado(true);
     } catch {
       setData(null);
-      setConsultado(true);
       showToast("No pudimos consultar tu consumo. Probá de nuevo.", { tone: "error" });
     } finally {
       setLoading(false);
     }
   }
 
+  // El mes en curso se carga solo: es lo que casi siempre se quiere ver.
+  useEffect(() => {
+    if (auth?.id) consultar();
+  }, [auth?.id]);
+
+  const dias = data?.days || [];
+  const maxDia = Math.max(1, ...dias.map((d) => (d.tokens_in || 0) + (d.tokens_out || 0)));
+
   return (
-    <section>
-      <div className="page-head">
-        <div>
-          <h1 className="hero">Uso y tokens</h1>
-          <p className="lede">Consumo real registrado en el backend, con tokens de entrada y salida.</p>
-        </div>
-        <div style={{ paddingTop: 26 }}>
-          <span className="chip-inline">Período seleccionable</span>
-        </div>
-      </div>
+    <section className="page">
+      <header className="page-head">
+        <h1>Uso y tokens</h1>
+        <p>Lo que registró el servidor, con lo que mandaste y lo que respondió Nova por separado.</p>
+      </header>
 
       {!auth ? (
-        <div className="empty-state">
-          <span className="sq"><Icon name="pulse" size={22} /></span>
-          <h3>Iniciá sesión para ver tu consumo</h3>
-          <p>El contador es privado y está vinculado a tu cuenta.</p>
-          <button className="linklike" onClick={() => go("login")}>
-            Iniciar sesión <Icon name="arrowUpRight" size={13} />
-          </button>
+        <div className="empty">
+          <Icon name="pulse" size={22} />
+          <h2>Iniciá sesión para ver tu consumo</h2>
+          <p>El contador es privado y está atado a tu cuenta.</p>
+          <button className="btn btn-primary" onClick={() => go("login")}>Iniciar sesión</button>
         </div>
       ) : (
         <>
-          <div className="uso-form">
-            <div className="field-inline">
-              <label htmlFor="desde">Desde</label>
-              <input id="desde" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-            </div>
-            <div className="field-inline">
-              <label htmlFor="hasta">Hasta</label>
-              <input id="hasta" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-            </div>
-            <button className="btn btn-primary" disabled={loading || !from || !to} onClick={consultar}>
-              {loading ? (
-                <>
-                  <span className="spinner" /> Consultando…
-                </>
-              ) : (
-                "Consultar período"
-              )}
+          <form className="periodo" onSubmit={(e) => { e.preventDefault(); consultar(); }}>
+            <label>
+              Desde
+              <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
+            </label>
+            <label>
+              Hasta
+              <input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} />
+            </label>
+            <button className="btn btn-quiet" disabled={loading || !from || !to}>
+              {loading ? <><span className="spinner" /> Consultando…</> : "Ver ese período"}
             </button>
-          </div>
+          </form>
 
-          {consultado && data && (
+          {data && (
             <>
-              <div className="grid-cards" style={{ marginTop: 30 }}>
-                <div className="card static stat-card spot" onPointerMove={spotlight.onPointerMove}>
-                  <span className="t">
-                    <strong className="stat-num">{total.toLocaleString("es-AR")}</strong>
-                    <p>tokens totales en el período</p>
-                  </span>
+              <div className="resumen">
+                <div className="resumen-total">
+                  <b>{total.toLocaleString("es-AR")}</b>
+                  <span>tokens en el período, {pct}% de tu cuota mensual de {fmt(quota)}</span>
+                  <span className="barra" aria-hidden="true"><i style={{ width: pct + "%" }} /></span>
                 </div>
-                <div className="card static stat-card spot" onPointerMove={spotlight.onPointerMove}>
-                  <span className="t">
-                    <strong className="stat-num">{totalIn.toLocaleString("es-AR")}</strong>
-                    <p>tokens de tus mensajes</p>
-                  </span>
-                </div>
-                <div className="card static stat-card spot" onPointerMove={spotlight.onPointerMove}>
-                  <span className="t">
-                    <strong className="stat-num">{totalOut.toLocaleString("es-AR")}</strong>
-                    <p>tokens de las respuestas</p>
-                  </span>
-                </div>
-                <div className="card static stat-card spot" onPointerMove={spotlight.onPointerMove}>
-                  <span className="t">
-                    <strong className="stat-num">{pct}%</strong>
-                    <p>de tu cuota mensual</p>
-                    <div className="plan-bar" aria-hidden="true">
-                      <span style={{ width: pct + "%" }} />
-                    </div>
-                  </span>
-                </div>
+                <dl className="resumen-partes">
+                  <div><dt>De tus mensajes</dt><dd>{fmt(data.totalIn)}</dd></div>
+                  <div><dt>De las respuestas</dt><dd>{fmt(data.totalOut)}</dd></div>
+                </dl>
               </div>
 
               {data.modelos?.length > 0 && (
-                <div className="model-budgets">
-                  <div className="mb-head">
-                    <span className="mono-label" style={{ margin: 0 }}>SALDO POR MODELO · {data.plan.toUpperCase()}</span>
-                    <span className="mono-sub">cada modelo consume su propia bolsa mensual</span>
-                  </div>
-                  {data.modelos.map((m) => (
-                    <div key={m.key} className={"mb-row" + (m.agotado ? " out" : "")}>
-                      <div className="mb-top">
-                        <strong>{m.label}</strong>
-                        <span className="mb-nums">
-                          {fmt(m.usado)} / {fmt(m.techo)}
-                          {m.agotado && <em>agotado</em>}
-                        </span>
-                      </div>
-                      <div className="plan-bar mini" aria-hidden="true">
-                        <span style={{ width: m.pct + "%" }} />
-                      </div>
-                      <p className="mb-desc">{m.desc}</p>
-                    </div>
-                  ))}
-                </div>
+                <section className="bloque" aria-labelledby="h-bolsas">
+                  <h2 id="h-bolsas">Saldo por modelo en el plan {data.plan === "pro" ? "Pro" : data.plan === "plus" ? "Plus" : "Gratis"}</h2>
+                  <ul className="bolsas">
+                    {data.modelos.map((m) => (
+                      <li key={m.key} className={"m-" + (COLOR_MODELO[m.key] || "oro") + (m.agotado ? " agotado" : "")}>
+                        <div className="bolsa-top">
+                          <strong><span className="dot" aria-hidden="true" />{m.label}</strong>
+                          <span className="bolsa-nums">
+                            {m.agotado ? "Agotado" : `${fmt(m.restantes ?? m.techo - m.usado)} de ${fmt(m.techo)}`}
+                          </span>
+                        </div>
+                        <span className="barra" aria-hidden="true"><i style={{ width: Math.max(0, 100 - m.pct) + "%" }} /></span>
+                        <p>{m.desc}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               )}
 
-              {data.days.length > 0 && (
-                <div className="table-wrap" style={{ marginTop: 20 }}>
-                  <table className="comparison">
+              <section className="bloque" aria-labelledby="h-dias">
+                <h2 id="h-dias">Día por día</h2>
+                {dias.length === 0 ? (
+                  <p className="muted">No registramos consumo en ese período.</p>
+                ) : (
+                  <table className="tabla">
                     <thead>
                       <tr>
                         <th scope="col">Día</th>
-                        <th scope="col">Entrada</th>
-                        <th scope="col">Salida</th>
+                        <th scope="col" className="num">Mensajes</th>
+                        <th scope="col" className="num">Respuestas</th>
+                        <th scope="col"><span className="sr-only">Proporción</span></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {data.days.map((d) => (
-                        <tr key={d.day}>
-                          <td>{d.day}</td>
-                          <td>{(d.tokens_in || 0).toLocaleString("es-AR")}</td>
-                          <td>{(d.tokens_out || 0).toLocaleString("es-AR")}</td>
-                        </tr>
-                      ))}
+                      {[...dias].reverse().map((d) => {
+                        const t = (d.tokens_in || 0) + (d.tokens_out || 0);
+                        return (
+                          <tr key={d.day}>
+                            <td>{diaEs(d.day)}</td>
+                            <td className="num">{fmt(d.tokens_in)}</td>
+                            <td className="num">{fmt(d.tokens_out)}</td>
+                            <td className="col-barra"><span className="barra" aria-hidden="true"><i style={{ width: (t / maxDia) * 100 + "%" }} /></span></td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
-                </div>
-              )}
-              {data.days.length === 0 && (
-                <p className="lede" style={{ marginTop: 22 }}>
-                  No registramos consumo en ese período.
-                </p>
-              )}
+                )}
+              </section>
             </>
           )}
         </>

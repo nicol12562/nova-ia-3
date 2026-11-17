@@ -8,6 +8,13 @@ const MOTIVOS = {
   "error-token_invalido": "No pudimos validar tu identidad con Google. Volvé a intentar.",
   "error-token_vencido": "La sesión de Google venció antes de completar el ingreso. Volvé a intentar.",
   "error-email_no_verificado": "Tu email de Google no está verificado. Verificalo y probá de nuevo.",
+  "error-cancelado": "Cancelaste el ingreso con Google. Podés volver a intentar cuando quieras.",
+  "error-cliente_invalido": "Google rechazó las credenciales del servidor: el GOOGLE_CLIENT_SECRET cargado en Cloudflare no coincide con el de la consola de Google.",
+  "error-codigo_vencido": "El código de Google ya se había usado o venció. Volvé a intentar.",
+  "error-redirect_uri": "Google no tiene registrada esta dirección de retorno. Hay que agregarla en la consola de Google.",
+  "error-sin_conexion": "El servidor no pudo hablar con Google. Probá de nuevo en un rato.",
+  "error-servidor": "Algo falló en el servidor durante el ingreso. Probá de nuevo; si sigue, entrá con email y contraseña.",
+  "error-google_admin_policy_enforced": "Tu organización no permite usar Google para entrar a apps externas.",
 };
 
 export default function GoogleFinish({ go, setAuth, ticket }) {
@@ -28,18 +35,15 @@ export default function GoogleFinish({ go, setAuth, ticket }) {
   }, [ticket]);
 
   return (
-    <div className="login-right" style={{ minHeight: "100vh", justifyContent: "center" }}>
-      <div className="login-box gf-card" style={{ paddingTop: 0 }}>
+    <div className="gf-screen">
+      <div className="gf-card">
         {!error ? (
           <>
-            <span className="spinner spinner-dark spinner-lg" aria-hidden="true" />
-            <p className="eyebrow" style={{ justifyContent: "center" }}>
-              CONECTANDO CON GOOGLE
-            </p>
-            <h1 className="hero" style={{ fontSize: 38, margin: "8px 0 0" }}>
+            <span className="spinner spinner-lg" aria-hidden="true" />
+            <h1>
               Un segundo…
             </h1>
-            <p className="lede" style={{ marginTop: 12 }}>
+            <p>
               Estamos entrando a tu espacio de Nova.
             </p>
           </>
@@ -48,19 +52,16 @@ export default function GoogleFinish({ go, setAuth, ticket }) {
             <span className="gf-error-icon" aria-hidden="true">
               <Icon name="x" size={24} />
             </span>
-            <p className="eyebrow" style={{ justifyContent: "center" }}>
-              ALGO NO SALIÓ COMO ESPERÁBAMOS
-            </p>
-            <h1 className="hero" style={{ fontSize: 38, margin: "8px 0 0" }}>
+            <h1>
               Ups.
             </h1>
-            <p className="lede" style={{ margin: "12px 0 24px" }}>
+            <p>
               {error}
             </p>
-            <button className="btn btn-primary btn-sheen" onClick={() => go("login")}>
-              Volver a iniciar sesión <Icon name="arrowUpRight" size={13} />
+            <button className="btn btn-primary" onClick={() => go("login")}>
+              Volver a iniciar sesión
             </button>
-            <p className="foot-note" style={{ marginTop: 16 }}>
+            <p className="foot-note">
               Si el problema sigue, probá con tu email y contraseña.
             </p>
           </>

@@ -21,31 +21,23 @@ export default function Agentes({ go, auth }) {
   };
 
   return (
-    <section>
-      <div className="page-head">
-        <div>
-          <h1 className="hero">Mini agentes</h1>
-          <p className="lede">
-            {`${AGENTS.length} asistentes con las instrucciones ya cargadas. Escribí nomás la pregunta: el agente se encarga del resto.`}
-          </p>
-        </div>
-        <div style={{ paddingTop: 26 }}>
-          <span className={"chip-inline" + (pago ? " ok" : "")}>
-            {pago ? "Desbloqueados" : "Pro y Plus"}
-          </span>
-        </div>
-      </div>
+    <section className="page">
+      <header className="page-head">
+        <h1>Mini agentes</h1>
+        <p>
+          {`${AGENTS.length} asistentes con las instrucciones ya cargadas. Escribís la pregunta y el agente se encarga del resto.`}
+          {pago ? " Están todos habilitados en tu plan." : " Vienen con Plus y Pro."}
+        </p>
+      </header>
 
-      <div className="agents-grid" data-rv>
+      <div className="agents-grid">
         {AGENTS.map((a) => (
           <button key={a.id} className={"agent-card" + (pago ? "" : " locked")} onClick={() => abrir(a)}>
-            <span className="agent-ico"><Icon name={a.icon} size={18} /></span>
+            <span className="agent-ico"><Icon name={a.icon} size={19} /></span>
             <span className="agent-body">
               <strong>{a.name}</strong>
               <p>{a.desc}</p>
-              <span className="agent-sample">
-                <Icon name="send" size={12} /> {a.sample}
-              </span>
+              <span className="agent-sample">“{a.sample}”</span>
             </span>
             <span className="agent-go">
               <Icon name={pago ? "arrowUpRight" : "lock"} size={15} />
@@ -55,8 +47,7 @@ export default function Agentes({ go, auth }) {
       </div>
 
       {!pago && (
-        <div className="agent-note" data-rv>
-          <span className="sq"><Icon name="lock" size={17} /></span>
+        <div className="agent-note">
           <div className="txt">
             <strong>Los mini agentes vienen con Pro o Plus</strong>
             <p>
@@ -64,24 +55,13 @@ export default function Agentes({ go, auth }) {
               se desbloquean al pasar de plan.
             </p>
           </div>
-          <button className="btn btn-primary" onClick={() => go("planes")}>
-            Ver planes <Icon name="arrowUpRight" size={13} />
-          </button>
+          <button className="btn btn-primary" onClick={() => go("planes")}>Ver planes</button>
         </div>
       )}
 
-      {pago && (
-        <div className="agent-note" data-rv>
-          <span className="sq"><Icon name="check" size={17} /></span>
-          <div className="txt">
-            <strong>Agentes disponibles en tu plan {auth.plan === "plus" ? "Plus" : "Pro"}</strong>
-            <p>Elegí uno y escribí: las instrucciones se aplican solas en cada respuesta.</p>
-          </div>
-        </div>
-      )}
 
       {!auth && (
-        <p className="foot-note" style={{ marginTop: 16, textAlign: "center" }}>
+        <p className="foot-note">
           ¿Ya tenés Pro?{" "}
           <button className="linklike" onClick={() => go("login")}>
             Iniciá sesión
@@ -93,19 +73,18 @@ export default function Agentes({ go, auth }) {
       <Modal
         open={!!needPlan}
         onClose={() => setNeedPlan(null)}
-        eyebrow="MINI AGENTES"
         title={needPlan ? `${needPlan.name} es de plan pago` : ""}
         footer={
-          <div className="gm-cta">
+          <div className="modal-cta">
             <button
               className="btn btn-primary btn-block"
               onClick={() => { setNeedPlan(null); go("planes"); }}
             >
-              <Icon name="crown" size={15} /> Comparar planes
+              Comparar planes
             </button>
             {!auth && (
               <button
-                className="btn btn-ghost btn-block"
+                className="btn btn-quiet btn-block"
                 onClick={() => { setNeedPlan(null); go("login"); }}
               >
                 Ya tengo Pro, iniciar sesión
@@ -114,13 +93,13 @@ export default function Agentes({ go, auth }) {
           </div>
         }
       >
-        <p className="gm-copy">
-          {needPlan?.desc} Con Pro o Plus lo usás sin límite de mensajes y con historial guardado.
+        <p>
+          {needPlan?.desc} Se habilita con Plus o Pro.
         </p>
-        <ul className="gm-list">
-          <li><span className="tick"><Icon name="check" size={12} /></span> Los {AGENTS.length} agentes habilitados</li>
-          <li><span className="tick"><Icon name="check" size={12} /></span> Más tokens por modelo cada mes</li>
-          <li><span className="tick"><Icon name="check" size={12} /></span> Historial en cualquier dispositivo</li>
+        <ul className="check-list">
+          <li>Los {AGENTS.length} agentes habilitados</li>
+          <li>Más tokens por modelo cada mes</li>
+          <li>Respuestas más largas</li>
         </ul>
       </Modal>
     </section>

@@ -3,9 +3,10 @@ import { Icon } from "../icons.jsx";
 import Md from "../md.jsx";
 import Canvas from "../canvas.jsx";
 import { piezaDe } from "../piece.js";
-import { copyText, showToast, spotlight, Modal } from "../ui.jsx";
+import { copyText, showToast, Modal } from "../ui.jsx";
 import { AGENTS, AGENT_KEY } from "../data/agents.js";
 import { leerPrefs } from "../data/prefs.js";
+import { COLOR_MODELO } from "./Home.jsx";
 
 const leerBorrador = () => {
   try {
@@ -49,10 +50,10 @@ const escribirGuest = (n) => {
 };
 
 const SUGGESTIONS = [
-  { i: "doc", t: "Escribí algo", d: "Ayudame a escribir un texto claro y convincente" },
-  { i: "wand", t: "Dame ideas", d: "Dame 5 ideas creativas para un proyecto nuevo" },
-  { i: "knot", t: "Explicame", d: "Explicame un tema difícil de forma sencilla" },
-  { i: "bot", t: "Programá conmigo", d: "Ayudame a planificar una pequeña aplicación web" },
+  { i: "send", t: "Contestale a un cliente", d: "Un cliente me pregunta por WhatsApp si hacemos envíos al interior y cuánto tarda. Respondele corto y amable." },
+  { i: "knot", t: "Explicame un tema", d: "Explicame un tema difícil de forma sencilla, con un ejemplo de todos los días." },
+  { i: "bot", t: "Programá conmigo", d: "Ayudame a planificar una pequeña aplicación web: qué pantallas, qué datos y por dónde arranco." },
+  { i: "wand", t: "Dame ideas", d: "Dame 5 ideas concretas para promocionar un emprendimiento chico en Instagram." },
 ];
 
 const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
@@ -77,8 +78,6 @@ export default function Chat({ auth, convId, go }) {
   const [agentBlock, setAgentBlock] = useState(false);
   const [modelos, setModelos] = useState([]);
   const [cuota, setCuota] = useState(null);
-  const [dias, setDias] = useState([]);
-  const [totalMes, setTotalMes] = useState(0);
   const asientoRef = useRef(null);
   const totalRef = useRef(0);
   const cuotaRef = useRef(null);
@@ -94,6 +93,11 @@ export default function Chat({ auth, convId, go }) {
   const [indicePieza, setIndicePieza] = useState(0);
   const [canvasAbierto, setCanvasAbierto] = useState(false);
   const vivaRef = useRef(-1);
+  // Detener: el usuario corta el stream y se queda con lo que llegó.
+  const controlRef = useRef(null);
+  const detenidoRef = useRef(false);
+  const [lejos, setLejos] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Botón explícito: cualquier respuesta se puede subir a la pieza sin que el
   // heuristic decida por el usuario. Toma el pedido anterior como título.
@@ -135,8 +139,6 @@ export default function Chat({ auth, convId, go }) {
       const d = await r.json();
       if (Array.isArray(d.modelos)) setModelos(d.modelos);
       if (d.cuota) setCuota(d.cuota);
-      setDias(Array.isArray(d.days) ? d.days : []);
-      setTotalMes(d.total || 0);
       totalRef.current = d.total || 0;
       if (d.cuota) cuotaRef.current = d.cuota;
     } catch {
@@ -190,7 +192,15 @@ export default function Chat({ auth, convId, go }) {
         body: JSON.stringify({ conv_id: target, role, content }),
       });
       const data = res.ok ? await res.json() : null;
-      if (data?.conversation_id) setConv(data.conversation_id);
+      if (data?.conversation_id) {
+        setConv(data.conversation_id);
+        // Conversación nueva: la barra lateral la suma a Recientes y la URL la
+        // apunta, así recargar no la pierde.
+        if (!target) {
+          window.dispatchEvent(new Event("novaia:historial"));
+          history.replaceState(null, "", `#/chat/${data.conversation_id}`);
+        }
+      }
       return data?.conversation_id ?? target;
     } catch {
       return target;
@@ -221,7 +231,7 @@ export default function Chat({ auth, convId, go }) {
     }
   }
 
-  async function send(text) {
+  async function send(text, { reintento = false } = {}) {
     const content = text.trim();
     if (!content || busy) return;
 
@@ -230,7 +240,10 @@ export default function Chat({ auth, convId, go }) {
       return;
     }
 
-    const history = [...msgs, { role: "user", content }];
+    // Reintento: el pedido ya está en pantalla (y guardado); se descarta la
+    // respuesta fallida y se vuelve a pedir sin duplicar el mensaje.
+    const previos = reintento ? msgs.slice(0, -2) : msgs;
+    const history = [...previos, { role: "user", content }];
     // La burbuja vacia se pinta ANTES de pedir: el backend tarda entre 3 y 14
     // segundos en el primer token, y sin esto el usuario mira una pantalla quieta.
     setMsgs([...history, { role: "assistant", content: "" }]);
@@ -242,10 +255,14 @@ export default function Chat({ auth, convId, go }) {
     setLento(false);
     const titulo = tituloDe(content);
     const control = new AbortController();
+    controlRef.current = control;
+    detenidoRef.current = false;
+    let acc = "";
+    let currentConv = conv;
     const relojLento = setTimeout(() => setLento(true), 18000);
     const relojCorte = setTimeout(() => control.abort(), 45000);
     try {
-      const currentConv = await save("user", content);
+      if (!reintento) currentConv = await save("user", content);
       const res = await fetch("/api/chat", {
         method: "POST",
         signal: control.signal,
@@ -262,14 +279,14 @@ export default function Chat({ auth, convId, go }) {
         if (res.status === 402 && data.limite) {
           setGuest({ day: hoy(), n: GUEST_LIMIT });
           escribirGuest(GUEST_LIMIT);
-          setMsgs(msgs); // devolvemos el mensaje que no llegó a procesarse
+          setMsgs(previos); // devolvemos el mensaje que no llegó a procesarse
           setLoginPrompt(true);
           return;
         }
         if (res.status === 403 && data.agentas) {
           try { sessionStorage.removeItem(AGENT_KEY); } catch { /* sin storage */ }
           setAgent(null);
-          setMsgs(msgs);
+          setMsgs(previos);
           setAgentBlock(true);
           return;
         }
@@ -283,7 +300,6 @@ export default function Chat({ auth, convId, go }) {
       // OpenRouter con stream:true responde SSE. Acumulamos por frames para que fluya suave.
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let acc = "";
       let buf = "";
       let ultSync = 0;
       let fallo = false;
@@ -360,6 +376,21 @@ export default function Chat({ auth, convId, go }) {
         setMsgs([...history, { role: "assistant", content: "No llegó ninguna respuesta. Reintentá: si pasa dos veces, cambiá de modelo desde el menú de abajo.", asiento: asientoCorto(fallo) }]);
       }
     } catch (e) {
+      // Lo cortó el usuario: queda lo que llegó, con su asiento, y se guarda.
+      if (e?.name === "AbortError" && detenidoRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+        flushAcc();
+        setMsgs((prev) =>
+          prev.map((m, k) =>
+            k === prev.length - 1 && m.role === "assistant"
+              ? { ...m, content: acc, detenida: true, asiento: null }
+              : m
+          )
+        );
+        if (acc) await save("assistant", acc, currentConv);
+        return;
+      }
       const cortado = e?.name === "AbortError";
       setMsgs([
         ...history,
@@ -375,10 +406,12 @@ export default function Chat({ auth, convId, go }) {
     } finally {
       clearTimeout(relojLento);
       clearTimeout(relojCorte);
+      controlRef.current = null;
       setLento(false);
       setBusy(false);
       setWaiting(false);
       cargarModelos();
+      window.dispatchEvent(new Event("novaia:saldo"));
     }
   }
 
@@ -386,6 +419,57 @@ export default function Chat({ auth, convId, go }) {
   // cuenta, el número que sigue es el del plan, no el de esta respuesta.
   function asientoCorto(fallo) {
     return { model: null, tokens: 0, upstream: null, saldo: null, fallo: !!fallo };
+  }
+
+  function detener() {
+    if (!controlRef.current) return;
+    detenidoRef.current = true;
+    controlRef.current.abort();
+  }
+
+  // Esc corta la respuesta en curso, desde cualquier lugar de la pantalla.
+  useEffect(() => {
+    if (!busy) return;
+    const onKey = (e) => {
+      if (e.key === "Escape" && !document.querySelector("[aria-modal='true']")) detener();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [busy]);
+
+  // ¿El usuario se alejó del final? Aparece el botón para volver.
+  useEffect(() => {
+    const onScroll = () => {
+      const falta = document.documentElement.scrollHeight - (window.innerHeight + window.scrollY);
+      setLejos(falta > 400);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [msgs.length]);
+
+  function reintentar() {
+    const pedido = msgs[msgs.length - 2];
+    if (pedido?.role === "user") send(pedido.content, { reintento: true });
+  }
+
+  // La charla entera como Markdown, para guardarla o mandarla.
+  function exportar() {
+    const titulo = tituloDe(msgs.find((m) => m.role === "user")?.content) || "Conversación con Nova";
+    const cuerpo = msgs
+      .filter((m) => m.content)
+      .map((m) => (m.role === "user" ? `## Vos\n\n${m.content}` : `## Nova${m.asiento?.model ? ` (${m.asiento.model})` : ""}\n\n${m.content}`))
+      .join("\n\n");
+    const texto = `# ${titulo}\n\n${cuerpo}\n`;
+    const url = URL.createObjectURL(new Blob([texto], { type: "text/markdown;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = (titulo.toLowerCase().replace(/[^a-z0-9áéíóúñü]+/gi, "-").replace(/^-|-$/g, "").slice(0, 50) || "conversacion") + ".md";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("Descargaste la conversación en Markdown.");
   }
 
   async function handleCopy(text, i) {
@@ -430,354 +514,320 @@ export default function Chat({ auth, convId, go }) {
     setIndicePieza(siguiente);
   };
 
-  const planName = auth?.plan === "pro" ? "Pro" : auth?.plan === "plus" ? "Plus" : "Gratis";
-  const cuotaMes = cuota ?? 1000000;
-  const restantePlan = Math.max(0, cuotaMes - (auth ? totalMes : 0));
-  // Fecha sin Date→locale: "2026-11-08" renderizado en GMT-3 da 07/11. El ciclo
-  // de cuota es calendario, así que se arma el dd/mm a mano desde la cadena.
-  const diaEs = (iso) => (iso || "").slice(8, 10) + "/" + (iso || "").slice(5, 7);
-  // "ahora", no "hoy": el módulo ya tiene una función hoy() que usa el límite
-  // de invitado, y taparla con un Date rompía cada envío sin sesión.
-  const ahora = new Date();
-  const renuevaMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 1);
-  const renueva =
-    String(renuevaMes.getDate()).padStart(2, "0") + "/" + String(renuevaMes.getMonth() + 1).padStart(2, "0");
-  // Saldo corrido sobre TODOS los días del mes; se muestran los últimos 8,
-  // del más reciente al más viejo.
-  const movimientos = (() => {
-    let usado = 0;
-    return dias
-      .map((r) => {
-        const cargo = (r.tokens_in || 0) + (r.tokens_out || 0);
-        usado += cargo;
-        return { day: r.day, cargo, saldo: Math.max(0, cuotaMes - usado) };
-      })
-      .slice(-8)
-      .reverse();
-  })();
+  const listaModelos = modelos.length ? modelos : [{ key: "flash", label: "Nova Flash", restantes: 0, agotado: false }];
+  const modeloActual = listaModelos.find((m) => m.key === modelKey) || listaModelos[0];
+  const titulo = tituloDe(msgs.find((m) => m.role === "user")?.content);
+  const ultimo = msgs[msgs.length - 1];
+  const puedeReintentar = !busy && ultimo?.role === "assistant" && ultimo.asiento?.fallo && msgs[msgs.length - 2]?.role === "user";
+  const quedanGuest = Math.max(0, GUEST_LIMIT - guest.n);
 
   return (
     <>
-    <div className="chat-lg">
-    <section className="chat">
-      <div className="banda-venc">
-        {auth ? (
-          <>
-            <span><b>Plan {planName}</b> · renueva {renueva}</span>
-            <span className="bv-derecha">
-              <span className="bv-cifra">{fmt(restantePlan)} de {fmt(cuotaMes)} tokens</span>
-            </span>
-          </>
-        ) : (
-          <>
-            <span><b>Sin cuenta</b> · {GUEST_LIMIT} mensajes por día, sin tarjeta</span>
-            <span className="bv-derecha">
-              <span className="bv-cifra">te quedan {Math.max(0, GUEST_LIMIT - guest.n)} hoy</span>
-            </span>
-          </>
-        )}
-      </div>
+    <section className={"chat" + (conversando ? "" : " chat-vacio")}>
       {conversando && (
-        <div className="chat-topline">
-          <span>Conversación</span>
-          <div className="tl-actions">
+        <header className="chat-head">
+          <h1 title={titulo}>{titulo || "Conversación"}</h1>
+          <div className="chat-tools">
             {piezas.length > 0 && !canvasAbierto && (
-              <button className="btn-plain" onClick={() => setCanvasAbierto(true)}>
-                <Icon name="doc" size={14} /> Ver {piezas.length === 1 ? "la pieza" : `las ${piezas.length} piezas`}
+              <button className="btn btn-quiet btn-sm" onClick={() => setCanvasAbierto(true)}>
+                <Icon name="doc" size={15} /> {piezas.length === 1 ? "Ver la pieza" : `Ver las ${piezas.length} piezas`}
               </button>
             )}
-            <button className="btn-plain" onClick={() => go("chat")}>
-              <Icon name="plusSq" size={14} /> Nuevo chat
+            <button className="icon-btn" onClick={exportar} disabled={busy} title="Descargar la conversación (.md)" aria-label="Descargar la conversación en Markdown">
+              <Icon name="download" size={17} />
+            </button>
+            <button className="icon-btn" onClick={() => go("chat")} title="Nuevo chat" aria-label="Nuevo chat">
+              <Icon name="plusSq" size={17} />
             </button>
           </div>
+        </header>
+      )}
+
+      {!conversando && (
+        <div className="chat-intro">
+          <h1>{agent ? agent.name : "¿Qué hacemos?"}</h1>
+          <p>
+            {agent
+              ? agent.desc
+              : auth
+                ? "Escribí abajo o arrancá con una de estas. Cada respuesta te dice qué modelo contestó y cuánto descontó."
+                : `Sin cuenta tenés ${GUEST_LIMIT} mensajes por día. Hoy te ${quedanGuest === 1 ? "queda 1" : `quedan ${quedanGuest}`}.`}
+          </p>
+          <ul className="sugerencias">
+            {(agent ? [{ i: agent.icon, t: "Probar con el ejemplo", d: agent.sample }] : SUGGESTIONS).map((s) => (
+              <li key={s.t}>
+                <button onClick={() => send(s.d)}>
+                  <Icon name={s.i} size={16} />
+                  <span>
+                    <strong>{s.t}</strong>
+                    <small>{s.d}</small>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
-      {msgs.length === 0 && (
-        <div className="sugerencias">
-          {SUGGESTIONS.map((s) => (
-            <button key={s.t} className="sugerencia" onClick={() => send(s.d)}>
-              <span className="sg-t">{s.t}</span>
-              <span className="sg-d">{s.d}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="chat-log" role="log" aria-live="polite">
+      <div className="chat-log" role="log" aria-live="polite" aria-busy={busy}>
         {msgs.map((m, i) => {
           const streaming = busy && i === msgs.length - 1 && m.role === "assistant";
           const isUser = m.role === "user";
           return (
-            <div key={i} className={"msg-row " + (isUser ? "row-user" : "row-ai") + (streaming ? " streaming" : "")}>
-              {!isUser && (
-                <span className="msg-ava mono" aria-hidden="true">
-                  n
-                </span>
-              )}
-              <div className={"msg-bubble " + (isUser ? "bubble-user" : "bubble-ai")}>
+            <article key={i} className={"msg " + (isUser ? "msg-user" : "msg-ai") + (streaming ? " streaming" : "")}>
+              <h2 className="sr-only">{isUser ? "Vos" : "Nova"}</h2>
+              <div className="msg-body">
                 {isUser ? (
-                  <span className="msg-text">{m.content}</span>
+                  <p className="msg-text">{m.content}</p>
                 ) : streaming && !m.content ? (
                   <span className={"typing" + (waiting ? " thinking" : "")}>
                     <span className="dots" aria-hidden="true"><i /><i /><i /></span>
-                    <span className="typing-label" aria-live="polite">
-                      {lento
-                        ? "Está tardando más de lo normal…"
-                        : waiting ? "Nova está pensando…" : "Escribiendo…"}
+                    <span className="typing-label">
+                      {lento ? "Está tardando más de lo normal…" : waiting ? "Pensando…" : "Escribiendo…"}
                     </span>
                   </span>
                 ) : (
                   <Md text={m.content} streaming={streaming} />
                 )}
-                {!isUser && !streaming && m.asiento && (
-                  <div className="asiento">
-                    <span className={m.asiento.tokens ? "a-cargo" : "a-neutro"}>
-                      {m.asiento.tokens
-                        ? `−${fmt(m.asiento.tokens)} tokens${m.asiento.saldo != null ? ` · saldo ${fmt(m.asiento.saldo)}` : ""}`
-                        : m.asiento.fallo
-                          ? "sin cargo: no hubo respuesta del modelo"
-                          : "sin cargo registrado"}
-                    </span>
-                    <span>
-                      {m.asiento.model || "sin modelo"}
-                      {m.asiento.upstream ? ` · ${m.asiento.upstream}` : ""}
-                    </span>
-                  </div>
-                )}
               </div>
+              {!isUser && !streaming && (m.asiento || m.detenida) && (
+                <p className={"asiento" + (m.asiento?.fallo ? " asiento-fallo" : "")}>
+                  {m.detenida ? (
+                    <span>{m.content ? "Detuviste esta respuesta." : "Detuviste la respuesta antes de que empezara."}</span>
+                  ) : (
+                    <>
+                      {m.asiento.model && (
+                        <span className={"asiento-modelo m-" + (COLOR_MODELO[listaModelos.find((x) => x.label === m.asiento.model)?.key] || "oro")}>
+                          {m.asiento.model}
+                        </span>
+                      )}
+                      {m.asiento.upstream && <span>{m.asiento.upstream}</span>}
+                      <span className={m.asiento.tokens ? "a-cargo" : ""}>
+                        {m.asiento.tokens
+                          ? `−${fmt(m.asiento.tokens)} tokens`
+                          : m.asiento.fallo
+                            ? "Sin cargo: el modelo no respondió"
+                            : "Sin cargo registrado"}
+                      </span>
+                      {m.asiento.saldo != null && <span>Saldo {fmt(m.asiento.saldo)}</span>}
+                    </>
+                  )}
+                </p>
+              )}
               {!isUser && !streaming && m.content && (
                 <div className="msg-actions">
                   <button className="msg-act" onClick={() => handleCopy(m.content, i)}>
-                    <Icon name={copiedIdx === i ? "check" : "copy"} size={13} />
+                    <Icon name={copiedIdx === i ? "check" : "copy"} size={14} />
                     {copiedIdx === i ? "Copiado" : "Copiar"}
                   </button>
-                  <button
-                    className="msg-act"
-                    onClick={() => abrirPieza(m.content, i)}
-                    title="Ver esto en el panel, listo para copiar o descargar"
-                  >
-                    <Icon name="doc" size={13} /> Abrir en la pieza
-                  </button>
+                  {!m.asiento?.fallo && (
+                    <button className="msg-act" onClick={() => abrirPieza(m.content, i)} title="Verla aparte, lista para copiar o descargar">
+                      <Icon name="doc" size={14} /> Abrir como pieza
+                    </button>
+                  )}
+                  {puedeReintentar && i === msgs.length - 1 && (
+                    <button className="msg-act msg-act-fuerte" onClick={reintentar}>
+                      <Icon name="refresh" size={14} /> Reintentar
+                    </button>
+                  )}
                 </div>
               )}
-              {isUser && !streaming && auth?.id && (
+              {isUser && auth?.id && !(busy && i === msgs.length - 2) && (
                 <div className="msg-actions">
                   <button
                     className="msg-act"
                     onClick={() => handleRecord(m.content, i)}
                     disabled={recordando === i}
-                    title="Nova va a usar esto en todas tus próximas charlas"
+                    title="Nova va a tener esto en cuenta en todas tus próximas charlas"
                   >
-                    <Icon name={recordado === i ? "check" : "knot"} size={13} />
+                    <Icon name={recordado === i ? "check" : "knot"} size={14} />
                     {recordado === i ? "Recordado" : recordando === i ? "Guardando…" : "Que Nova lo recuerde"}
                   </button>
                 </div>
               )}
-            </div>
+            </article>
           );
         })}
         {msgs.length > 0 && <div ref={endRef} />}
       </div>
 
-      {agent && (
-        <div className="agent-chip">
-          <span className="ac-ico"><Icon name={agent.icon} size={13} /></span>
-          <span className="ac-name">{agent.name}</span>
-          <span className="ac-hint">instrucciones del agente activas</span>
+      <div className="dock">
+        {lejos && conversando && (
           <button
-            className="ac-x"
-            aria-label={`Quitar el agente ${agent.name}`}
-            onClick={() => {
-              try { sessionStorage.removeItem(AGENT_KEY); } catch { /* sin storage */ }
-              setAgent(null);
-            }}
+            className="al-final"
+            onClick={() => endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" })}
+            aria-label="Ir al último mensaje"
           >
-            <Icon name="x" size={13} />
+            <Icon name="arrowDown" size={17} />
           </button>
-        </div>
-      )}
+        )}
 
-      {!auth && (
-        <div className={"guest-bar" + (guest.n >= GUEST_LIMIT ? " out" : "")}>
-          <span className="tag">SIN SESIÓN</span>
-          <span className="txt">
-            {guest.n >= GUEST_LIMIT ? (
-              <>Se acabaron los <b>{GUEST_LIMIT}</b> mensajes gratis de hoy.</>
-            ) : (
-              <>
-                Te quedan <b>{GUEST_LIMIT - guest.n}</b>{" "}
-                {GUEST_LIMIT - guest.n === 1 ? "mensaje" : "mensajes"} gratis hoy.
-              </>
-            )}
-          </span>
-          <button className="btn btn-primary btn-sm" onClick={() => go("login")}>
-            Iniciar sesión
-          </button>
-        </div>
-      )}
-
-      <div className="composer">
-        <textarea
-          ref={taRef}
-          placeholder="Escribí tu mensaje…"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              send(input);
-            }
-          }}
-        />
-        <div className="row">
-          <div className="model-chip" title="Cada modelo consume su propia bolsa mensual">
-            <span className="spark" aria-hidden="true" />
-            <select
-              value={modelKey}
-              onChange={(e) => setModelKey(e.target.value)}
-              disabled={busy}
-              aria-label="Elegir modelo"
+        {agent && (
+          <div className="agent-chip">
+            <Icon name={agent.icon} size={14} />
+            <span><b>{agent.name}</b> con sus instrucciones activas</span>
+            <button
+              className="icon-btn"
+              aria-label={`Quitar el agente ${agent.name}`}
+              onClick={() => {
+                try { sessionStorage.removeItem(AGENT_KEY); } catch { /* sin storage */ }
+                setAgent(null);
+              }}
             >
-              {(modelos.length ? modelos : [{ key: "flash", label: "Nova Flash", restantes: 0, agotado: false }]).map((m) => (
-                <option key={m.key} value={m.key} disabled={m.agotado}>
-                  {m.label}
-                  {auth ? (m.agotado ? " · agotado" : ` · ${fmt(m.restantes)} restantes`) : ""}
-                </option>
-              ))}
-            </select>
-            {auth && modelos.some((m) => m.key === modelKey && m.pct >= 80) && (
-              <span className="mc-warn">
-                <Icon name="pulse" size={12} />
-              </span>
+              <Icon name="x" size={14} />
+            </button>
+          </div>
+        )}
+
+        {!auth && guest.n >= GUEST_LIMIT && (
+          <div className="guest-bar">
+            <span>Se terminaron los {GUEST_LIMIT} mensajes gratis de hoy. Con una cuenta seguís sin tarjeta.</span>
+            <button className="btn btn-primary btn-sm" onClick={() => go("login")}>Crear cuenta</button>
+          </div>
+        )}
+
+        <div className="composer">
+          <textarea
+            ref={taRef}
+            rows={1}
+            placeholder={agent ? `Escribile a ${agent.name}` : "Escribí tu mensaje"}
+            aria-label="Mensaje para Nova"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send(input);
+              }
+            }}
+          />
+          <div className="composer-row">
+            <div className="picker">
+              <button
+                className={"picker-btn m-" + (COLOR_MODELO[modeloActual.key] || "oro")}
+                onClick={() => setPickerOpen((v) => !v)}
+                disabled={busy}
+                aria-haspopup="listbox"
+                aria-expanded={pickerOpen}
+                aria-label={`Modelo: ${modeloActual.label}. Cambiar`}
+              >
+                <span className="dot" aria-hidden="true" />
+                {modeloActual.label}
+                <Icon name="chevronDown" size={14} />
+              </button>
+              {pickerOpen && (
+                <>
+                  <button className="picker-scrim" tabIndex={-1} aria-label="Cerrar" onClick={() => setPickerOpen(false)} />
+                  <ul
+                    className="picker-menu"
+                    role="listbox"
+                    aria-label="Elegir modelo"
+                    onKeyDown={(e) => e.key === "Escape" && setPickerOpen(false)}
+                  >
+                    {listaModelos.map((m) => (
+                      <li key={m.key}>
+                        <button
+                          role="option"
+                          aria-selected={m.key === modelKey}
+                          disabled={m.agotado}
+                          className={"m-" + (COLOR_MODELO[m.key] || "oro") + (m.key === modelKey ? " on" : "")}
+                          autoFocus={m.key === modelKey}
+                          onClick={() => {
+                            setModelKey(m.key);
+                            setPickerOpen(false);
+                            taRef.current?.focus();
+                          }}
+                        >
+                          <span className="dot" aria-hidden="true" />
+                          <span className="pm-t">
+                            <strong>{m.label}</strong>
+                            {m.desc && <small>{m.desc}</small>}
+                          </span>
+                          <span className={"pm-saldo" + (m.agotado ? " vacio" : "")}>
+                            {m.agotado ? "Agotado" : auth ? fmt(m.restantes) : ""}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+            {auth && modeloActual.pct >= 80 && !modeloActual.agotado && (
+              <span className="picker-aviso">Te queda {100 - modeloActual.pct}% de este modelo</span>
+            )}
+            {busy ? (
+              <button className="send-btn stop" onClick={detener} aria-label="Detener la respuesta" title="Detener (Esc)">
+                <Icon name="stop" size={16} />
+              </button>
+            ) : (
+              <button
+                className="send-btn"
+                disabled={!input.trim()}
+                onClick={() => send(input)}
+                aria-label="Enviar mensaje"
+              >
+                <Icon name="send" size={17} />
+              </button>
             )}
           </div>
-          <span className="send-hint">Enter para enviar</span>
-          <button
-            className="send-btn"
-            disabled={busy || !input.trim()}
-            onClick={() => send(input)}
-            aria-label="Enviar mensaje"
-          >
-            <Icon name="send" size={16} />
-          </button>
         </div>
+        <p className="chat-note">Nova puede equivocarse. Revisá lo importante antes de mandarlo.</p>
       </div>
-      <p className="chat-note">Nova IA puede equivocarse. Revisá la información importante.</p>
 
       <Modal
         open={agentBlock}
         onClose={() => setAgentBlock(false)}
-        eyebrow="MINI AGENTES"
-        title="Ese agente necesita Pro o Plus"
+        title="Ese agente necesita Plus o Pro"
         footer={
-          <div className="gm-cta">
+          <div className="modal-cta">
             <button className="btn btn-primary btn-block" onClick={() => { setAgentBlock(false); go("planes"); }}>
-              <Icon name="crown" size={15} /> Comparar planes
+              Comparar planes
             </button>
-            <button className="btn btn-ghost btn-block" onClick={() => setAgentBlock(false)}>
-              Seguir con Nova normal
+            <button className="btn btn-quiet btn-block" onClick={() => setAgentBlock(false)}>
+              Seguir sin el agente
             </button>
           </div>
         }
       >
-        <p className="gm-copy">
+        <p>
           Te saqué el agente y podés seguir conversando igual. Los {AGENTS.length} mini agentes con
-          instrucciones propias vienen con el plan Pro.
+          instrucciones propias vienen con Plus y Pro.
         </p>
       </Modal>
 
       <Modal
         open={loginPrompt}
         onClose={() => setLoginPrompt(false)}
-        eyebrow="LÍMITE DE INVITADO"
-        title="Probaste los 3 mensajes gratis"
+        title={`Usaste los ${GUEST_LIMIT} mensajes de hoy`}
         footer={
-          <div className="gm-cta">
+          <div className="modal-cta">
             <button className="btn btn-primary btn-block" onClick={() => { setLoginPrompt(false); go("login"); }}>
-              <Icon name="arrowUpRight" size={15} /> Crear mi cuenta gratis
+              Crear mi cuenta gratis
             </button>
-            <button className="btn btn-ghost btn-block" onClick={() => { setLoginPrompt(false); go("planes"); }}>
+            <button className="btn btn-quiet btn-block" onClick={() => { setLoginPrompt(false); go("planes"); }}>
               Comparar los planes
             </button>
           </div>
         }
       >
-        <div className="gm-meter">
-          <div className="gm-dots" aria-hidden="true">
-            {Array.from({ length: GUEST_LIMIT }, (_, i) => (
-              <span key={i} className={i < guest.n ? "used" : ""} />
-            ))}
-          </div>
-          <span className="gm-count">
-            <b>{Math.min(guest.n, GUEST_LIMIT)}</b> / {GUEST_LIMIT} USADOS
-          </span>
+        <div className="gm-dots" aria-label={`${Math.min(guest.n, GUEST_LIMIT)} de ${GUEST_LIMIT} usados`}>
+          {Array.from({ length: GUEST_LIMIT }, (_, i) => (
+            <span key={i} className={i < guest.n ? "used" : ""} />
+          ))}
         </div>
-
-        <p className="gm-copy">
-          Así es como Nova te deja probarla sin pedir datos. Con una cuenta el chat no se corta a los
-          tres mensajes y queda guardado en tu historial.
+        <p>
+          Así Nova te deja probarla sin pedirte datos. Con una cuenta gratis el chat no se corta y queda
+          guardado:
         </p>
-
-        <ul className="gm-list">
-          <li><span className="tick"><Icon name="check" size={12} /></span> Sin el corte diario de invitado</li>
-          <li><span className="tick"><Icon name="check" size={12} /></span> {`${cuota ? fmt(cuota) : "1.000.000"} tokens por mes, sin tarjeta`}</li>
-          <li><span className="tick"><Icon name="check" size={12} /></span> Historial, búsqueda y memoria en cualquier dispositivo</li>
+        <ul className="check-list">
+          <li>{`${cuota ? fmt(cuota) : "1.000.000"} tokens por mes, sin tarjeta`}</li>
+          <li>Historial con búsqueda en cualquier dispositivo</li>
+          <li>Una memoria que Nova lee en cada charla</li>
         </ul>
-
-        <p className="modal-note">
-          El cupo de invitado se renueva al cambiar el día. Si ya tenés cuenta, iniciá sesión y seguís ahora.
-        </p>
+        <p className="modal-note">El cupo de invitado se renueva al cambiar el día.</p>
       </Modal>
     </section>
-      <aside className="cuenta" aria-label="Cuenta del mes">
-        <h2>{auth ? "Saldo del mes" : "Tu cupo de hoy"}</h2>
-        <p className="saldo-hero">{auth ? fmt(restantePlan) : Math.max(0, GUEST_LIMIT - guest.n)}</p>
-        <p className="saldo-sub">
-          {auth
-            ? `de ${fmt(cuotaMes)} tokens · plan ${planName}`
-            : `mensajes gratis por día · sin tarjeta. Con cuenta: ${fmt(cuotaMes)} tokens por mes.`}
-        </p>
-
-        <h2>{auth ? "Bolsas por modelo" : "Bolsas con una cuenta gratis"}</h2>
-        <ul className="bolsas">
-          {modelos.map((m) => (
-            <li key={m.key}>
-              <span className="b-nombre">
-                {m.label}
-                <span className="b-up">{m.upstream || "OpenRouter"}</span>
-              </span>
-              <span className={"b-rest" + (m.agotado ? " b-vacia" : "")}>
-                {m.agotado ? "agotado" : fmt(m.restantes)}
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        <h2>Movimientos</h2>
-        {movimientos.length ? (
-          <table className="movimientos">
-            <caption>Movimientos por día del mes en curso</caption>
-            <thead>
-              <tr><th>Día</th><th>Cargo</th><th>Saldo</th></tr>
-            </thead>
-            <tbody>
-              {movimientos.map((r) => (
-                <tr key={r.day}>
-                  <td>{diaEs(r.day)}</td>
-                  <td className={r.cargo ? "m-cargo" : "m-vacia"}>{r.cargo ? `−${fmt(r.cargo)}` : "0"}</td>
-                  <td>{fmt(r.saldo)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="saldo-sub">
-            {auth ? "Todavía no hay movimientos este mes." : "Iniciá sesión para ver tus movimientos."}
-          </p>
-        )}
-      </aside>
-    </div>
 
     {canvasAbierto && piezaActual && (
       <Canvas

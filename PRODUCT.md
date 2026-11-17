@@ -62,7 +62,7 @@ Mecanismo que un vecino no puede copiar sin cambiar su producto:
 - "Hecho en Argentina" y "Hecho por una persona" son afirmaciones deliberadas de la marca.
 - Precios siempre en ARS.
 - **Regla vinculante del dueño: no inventar certificados, usuarios, estadísticas, garantías, memoria persistente ni capacidades que no estén implementadas.**
-- La paleta actual (zinc + azul #004de5, Inter con un monograma serif) es el sistema vigente en el código. En esta ronda el dueño pidió explícitamente **reemplazar el mundo visual**, así que la paleta deja de ser una restricción para las previews de rediseño; sigue siendo la verdad del sitio publicado.
+- Sistema visual vigente: "Filete" (ver `DESIGN.md`): porcelana, tinta índigo y los cuatro colores del fileteado porteño, cada uno con un significado fijo.
 
 ## Evidence on Hand
 
@@ -83,6 +83,6 @@ Mecanismo que un vecino no puede copiar sin cambiar su producto:
 ## Accessibility & Inclusion
 
 - Contraste AA verificado sobre estilos computados (acentos sobre blanco 6,58:1; texto secundario en oscuro 7,76:1).
-- Atajos de teclado en el chat (⌘K nuevo chat, Enter manda, Shift+Enter salto de línea).
+- Atajos de teclado (⌘K paleta de comandos, ⌘⇧O nuevo chat, Enter manda, Shift+Enter salto de línea, Esc detiene la respuesta).
 - Diálogos con foco atrapado, Escape y restauración del foco al trigger.
 - Sin certificación de accesibilidad declarada: no se puede afirmar cumplimiento más allá de lo medido.
