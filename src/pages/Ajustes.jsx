@@ -32,7 +32,6 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
       <div className="settings-stack">
         <div className="settings-card">
           <div className="head">
-            <span className="sq"><Icon name="lock" size={19} /></span>
             <div>
               <h3>Cuenta y privacidad</h3>
               <p>Tu cuenta, tus datos y tus preferencias.</p>
@@ -44,16 +43,9 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
               <strong>Perfil</strong>
               <p>{auth ? `${auth.name || "Sin nombre"}, ${auth.email}. Plan ${planName}.` : "Nombre visible y datos de la cuenta"}</p>
             </div>
-            <button
-              className="btn btn-ghost"
-              onClick={() =>
-                auth
-                  ? showToast("La edición de perfil llega pronto. Podés cambiar tu nombre al registrarte.")
-                  : go("login")
-              }
-            >
-              {auth ? "Editar perfil" : "Iniciar sesión"} <Icon name="arrowUpRight" size={12} />
-            </button>
+            {!auth && (
+              <button className="btn btn-quiet" onClick={() => go("login")}>Iniciar sesión</button>
+            )}
           </div>
 
           <div className="settings-row">
@@ -61,8 +53,8 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
               <strong>Plan actual</strong>
               <p>{auth ? `Estás en el plan ${planName}.` : "Compará los límites de cada plan."}</p>
             </div>
-            <button className="btn btn-ghost" onClick={() => go("planes")}>
-              Ver planes <Icon name="arrowUpRight" size={12} />
+            <button className="btn btn-quiet" onClick={() => go("planes")}>
+              Ver planes
             </button>
           </div>
 
@@ -71,8 +63,8 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
               <strong>Historial de chats</strong>
               <p>Los chats quedan vinculados a tu cuenta.</p>
             </div>
-            <button className="btn btn-ghost" onClick={() => go("historial")}>
-              Abrir historial <Icon name="arrowUpRight" size={12} />
+            <button className="btn btn-quiet" onClick={() => go("historial")}>
+              Abrir historial
             </button>
           </div>
 
@@ -85,11 +77,11 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
               </p>
             </div>
             <button
-              className="btn btn-ghost"
+              className="btn btn-quiet"
               aria-expanded={abierto}
               onClick={() => setAbierto((v) => !v)}
             >
-              {abierto ? "Ocultar" : "Personalizar"} <Icon name={abierto ? "chevronDown" : "arrowUpRight"} size={12} />
+              {abierto ? "Listo" : "Personalizar"}
             </button>
           </div>
 
@@ -126,8 +118,7 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
                   ))}
                 </div>
                 <p className="prefs-hint">
-                  <Icon name="pulse" size={12} />
-                  {` Breve responde más rápido: limita la salida a ${LARGOS.find((l) => l.id === "breve").maxTokens} tokens.`}
+                      {` Breve responde más rápido: limita la salida a ${LARGOS.find((l) => l.id === "breve").maxTokens} tokens.`}
                 </p>
               </div>
 
@@ -156,7 +147,7 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
                 <strong>Sesión</strong>
                 <p>Salí de tu cuenta en este dispositivo</p>
               </div>
-              <button className="btn btn-ghost" onClick={logout}>
+              <button className="btn btn-quiet" onClick={logout}>
                 Cerrar sesión
               </button>
             </div>
@@ -169,7 +160,6 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
 
         <div className="settings-card">
           <div className="head">
-            <span className="sq"><Icon name="sun" size={19} /></span>
             <div>
               <h3>Apariencia</h3>
               <p>Elegí cómo se ve Nova IA.</p>
@@ -272,7 +262,6 @@ function PerfilNegocio({ auth, go }) {
   return (
     <div className="settings-card">
       <div className="head">
-        <span className="sq"><Icon name="send" size={19} /></span>
         <div>
           <h3>Perfil del negocio</h3>
           <p>Para que el agente de WhatsApp responda como respondés vos.</p>
@@ -285,8 +274,8 @@ function PerfilNegocio({ auth, go }) {
             <strong>Iniciá sesión para cargarlo</strong>
             <p>Se guarda en tu cuenta y se usa en todas las conversaciones.</p>
           </div>
-          <button className="btn btn-ghost" onClick={() => go("login")}>
-            Entrar <Icon name="arrowUpRight" size={12} />
+          <button className="btn btn-quiet" onClick={() => go("login")}>
+            Entrar
           </button>
         </div>
       ) : (
@@ -358,14 +347,14 @@ function Memoria({ auth, go }) {
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) {
-        showToast(d.error || "No lo pude guardar.");
+        showToast(d.error || "No lo pude guardar.", { tone: "error" });
         return;
       }
       setTexto("");
       showToast("Listo, Nova va a recordar esto.");
       await cargar();
     } catch {
-      showToast("Se cayó la conexión. Probá de nuevo.");
+      showToast("Se cayó la conexión. Probá de nuevo.", { tone: "error" });
     } finally {
       setBusy(false);
     }
@@ -384,7 +373,6 @@ function Memoria({ auth, go }) {
   return (
     <div className="settings-card">
       <div className="head">
-        <span className="sq"><Icon name="knot" size={19} /></span>
         <div>
           <h3>Memoria de Nova</h3>
           <p>Datos que Nova usa en todas tus conversaciones, sin que se los repitas.</p>
@@ -397,8 +385,8 @@ function Memoria({ auth, go }) {
             <strong>Iniciá sesión para activarla</strong>
             <p>La memoria se guarda en tu cuenta y queda entre tus chats.</p>
           </div>
-          <button className="btn btn-ghost" onClick={() => go("login")}>
-            Entrar <Icon name="arrowUpRight" size={12} />
+          <button className="btn btn-quiet" onClick={() => go("login")}>
+            Entrar
           </button>
         </div>
       ) : (
@@ -413,7 +401,7 @@ function Memoria({ auth, go }) {
               aria-label="Nueva nota para la memoria"
             />
             <button className="btn btn-primary" type="submit" disabled={busy || !texto.trim()}>
-              Guardar
+              Guardar nota
             </button>
           </form>
 
@@ -429,8 +417,8 @@ function Memoria({ auth, go }) {
               {notas.map((n) => (
                 <li key={n.id}>
                   <span>{n.note}</span>
-                  <button type="button" onClick={() => borrar(n.id)} aria-label="Olvidar esta nota">
-                    ✕
+                  <button type="button" className="icon-btn icon-danger" onClick={() => borrar(n.id)} aria-label={`Olvidar: ${n.note}`} title="Olvidar esta nota">
+                    <Icon name="trash" size={16} />
                   </button>
                 </li>
               ))}
@@ -439,8 +427,7 @@ function Memoria({ auth, go }) {
 
           {notas && (
             <p className="prefs-hint">
-              <Icon name="pulse" size={12} />
-              {` ${notas.length} de ${limite} notas. Entran al inicio de cada mensaje que mandás.`}
+              {`${notas.length} de ${limite} notas. Entran al inicio de cada mensaje que mandás.`}
             </p>
           )}
         </>

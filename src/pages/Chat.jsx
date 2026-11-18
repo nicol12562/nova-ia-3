@@ -557,7 +557,6 @@ export default function Chat({ auth, convId, go }) {
             {(agent ? [{ i: agent.icon, t: "Probar con el ejemplo", d: agent.sample }] : SUGGESTIONS).map((s) => (
               <li key={s.t}>
                 <button onClick={() => send(s.d)}>
-                  <Icon name={s.i} size={16} />
                   <span>
                     <strong>{s.t}</strong>
                     <small>{s.d}</small>
@@ -640,7 +639,7 @@ export default function Chat({ auth, convId, go }) {
                     disabled={recordando === i}
                     title="Nova va a tener esto en cuenta en todas tus próximas charlas"
                   >
-                    <Icon name={recordado === i ? "check" : "knot"} size={14} />
+                    <Icon name={recordado === i ? "check" : "bookmark"} size={14} />
                     {recordado === i ? "Recordado" : recordando === i ? "Guardando…" : "Que Nova lo recuerde"}
                   </button>
                 </div>

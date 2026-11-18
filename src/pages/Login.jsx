@@ -27,7 +27,7 @@ export default function Login({ go, setAuth }) {
       if (!res.ok) throw new Error(data.error || "Algo salió mal. Probá de nuevo.");
       localStorage.setItem("novaia_user", JSON.stringify(data.user));
       setAuth(data.user);
-      showToast(mode === "register" ? "¡Cuenta creada! Bienvenido a Nova." : "¡Hola de nuevo! Sesión iniciada.");
+      showToast(mode === "register" ? "Cuenta creada. Ya podés empezar." : "Sesión iniciada.");
       go("");
     } catch (err) {
       setError(err.message);
@@ -59,7 +59,7 @@ export default function Login({ go, setAuth }) {
         </button>
 
         <div className="login-box">
-          <h2>{mode === "login" ? "Bienvenido de vuelta." : "Creá tu cuenta."}</h2>
+          <h2>{mode === "login" ? "Qué bueno verte de nuevo." : "Creá tu cuenta."}</h2>
           <p className="sub">
             {mode === "login"
               ? "Entrá y seguí donde lo dejaste: el historial y la memoria quedan en tu cuenta."

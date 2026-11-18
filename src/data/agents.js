@@ -6,7 +6,7 @@ export const AGENTS = [
   {
     id: "ventawhats",
     name: "Ventas por WhatsApp",
-    icon: "send",
+    icon: "chat",
     desc: "Pegás el mensaje del cliente y te lo devuelve contestado, listo para copiar.",
     sample: "Cliente: hola, tenés la 42 en negro? cuánto sale con envío a Santa Fe?",
     perfil: true,
@@ -35,21 +35,21 @@ export const AGENTS = [
   {
     id: "resumidor",
     name: "Resumidor",
-    icon: "knot",
+    icon: "list",
     desc: "Convierte texto largo en puntos clave.",
     sample: "Resumí esto en 5 bullets",
   },
   {
     id: "explicador",
     name: "Explicador",
-    icon: "cpu",
+    icon: "bulb",
     desc: "Te baja un tema difícil a palabras simples.",
     sample: "Explicame cómo funciona un transformador",
   },
   {
     id: "traductor",
     name: "Traductor",
-    icon: "send",
+    icon: "languages",
     desc: "Pasa entre español e inglés sin perder el sentido.",
     sample: "Pasá esto a inglés natural",
   },
