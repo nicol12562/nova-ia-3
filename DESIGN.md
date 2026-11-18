@@ -44,6 +44,20 @@ en `COLOR_MODELO` (`src/pages/Home.jsx`) y se aplica con las clases `.m-oro`,
 - ≤ 860 px: barra superior índigo con filete oro; la barra lateral pasa a cajón.
 - Chat: columna de 820 px, composer fijo abajo, la pieza (canvas) a la derecha.
 
+## Patrones de interfaz
+
+- **Listas regladas, no tarjetas.** Mini agentes, las sugerencias del chat, Historial
+  y los agentes de Inicio son filas separadas por filetes de 1 px. Las tarjetas
+  quedan para lo que de verdad se compara lado a lado (los planes) y para
+  formularios (Ajustes).
+- **Sin cuadraditos de ícono.** Los títulos de sección no llevan un ícono en una
+  baldosa; los íconos van en línea, a 20 px, del mismo trazo (`src/icons.jsx`).
+  Nada de ✓ ✕ ★ como íconos: se dibujan.
+- **Sin franjas laterales en tarjetas.** El único filete grueso es el marco de la
+  barra lateral y del login (marcado `impeccable-disable side-tab` en `nova.css`).
+  El color de un modelo se muestra con su punto, no con un borde.
+- **Navegador:** barra de scroll y cursor de texto con colores de la paleta.
+
 ## Movimiento
 
 Una sola entrada orquestada: en Inicio y Login el filete se dibuja y el letrero

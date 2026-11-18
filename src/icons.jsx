@@ -35,6 +35,10 @@ const PATHS = {
   trash: <><path d="M4.5 7h15M10 7V5h4v2M6.5 7l1 12.5h9l1-12.5" /></>,
   home: <><path d="M4 11l8-6.5 8 6.5" /><path d="M6.5 9.5V19.5h11V9.5" /></>,
   command: <path d="M9 9V6.5A2.5 2.5 0 1 0 6.5 9H9zm0 0h6m-6 0v6m6-6V6.5A2.5 2.5 0 1 1 17.5 9H15zm0 0v6m0 0h2.5A2.5 2.5 0 1 1 15 17.5V15zm0 0H9m0 0v2.5A2.5 2.5 0 1 1 6.5 15H9z" />,
+  bookmark: <path d="M7 4.5h10a1 1 0 0 1 1 1v14l-6-3.8-6 3.8v-14a1 1 0 0 1 1-1z" />,
+  bulb: <><path d="M9 17.5h6M10 20.5h4" /><path d="M12 3.5a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2v1h5v-1c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3.5z" /></>,
+  languages: <><path d="M4 6h9M8.5 4v2M6 6c.8 3 2.8 5.5 5.5 6.8M11 6c-.8 3-3 5.8-6.5 7.5" /><path d="M13 20l3.5-8 3.5 8M14.2 17.5h4.6" /></>,
+  list: <><path d="M9 7h11M9 12h11M9 17h11" /><circle cx="5" cy="7" r="1" fill="currentColor" stroke="none" /><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="5" cy="17" r="1" fill="currentColor" stroke="none" /></>,
   google: null,
 };
 

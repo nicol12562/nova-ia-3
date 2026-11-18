@@ -415,7 +415,7 @@ export default function App() {
                 <span className="avatar">{inicial}</span>
                 <span className="user-t">
                   <strong>{auth ? auth.name || auth.email : "Iniciar sesión"}</strong>
-                  <span>{auth ? (racha >= 2 ? `${racha} días seguidos` : auth.email) : "o crear una cuenta"}</span>
+                  <span>{auth ? (racha >= 2 ? `${racha} días seguidos` : auth.email) : "o creá tu cuenta"}</span>
                 </span>
               </button>
               {userMenu && auth && (

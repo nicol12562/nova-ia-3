@@ -30,45 +30,39 @@ export default function Agentes({ go, auth }) {
         </p>
       </header>
 
-      <div className="agents-grid">
-        {AGENTS.map((a) => (
-          <button key={a.id} className={"agent-card" + (pago ? "" : " locked")} onClick={() => abrir(a)}>
-            <span className="agent-ico"><Icon name={a.icon} size={19} /></span>
-            <span className="agent-body">
-              <strong>{a.name}</strong>
-              <p>{a.desc}</p>
-              <span className="agent-sample">“{a.sample}”</span>
-            </span>
-            <span className="agent-go">
-              <Icon name={pago ? "arrowUpRight" : "lock"} size={15} />
-            </span>
-          </button>
-        ))}
-      </div>
-
       {!pago && (
         <div className="agent-note">
-          <div className="txt">
-            <strong>Los mini agentes vienen con Pro o Plus</strong>
-            <p>
-              El plan Gratis usa los tres modelos con sus límites. Los agentes con instrucciones propias
-              se desbloquean al pasar de plan.
-            </p>
-          </div>
+          <p>
+            <strong>Se habilitan con Plus o Pro.</strong> Con el plan Gratis usás los tres modelos;
+            los agentes con instrucciones propias vienen al pasar de plan.
+            {!auth && (
+              <>
+                {" "}¿Ya tenés uno?{" "}
+                <button className="linklike" onClick={() => go("login")}>Iniciá sesión</button>.
+              </>
+            )}
+          </p>
           <button className="btn btn-primary" onClick={() => go("planes")}>Ver planes</button>
         </div>
       )}
 
-
-      {!auth && (
-        <p className="foot-note">
-          ¿Ya tenés Pro?{" "}
-          <button className="linklike" onClick={() => go("login")}>
-            Iniciá sesión
-          </button>{" "}
-          para usarlos.
-        </p>
-      )}
+      <ul className="agentes">
+        {AGENTS.map((a) => (
+          <li key={a.id}>
+            <button className="agente" onClick={() => abrir(a)}>
+              <Icon name={a.icon} size={20} />
+              <span className="agente-t">
+                <strong>{a.name}</strong>
+                <span>{a.desc}</span>
+                <q>{a.sample}</q>
+              </span>
+              <span className={"agente-acc" + (pago ? "" : " bloqueado")}>
+                {pago ? "Usar" : <><Icon name="lock" size={14} /> Plus o Pro</>}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
 
       <Modal
         open={!!needPlan}

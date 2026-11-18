@@ -139,8 +139,8 @@ export default function Planes({ go, auth }) {
             <ul>
               {p.models.map(([m, lim]) => (
                 <li key={m}>
-                  <span className="check">✓</span>
-                  <span className="modelo">{m}</span>
+                  <span className="check" aria-hidden="true"><Icon name="check" size={15} /></span>
+                  <span className="pl-item">{m}</span>
                   <span className="lim">{lim}</span>
                 </li>
               ))}
@@ -152,8 +152,8 @@ export default function Planes({ go, auth }) {
                 const negativo = /^sin /i.test(e);
                 return (
                   <li key={e} className={negativo ? "no" : ""}>
-                    <span className="check">{negativo ? "✕" : "✓"}</span>
-                    <span className="modelo">{e}</span>
+                    <span className="check" aria-hidden="true"><Icon name={negativo ? "x" : "check"} size={15} /></span>
+                    <span className="pl-item">{e}</span>
                   </li>
                 );
               })}
@@ -174,13 +174,13 @@ export default function Planes({ go, auth }) {
               </button>
             ) : (
               <a
-                className="btn btn-primary btn-block btn-whats"
+                className="btn btn-primary btn-block"
                 href={whatsappLink(p, auth.email)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => marcarSolicitud(p.id)}
               >
-                <Icon name="chat" size={16} /> {p.cta} por WhatsApp
+                <Icon name="chat" size={16} /> Pedir {p.name} por WhatsApp
               </a>
             )}
             {solicitudes[claveSolicitud(p.id)] ? (
@@ -241,7 +241,7 @@ export default function Planes({ go, auth }) {
                         d: `${fmt(base.techos.pro31)} → ${fmt(datos.techos.pro31)} tokens en el rol de saldo más corto.`,
                       },
                       {
-                        t: `${MULT(datos.cuota, base.cuota)}× el cupón total`,
+                        t: `${MULT(datos.cuota, base.cuota)}× la cuota total`,
                         d: `${fmt(base.cuota)} → ${fmt(datos.cuota)} tokens por mes, repartidos entre los tres roles.`,
                       },
                       techos.forzado
@@ -256,7 +256,7 @@ export default function Planes({ go, auth }) {
                   <ul>
                     {destacados.map((x) => (
                       <li key={x.t}>
-                        <span className="check">✓</span>
+                        <span className="check" aria-hidden="true"><Icon name="check" size={15} /></span>
                         <span className="e-t">{x.t}</span>
                         <p>{x.d}</p>
                       </li>
