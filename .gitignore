@@ -6,3 +6,5 @@ dist/
 .dev.vars
 *.log
 .DS_Store
+.claude/settings.local.json
+.claude/skills/impeccable/scripts/bin/
