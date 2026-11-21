@@ -44,36 +44,40 @@
       rel="stylesheet"
     />
     <script>
-      // Autocuración: si el bundle no llega (caché vieja + deploy nuevo),
-      // recargamos una sola vez con cache-busting en lugar de quedar en blanco.
+      // Autocuración: si un bundle propio (/assets/) no llega (caché vieja +
+      // deploy nuevo), recargamos UNA sola vez con cache-busting en lugar de
+      // quedar en blanco. Scripts de terceros (p. ej. el beacon de Cloudflare)
+      // se ignoran. La marca solo se borra cuando la app montó bien, así un
+      // fallo persistente nunca entra en bucle de recargas.
       (function () {
         var KEY = "novaia_boot_retry";
-        try { sessionStorage.removeItem(KEY); } catch (e) {}
+        function propio(u) {
+          try {
+            var x = new URL(u, location.href);
+            return x.origin === location.origin && x.pathname.indexOf("/assets/") === 0;
+          } catch (e) { return false; }
+        }
+        function reintentar() {
+          try {
+            if (sessionStorage.getItem(KEY)) return;
+            sessionStorage.setItem(KEY, "1");
+          } catch (e) { return; }
+          location.replace(location.pathname + "?r=" + Date.now() + location.hash);
+        }
         window.addEventListener(
           "error",
           function (e) {
             var t = e.target;
-            if (t && (t.tagName === "SCRIPT" || t.tagName === "LINK")) {
-              try {
-                if (!sessionStorage.getItem(KEY)) {
-                  sessionStorage.setItem(KEY, "1");
-                  location.reload();
-                }
-              } catch (err) {}
-            }
+            if (!t) return;
+            var u = t.tagName === "SCRIPT" ? t.src : t.tagName === "LINK" ? t.href : "";
+            if (u && propio(u)) reintentar();
           },
           true
         );
         setTimeout(function () {
           var root = document.getElementById("root");
-          if (root && root.childElementCount === 0) {
-            try {
-              if (!sessionStorage.getItem(KEY)) {
-                sessionStorage.setItem(KEY, "1");
-                location.replace(location.pathname + "?r=" + Date.now() + location.hash);
-              }
-            } catch (err) {}
-          }
+          if (root && root.childElementCount === 0) reintentar();
+          else try { sessionStorage.removeItem(KEY); } catch (e) {}
         }, 3500);
       })();
     </script>

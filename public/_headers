@@ -13,11 +13,11 @@
 # Si el hash no coincide la app igual carga; solo se pierde ese script.
 
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-+CO3cXMUp3khRfTIYSQjWYtIpP/rHghKFvvpOL0Mji0=' 'sha256-/EZbnMZy8uUSODKDZa64OGk0i2T7XpHL8UGSpjHm14s='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-87nIKzAR6j0QFqKCPOM8WTeNA6no+5aFbwRUvrTEHio=' 'sha256-/EZbnMZy8uUSODKDZa64OGk0i2T7XpHL8UGSpjHm14s=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cloudflareinsights.com; manifest-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), magnetometer=(), gyroscope=(), accelerometer=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
   Strict-Transport-Security: max-age=31536000
   Cross-Origin-Opener-Policy: same-origin
 
