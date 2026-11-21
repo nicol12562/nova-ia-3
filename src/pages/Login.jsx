@@ -4,7 +4,7 @@ import { showToast } from "../ui.jsx";
 import Filete from "../filete.jsx";
 
 // El servidor exige lo mismo (functions/api/auth.js): se valida antes para no gastar intentos.
-const MIN_PASS = 6;
+const MIN_PASS = 8;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validar(mode, email, password) {

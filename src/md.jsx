@@ -77,6 +77,14 @@ const INLINE_PATTERNS = [
     link: true,
   },
   {
+    re: /\*\*\*(?=\S)([\s\S]*?\S)\*\*\*/,
+    make: (m, k, ctx) => (
+      <strong key={k}>
+        <em>{inline(m[1], k + "s", ctx)}</em>
+      </strong>
+    ),
+  },
+  {
     re: /\*\*(?=\S)([\s\S]*?\S)\*\*(?!\*\*)/,
     make: (m, k, ctx) => <strong key={k}>{inline(m[1], k + "b", ctx)}</strong>,
   },
@@ -268,7 +276,7 @@ function parseBlocks(src, depth = 0) {
       continue;
     }
 
-    if (HR_RE.test(line) && !(LIST_RE.test(line) && !/^\s*([-*_])(\s*\1){2,}\s*$/.test(line))) {
+    if (HR_RE.test(line)) {
       blocks.push({ type: "hr" });
       i += 1;
       continue;
@@ -332,14 +340,13 @@ function parseList(lines, start, depth) {
   const ordered = /\d/.test(first[2]);
   const startNum = ordered ? parseInt(first[2], 10) : null;
   const items = [];
-  let loose = false;
   let i = start;
 
   while (i < lines.length) {
     const m = LIST_RE.exec(lines[i]);
     if (!m || m[1].length < base || m[1].length > base + 1 || /\d/.test(m[2]) !== ordered) break;
 
-    const contentCol = m[0].length && m[3] ? m[0].length : m[1].length + m[2].length + 1;
+    const contentCol = m[3] ? m[0].length : m[1].length + m[2].length + 1;
     const body = [lines[i].slice(m[0].length)];
     i += 1;
     let blankRun = 0;
@@ -370,15 +377,8 @@ function parseList(lines, start, depth) {
       break;
     }
 
-    // Los renglones en blanco al final no son del ítem; si sigue otro ítem
-    // hermano después de un blanco, la lista es "suelta".
-    while (body.length > 1 && body[body.length - 1] === "") {
-      body.pop();
-      if (i < lines.length) loose = true;
-    }
-    if (body.slice(1).some((l, j) => l === "" && body[j + 2] !== undefined && !/^\s/.test(body[j + 2]) && !LIST_RE.test(body[j + 2]))) {
-      loose = true;
-    }
+    // Los renglones en blanco al final no son del ítem.
+    while (body.length > 1 && body[body.length - 1] === "") body.pop();
 
     let text = body.join("\n");
     let task = null;
@@ -389,18 +389,10 @@ function parseList(lines, start, depth) {
     }
     items.push({ task, blocks: depth < 8 ? parseBlocks(text, depth + 1) : [{ type: "p", text }] });
 
-    // Un ítem hermano tiene que estar en la misma columna.
-    const nextM = i < lines.length ? LIST_RE.exec(lines[i]) : null;
-    if (!nextM) break;
+    if (i >= lines.length || !LIST_RE.test(lines[i])) break;
   }
 
-  // Si el último "blanco" no tenía hermano detrás, la lista no es suelta.
-  if (loose && i < lines.length) {
-    const m = LIST_RE.exec(lines[i]);
-    if (!m || m[1].length < base) loose = items.length > 1 && loose;
-  }
-
-  return { block: { type: ordered ? "ol" : "ul", start: startNum, items, loose: false && loose }, next: i };
+  return { block: { type: ordered ? "ol" : "ul", start: startNum, items }, next: i };
 }
 
 /* -------------------------------------------------------- componentes */

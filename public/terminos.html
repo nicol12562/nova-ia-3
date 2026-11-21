@@ -3,173 +3,462 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Términos y Condiciones — Nova IA</title>
+    <title>Términos y condiciones · Nova IA</title>
+    <meta name="description" content="Las reglas de uso de Nova IA: cuentas, planes, pagos por WhatsApp, respuestas de la IA y responsabilidad." />
     <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#14183a" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // Mismo tema que eligió la persona en la app; si nunca eligió, manda el sistema.
+      try {
+        var t = localStorage.getItem("novaia_theme");
+        if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..800&family=Shrikhand&display=swap"
       rel="stylesheet"
     />
     <style>
-      /* Mismos tokens de la app: estas páginas no pueden parecer otro producto. */
+      /* Tokens del mundo "Filete" (src/nova.css). Estas páginas no pueden parecer otro producto. */
       :root {
-        --bg: #ffffff;
-        --panel: #ffffff;
-        --surface: #f4f4f5;
-        --border: #e4e4e7;
-        --text: #09090b;
-        --muted: #71717a;
-        --accent: #004de5;
-        --radius: 8px;
-        --radius-xl: 12px;
+        --ground: #f3f5f8;
+        --surface: #ffffff;
+        --sunk: #e8ecf2;
+        --ink: #14183a;
+        --ink-2: #474d70;
+        --ink-3: #61678a;
+        --line: #d9dee7;
+        --line-strong: #b9c1d0;
+        --side: #14183a;
+        --side-ink: #eef0f8;
+        --side-dim: #a9aecb;
+        --oro: #f2b705;
+        --rojo: #d7263d;
+        --celeste: #3a8dde;
+        --celeste-ink: #1b5fa6;
+        --oro-ink: #7f5c00;
+        --f-ui: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+        --f-letrero: "Shrikhand", Georgia, serif;
+        color-scheme: light;
       }
       @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #09090b;
-          --panel: #0c0c0e;
-          --surface: #18181b;
-          --border: #27272a;
-          --text: #fafafa;
-          --muted: #a1a1aa;
-          --accent: #4d8bff;
+        :root:not([data-theme="light"]) {
+          --ground: #0f1228;
+          --surface: #171b38;
+          --sunk: #1e2345;
+          --ink: #eceef8;
+          --ink-2: #bcc0db;
+          --ink-3: #9196b8;
+          --line: #2a3058;
+          --line-strong: #3b4373;
+          --side: #090b1c;
+          --celeste-ink: #7db7f0;
+          --oro-ink: #f5c63c;
+          color-scheme: dark;
         }
       }
-      * { box-sizing: border-box; }
+      :root[data-theme="dark"] {
+        --ground: #0f1228;
+        --surface: #171b38;
+        --sunk: #1e2345;
+        --ink: #eceef8;
+        --ink-2: #bcc0db;
+        --ink-3: #9196b8;
+        --line: #2a3058;
+        --line-strong: #3b4373;
+        --side: #090b1c;
+        --celeste-ink: #7db7f0;
+        --oro-ink: #f5c63c;
+        color-scheme: dark;
+      }
+
+      *, *::before, *::after { box-sizing: border-box; }
+      html { scrollbar-color: var(--line-strong) var(--ground); -webkit-text-size-adjust: 100%; }
+      @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
       body {
         margin: 0;
-        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-        background: var(--bg);
-        color: var(--text);
+        background: var(--ground);
+        color: var(--ink);
+        font-family: var(--f-ui);
+        font-size: 17px;
         line-height: 1.65;
-        font-size: 15px;
         -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
       }
-      main { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+      ::selection { background: rgba(242, 183, 5, 0.35); }
+      :focus-visible { outline: 2px solid var(--celeste); outline-offset: 2px; border-radius: 4px; }
+      a { color: var(--celeste-ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+      a:hover { text-decoration-thickness: 2px; }
+
+      .skip {
+        position: absolute; left: 12px; top: 10px; z-index: 50;
+        background: var(--oro); color: #14183a; font-weight: 700;
+        padding: 8px 14px; border-radius: 6px; text-decoration: none;
+        transform: translateY(-160%);
+      }
+      .skip:focus-visible { transform: none; outline-color: #14183a; }
+
+      /* Barra índigo con filete oro, como la barra superior de la app. */
+      .barra {
+        background: var(--side);
+        color: var(--side-ink);
+        border-bottom: 2px solid var(--oro);
+      }
+      .barra-in {
+        max-width: 1120px; margin: 0 auto;
+        display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        padding: 12px 24px;
+      }
+      .barra :focus-visible { outline-color: var(--oro); }
+      .wordmark {
+        font-family: var(--f-letrero);
+        font-size: 27px; line-height: 1;
+        color: var(--side-ink);
+        text-decoration: none;
+        text-shadow: 2px 2px 0 var(--oro), 4px 4px 0 var(--rojo);
+        padding: 2px 6px 6px 0;
+      }
       .volver {
-        display: inline-flex; align-items: center; gap: 6px;
-        color: var(--muted); text-decoration: none; font-size: 13.5px; font-weight: 500;
+        display: inline-flex; align-items: center; gap: 8px;
+        color: var(--side-ink); text-decoration: none;
+        font-size: 15px; font-weight: 600;
+        padding: 8px 12px; border-radius: 8px;
       }
-      .volver:hover { color: var(--accent); }
-      .eyebrow {
-        color: var(--accent); font-size: 11.5px; letter-spacing: 0.16em;
-        text-transform: uppercase; font-weight: 700; margin: 40px 0 0;
+      .volver:hover { background: rgba(238, 240, 248, 0.08); }
+      .volver svg { flex: none; }
+
+      .hoja {
+        max-width: 1120px; margin: 0 auto;
+        padding: 56px 24px 96px;
+        display: grid;
+        grid-template-columns: 232px minmax(0, 1fr);
+        gap: 64px;
+        align-items: start;
       }
+
+      /* Índice */
+      .indice { position: sticky; top: 28px; font-size: 15px; }
+      .indice-t { font-size: 14px; font-weight: 700; color: var(--ink-3); margin: 0 0 10px; }
+      .indice ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); counter-reset: idx; }
+      .indice li { counter-increment: idx; border-bottom: 1px solid var(--line); }
+      .indice li a {
+        display: grid; grid-template-columns: 22px 1fr; gap: 4px;
+        padding: 8px 0; color: var(--ink-2); text-decoration: none; line-height: 1.4;
+      }
+      .indice li a::before { content: counter(idx); color: var(--ink-3); }
+      .indice li a:hover { color: var(--ink); }
+      .indice li a[aria-current="true"] { color: var(--ink); font-weight: 650; }
+      .indice li a[aria-current="true"]::before { color: var(--oro-ink); }
+      .indice-otro { margin: 18px 0 0; color: var(--ink-3); font-size: 14.5px; }
+
+      /* Texto */
+      article { max-width: 68ch; min-width: 0; }
       h1 {
-        font-family: "Fraunces", Georgia, serif; font-weight: 600;
-        font-size: 40px; letter-spacing: -0.5px; margin: 8px 0 6px;
+        font-size: 38px; font-weight: 750; line-height: 1.15;
+        letter-spacing: -0.025em; margin: 0 0 10px; text-wrap: balance;
       }
-      .vigencia { color: var(--muted); font-size: 13.5px; margin: 0 0 28px; }
+      .actualizado { color: var(--ink-3); font-size: 15px; margin: 0 0 28px; }
+      .bajada { font-size: 19px; line-height: 1.6; color: var(--ink-2); margin: 0 0 8px; }
+      section { padding-top: 40px; scroll-margin-top: 20px; }
+      section + section { border-top: 1px solid var(--line); margin-top: 40px; }
       h2 {
-        font-family: "Fraunces", Georgia, serif; font-weight: 600;
-        font-size: 22px; letter-spacing: -0.2px; margin: 34px 0 8px;
+        font-size: 23px; font-weight: 720; line-height: 1.25;
+        letter-spacing: -0.015em; margin: 0 0 12px; text-wrap: balance;
       }
+      h2 .n { color: var(--ink-3); font-weight: 600; margin-right: 8px; }
       p { margin: 0 0 14px; }
       ul { margin: 0 0 14px; padding-left: 22px; }
       li { margin-bottom: 6px; }
-      .card {
-        background: var(--panel); border: 1px solid var(--border);
-        border-radius: var(--radius-xl); padding: 26px 28px; margin: 24px 0;
+      li::marker { color: var(--ink-3); }
+      strong { font-weight: 700; }
+      em { font-style: normal; font-weight: 600; }
+
+      .aviso {
+        background: var(--sunk);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin: 20px 0 14px;
       }
-      a { color: var(--accent); }
-      .contacto {
-        display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
-        font-weight: 600; font-size: 14px; border-radius: var(--radius); padding: 12px 20px; margin-top: 6px;
+      .aviso p:last-child { margin-bottom: 0; }
+
+      .pie {
+        margin-top: 56px; padding-top: 24px;
+        border-top: 2px solid var(--line-strong);
+        color: var(--ink-2); font-size: 15.5px;
       }
-      .contacto:hover { opacity: 0.92; }
+      .pie p { margin: 0 0 8px; }
+
+      @media (max-width: 860px) {
+        .hoja { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 36px 16px 72px; }
+        .indice { position: static; margin: 0 0 8px; order: 0; }
+        .indice details { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+        .indice summary {
+          cursor: pointer; padding: 12px 16px; font-weight: 650; color: var(--ink);
+          list-style-position: inside;
+        }
+        .indice ol { margin: 0 16px; }
+        .indice li:last-child { border-bottom: 0; }
+        .indice-t { display: none; }
+        .indice-otro { margin: 0; padding: 12px 16px; border-top: 1px solid var(--line); }
+        article { order: 1; padding-top: 28px; }
+        h1 { font-size: 31px; }
+        .bajada { font-size: 18px; }
+        .barra-in { padding: 10px 16px; }
+        .wordmark { font-size: 24px; }
+      }
+      @media (min-width: 861px) {
+        /* En desktop el índice va siempre abierto, sin el resumen plegable. */
+        .indice summary { display: none; }
+      }
+      @media print {
+        .barra, .indice, .skip { display: none; }
+        .hoja { display: block; padding: 0; }
+        body { background: #fff; color: #000; font-size: 12pt; }
+      }
     </style>
   </head>
   <body>
-    <main>
-      <a class="volver" href="/">← Volver a Nova IA</a>
-      <p class="eyebrow">Nova IA</p>
-      <h1>Términos y Condiciones</h1>
-      <p class="vigencia">Vigencia: 6 de noviembre de 2026</p>
+    <a class="skip" href="#texto">Saltar al texto</a>
 
-      <p>
-        Al crear una cuenta o usar Nova IA aceptás estos términos. Son cortos y en castellano
-        a propósito: nada de letra chica escondida.
-      </p>
-
-      <h2>1. Qué es Nova IA</h2>
-      <p>
-        Un asistente conversacional desarrollado en Argentina que da acceso a modelos de IA de terceros
-        desde una sola cuenta, con límites mensuales por plan. Se ofrece “tal cual” y en desarrollo
-        activo: pueden aparecer mejoras, cambios de límites o funciones nuevas sin costo adicional.
-      </p>
-
-      <h2>2. Tu cuenta</h2>
-      <p>
-        Sos responsable del uso de tu cuenta y de lo que se genere con ella. Un uso responsable por
-        persona: no compartas la cuenta ni revendas el acceso. Si dejás de usar Nova, podés pedir la
-        eliminación de la cuenta cuando quieras.
-      </p>
-
-      <h2>3. Uso aceptable</h2>
-      <ul>
-        <li>No usar el servicio para nada ilegal, contenido dañino, spam ni para atacar la plataforma.</li>
-        <li>No crear cuentas masivas ni sortear los límites del plan con automatización.</li>
-        <li>Si hay abuso, podemos limitar o suspender la cuenta involucrada.</li>
-      </ul>
-
-      <h2>4. Planes, límites y pago</h2>
-      <p>
-        Los tres planes atienden con los mismos roles de modelo (Nova Flash, Nova Pro, Nova Pro 3.1).
-        Lo que cambia entre planes es la cuota mensual, el largo máximo de cada respuesta y si tenés
-        mini agentes incluidos. Los detalles están en la página de Planes y se recalculan desde la
-        configuración real del servidor.
-      </p>
-      <p>
-        Los precios son en pesos argentinos. Hoy la solicitud y la activación de Pro y Plus se hacen a
-        mano por WhatsApp, y el pago se coordina ahí mismo: la app no procesa tarjetas ni tiene débito
-        automático. Los límites y precios pueden cambiar; si afecta un plan pago, avisamos con
-        antelación razonable antes de que aplique.
-      </p>
-
-      <h2>5. Las respuestas de la IA</h2>
-      <p>
-        Nova puede equivocarse. Las respuestas de los modelos no son asesoramiento profesional
-        (médico, legal, contable ni financiero) y conviene verificar cualquier dato importante antes de
-        usarlo. Lo que escribís en el chat es tuyo; los modelos son propiedad de sus proveedores
-        respectivos, y el proveedor que atiende cada rol puede cambiar en cualquier momento.
-      </p>
-      <div class="card">
-        <p style="margin:0">
-          <strong>Si usás Nova para atender clientes o vender</strong> —por ejemplo con el mini agente
-          de WhatsApp—, el mensaje sale de acá pero lo enviás vos. Confirmá stock, precios, medidas y
-          tiempos de entrega antes de mandarlo: Nova está instruido para no inventarlos, pero ningún
-          modelo es una fuente de verdad sobre tu propio negocio.
-        </p>
+    <header class="barra">
+      <div class="barra-in">
+        <a class="wordmark" href="/" aria-label="Nova IA, ir al inicio">novaia</a>
+        <a class="volver" href="/">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5" /><path d="m11 18-6-6 6-6" /></svg>
+          Volver a la app
+        </a>
       </div>
+    </header>
 
-      <h2>6. Disponibilidad y garantías</h2>
-      <p>
-        El servicio depende de terceros (proveedores de IA, hosting y login con Google), así que no
-        garantizamos disponibilidad ininterrumpida ni ausencia de errores. Los modelos gratuitos pueden
-        estar lentos o saturarse en horarios pico. Si algo se corta de forma sostenida, escribinos.
-      </p>
+    <div class="hoja">
+      <aside class="indice">
+        <nav aria-labelledby="indice-titulo">
+          <details open>
+            <summary>En esta página</summary>
+            <p class="indice-t" id="indice-titulo">En esta página</p>
+            <ol>
+              <li><a href="#quien">Quién está detrás</a></li>
+              <li><a href="#servicio">Qué es Nova IA</a></li>
+              <li><a href="#cuenta">Sin cuenta y con cuenta</a></li>
+              <li><a href="#uso">Uso aceptable</a></li>
+              <li><a href="#planes">Planes, cupos y pagos</a></li>
+              <li><a href="#respuestas">Las respuestas de la IA</a></li>
+              <li><a href="#disponibilidad">Disponibilidad</a></li>
+              <li><a href="#responsabilidad">Responsabilidad</a></li>
+              <li><a href="#baja">Tus datos y la baja</a></li>
+              <li><a href="#cambios">Cambios en estos términos</a></li>
+              <li><a href="#ley">Ley aplicable y contacto</a></li>
+            </ol>
+            <p class="indice-otro">Ver también la <a href="/privacidad.html">Política de privacidad</a>.</p>
+          </details>
+        </nav>
+      </aside>
 
-      <h2>7. Responsabilidad</h2>
-      <p>
-        En la máxima medida que la ley permita, Nova IA no es responsable por daños indirectos
-        derivados del uso del servicio o de las respuestas generadas por los modelos.
-      </p>
+      <main id="texto" tabindex="-1">
+        <article>
+          <h1>Términos y condiciones</h1>
+          <p class="actualizado">Última actualización: <time datetime="2026-11-21">21 de noviembre de 2026</time></p>
+          <p class="bajada">
+            Al crear una cuenta o usar Nova IA aceptás estos términos. Están en castellano llano a
+            propósito: lo que dice acá es lo que hace la app, sin letra chica escondida.
+          </p>
 
-      <h2>8. Cancelación y datos</h2>
-      <p>
-        Podés dejar de usar el servicio y borrar tus conversaciones o tus notas de memoria cuando
-        quieras desde la app. La eliminación de la cuenta se pide por email y borra cuenta, historial,
-        memoria y contadores asociados. Cómo tratamos los datos está en la
-        <a href="/privacidad.html">Política de Privacidad</a>.
-      </p>
+          <section id="quien" aria-labelledby="h-quien">
+            <h2 id="h-quien"><span class="n" aria-hidden="true">1</span>Quién está detrás</h2>
+            <p>
+              Nova IA está hecho y operado por una persona, en Argentina. No hay una empresa ni un
+              equipo de soporte detrás: cuando escribís, te contesta quien lo hace.
+            </p>
+            <p>
+              Contacto general: <a href="mailto:gonzaloangio@gmail.com">gonzaloangio@gmail.com</a>.
+              Planes y activaciones: por WhatsApp, desde la página de Planes de la app.
+            </p>
+          </section>
 
-      <h2>9. Contacto y ley aplicable</h2>
-      <p>
-        Dudas sobre estos términos: gonzaloangio@gmail.com. Se rigen por las leyes de la República
-        Argentina.
-      </p>
+          <section id="servicio" aria-labelledby="h-servicio">
+            <h2 id="h-servicio"><span class="n" aria-hidden="true">2</span>Qué es Nova IA</h2>
+            <p>
+              Un asistente conversacional que te da acceso a modelos de inteligencia artificial de
+              terceros desde una sola cuenta, con un cupo mensual de tokens según tu plan. Los modelos
+              se presentan con tres nombres (Nova Flash, Nova Pro y Nova Pro 3.1) y los sirve
+              <strong>OpenRouter</strong>; debajo de cada uno ves qué proveedor lo atiende.
+            </p>
+            <p>
+              Nova no tiene modelos propios. El servicio se ofrece “tal cual” y está en desarrollo
+              activo: pueden aparecer mejoras, funciones nuevas o cambios en qué proveedor atiende cada
+              modelo.
+            </p>
+          </section>
 
-      <a class="contacto" href="mailto:gonzaloangio@gmail.com">Escribir por términos</a>
-    </main>
+          <section id="cuenta" aria-labelledby="h-cuenta">
+            <h2 id="h-cuenta"><span class="n" aria-hidden="true">3</span>Sin cuenta y con cuenta</h2>
+            <ul>
+              <li>
+                <strong>Sin cuenta</strong> podés mandar 3 mensajes por día. Para contarlos usamos tu
+                dirección IP; esos mensajes no quedan en un historial.
+              </li>
+              <li>
+                <strong>Con cuenta</strong> entrás con email y contraseña o con Google. La sesión dura
+                hasta 30 días en ese navegador, o hasta que la cierres.
+              </li>
+            </ul>
+            <p>
+              Sos responsable de lo que se haga con tu cuenta. Una cuenta es para una persona: no la
+              compartas ni revendas el acceso. Si sospechás que alguien entró, cerrá la sesión desde
+              <em>Ajustes</em> y escribinos.
+            </p>
+          </section>
+
+          <section id="uso" aria-labelledby="h-uso">
+            <h2 id="h-uso"><span class="n" aria-hidden="true">4</span>Uso aceptable</h2>
+            <ul>
+              <li>No uses Nova para nada ilegal, para dañar a otros, para mandar spam ni para atacar la plataforma.</li>
+              <li>No crees cuentas en masa ni uses automatizaciones para esquivar los límites de tu plan.</li>
+              <li>No intentes sacar las claves, instrucciones internas o datos de otras personas.</li>
+            </ul>
+            <p>
+              Si hay abuso, podemos limitar o suspender la cuenta involucrada. Si fue un error, escribinos
+              y lo revisamos.
+            </p>
+          </section>
+
+          <section id="planes" aria-labelledby="h-planes">
+            <h2 id="h-planes"><span class="n" aria-hidden="true">5</span>Planes, cupos y pagos</h2>
+            <p>
+              Hay tres planes: <strong>Gratis</strong>, <strong>Plus</strong> y <strong>Pro</strong>, que es
+              el más alto. Los tres usan los mismos tres modelos. Lo que cambia es el cupo mensual de
+              tokens (1.000.000, 2.500.000 y 5.000.000), el largo máximo de cada respuesta y si incluye
+              los mini agentes, que son solo de los planes pagos. Cada modelo tiene además su propio
+              saldo dentro del cupo; lo ves en el chat y en la página de Uso.
+            </p>
+            <p>
+              Los precios están en pesos argentinos y figuran en la página de Planes de la app. Así se
+              contrata un plan pago:
+            </p>
+            <ul>
+              <li>Lo pedís por WhatsApp desde la página de Planes.</li>
+              <li>El pago se coordina ahí mismo, con una persona.</li>
+              <li>Esa persona revisa el pedido y activa el plan a mano en tu cuenta.</li>
+            </ul>
+            <p>
+              La app <strong>no procesa tarjetas</strong>, no tiene débito automático y no renueva planes
+              sola. Los límites y los precios pueden cambiar; si el cambio afecta un plan pago, lo avisamos
+              con anticipación razonable antes de que aplique.
+            </p>
+          </section>
+
+          <section id="respuestas" aria-labelledby="h-respuestas">
+            <h2 id="h-respuestas"><span class="n" aria-hidden="true">6</span>Las respuestas de la IA</h2>
+            <p>
+              Nova puede equivocarse. Las respuestas no son asesoramiento profesional (médico, legal,
+              contable ni financiero): verificá cualquier dato importante antes de usarlo. Lo que
+              escribís y lo que Nova te devuelve es tuyo para usar; los modelos pertenecen a sus
+              respectivos proveedores.
+            </p>
+            <div class="aviso">
+              <p>
+                <strong>Si usás Nova para atender clientes o vender</strong>, por ejemplo con el mini
+                agente de WhatsApp o el perfil de tu negocio, el mensaje se arma acá pero lo mandás vos.
+                Confirmá stock, precios, medidas y plazos de entrega antes de enviarlo: Nova está
+                instruido para no inventarlos, pero ningún modelo es una fuente de verdad sobre tu negocio.
+              </p>
+            </div>
+          </section>
+
+          <section id="disponibilidad" aria-labelledby="h-disponibilidad">
+            <h2 id="h-disponibilidad"><span class="n" aria-hidden="true">7</span>Disponibilidad</h2>
+            <p>
+              Nova depende de terceros: proveedores de modelos, OpenRouter, Cloudflare (que aloja la app y
+              la base de datos) y Google para el ingreso con Google. Por eso no garantizamos que el
+              servicio funcione siempre ni sin errores.
+            </p>
+            <p>
+              Los modelos gratuitos pueden ir lentos o saturarse en horarios pico, y tienen topes diarios
+              que Nova no controla. Cuando un proveedor falla, Nova prueba con otro, incluido un grupo de
+              modelos de reserva; cada respuesta te dice qué modelo la dio. Si algo se corta de forma
+              sostenida, escribinos.
+            </p>
+          </section>
+
+          <section id="responsabilidad" aria-labelledby="h-responsabilidad">
+            <h2 id="h-responsabilidad"><span class="n" aria-hidden="true">8</span>Responsabilidad</h2>
+            <p>
+              En la máxima medida que permita la ley, Nova IA no responde por daños indirectos que
+              surjan del uso del servicio, de su falta de disponibilidad o de las respuestas que generen
+              los modelos. Nada de esto limita los derechos que te da la ley de defensa del consumidor.
+            </p>
+          </section>
+
+          <section id="baja" aria-labelledby="h-baja">
+            <h2 id="h-baja"><span class="n" aria-hidden="true">9</span>Tus datos y la baja</h2>
+            <ul>
+              <li>Borrás una conversación, o todas, desde <em>Historial</em>.</li>
+              <li>Borrás una nota de memoria desde <em>Ajustes → Memoria de Nova</em>.</li>
+              <li>Descargás una conversación en Markdown desde el chat.</li>
+              <li>Cerrás la sesión desde <em>Ajustes</em> o desde el menú de tu usuario.</li>
+            </ul>
+            <p>
+              La eliminación de la cuenta se pide por email a
+              <a href="mailto:gonzaloangio@gmail.com">gonzaloangio@gmail.com</a> y borra la cuenta, el
+              historial, la memoria y los contadores asociados. Cómo tratamos tus datos está en la
+              <a href="/privacidad.html">Política de privacidad</a>.
+            </p>
+          </section>
+
+          <section id="cambios" aria-labelledby="h-cambios">
+            <h2 id="h-cambios"><span class="n" aria-hidden="true">10</span>Cambios en estos términos</h2>
+            <p>
+              Si cambiamos algo, actualizamos esta página y la fecha de arriba. Si el cambio es importante,
+              lo avisamos antes de que aplique. Seguir usando Nova después de un cambio significa que lo
+              aceptás.
+            </p>
+          </section>
+
+          <section id="ley" aria-labelledby="h-ley">
+            <h2 id="h-ley"><span class="n" aria-hidden="true">11</span>Ley aplicable y contacto</h2>
+            <p>
+              Estos términos se rigen por las leyes de la República Argentina. Para cualquier duda,
+              escribinos a <a href="mailto:gonzaloangio@gmail.com">gonzaloangio@gmail.com</a>.
+            </p>
+          </section>
+
+          <footer class="pie">
+            <p>¿Dudas sobre estos términos? <a href="mailto:gonzaloangio@gmail.com?subject=T%C3%A9rminos%20de%20Nova%20IA">Escribinos por email</a>.</p>
+            <p><a href="/privacidad.html">Política de privacidad</a> · <a href="/">Volver a Nova IA</a></p>
+          </footer>
+        </article>
+      </main>
+    </div>
+
+    <script>
+      // Marca en el índice la sección que se está leyendo.
+      (function () {
+        if (!("IntersectionObserver" in window)) return;
+        var links = {};
+        document.querySelectorAll(".indice ol a").forEach(function (a) {
+          links[a.getAttribute("href").slice(1)] = a;
+        });
+        var obs = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (e) {
+              if (!e.isIntersecting) return;
+              Object.keys(links).forEach(function (id) { links[id].removeAttribute("aria-current"); });
+              var a = links[e.target.id];
+              if (a) a.setAttribute("aria-current", "true");
+            });
+          },
+          { rootMargin: "-15% 0px -70% 0px" }
+        );
+        document.querySelectorAll("article section[id]").forEach(function (s) { obs.observe(s); });
+        // En móvil el índice arranca plegado para no tapar el texto.
+        if (window.matchMedia("(max-width: 860px)").matches) {
+          var d = document.querySelector(".indice details");
+          if (d) d.removeAttribute("open");
+        }
+      })();
+    </script>
   </body>
 </html>
