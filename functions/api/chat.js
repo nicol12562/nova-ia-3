@@ -168,7 +168,17 @@ async function leerBody(request) {
   }
 }
 
+// Si D1 o la sesión fallan antes de abrir el stream, el usuario recibe un error
+// en español (el frente muestra data.error) y no la página 500 de Cloudflare.
 export async function onRequestPost(context) {
+  try {
+    return await atender(context);
+  } catch {
+    return json({ error: "Nova tuvo un problema interno. Reintentá en unos segundos." }, 500);
+  }
+}
+
+async function atender(context) {
   const { request, env, waitUntil } = context;
   const leido = await leerBody(request);
   if (leido.error) return json({ error: leido.error }, leido.status);
@@ -323,11 +333,12 @@ export async function onRequestPost(context) {
   const maxTokens = Math.min(LARGOS[largo].maxTokens, MAX_TOKENS[plan]);
 
   // ---- stream compuesto con reintento entre candidatos ----
-  const decoder = new TextDecoder();
+  // Al navegador se le reenvían SÓLO los deltas de texto, re-armados por nosotros:
+  // antes se pasaban las líneas crudas de OpenRouter (con el id de generación, el
+  // proveedor real y, si fallaba a mitad de camino, el JSON de error interno).
   const encoder = new TextEncoder();
   let outChars = 0;
   let usedSlot = null;
-  let usedUpstream = null;
   let falloCredencial = false;
   let usedTokens = 0;
   let usedPrompt = 0;
@@ -336,10 +347,38 @@ export async function onRequestPost(context) {
   let marcarListo = () => {};
   const finished = new Promise((resolve) => { marcarListo = resolve; });
 
+  // El cliente puede cortar (botón "detener", timeout de 45s, cerrar la pestaña).
+  // Se corta también el intento en curso contra el proveedor: seguir leyendo un
+  // stream que nadie mira es gastar cupo de OpenRouter de gusto.
+  let cancelado = false;
+  let controlActual = null;
+  const cancelar = () => {
+    cancelado = true;
+    try { controlActual?.abort(); } catch { /* noop */ }
+  };
+  if (request.signal && !request.signal.aborted) {
+    request.signal.addEventListener("abort", cancelar, { once: true });
+  } else if (request.signal?.aborted) {
+    cancelado = true;
+  }
+
   const composite = new ReadableStream({
     async start(controller) {
+      const enviar = (texto) => {
+        if (cancelado) return false;
+        try {
+          controller.enqueue(encoder.encode(texto));
+          return true;
+        } catch {
+          cancelar();
+          return false;
+        }
+      };
+      const delta = (content) => `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`;
+
       try {
         for (const intento of intentos) {
+          if (cancelado) break;
           const key = intento.key;
           const slot = slotByKey(key);
           const upstream = intento.upstream;
@@ -349,7 +388,7 @@ export async function onRequestPost(context) {
           // mirando "Nova está pensando" sin fin. Se corta el intento si no
           // aparece el primer token, y también si el stream se queda mudo.
           const control = new AbortController();
-          let primero = false;
+          controlActual = control;
           let cronometro = setTimeout(() => control.abort(), SLA_PRIMER_TOKEN_MS);
           const rearmar = () => {
             clearTimeout(cronometro);
@@ -379,8 +418,9 @@ export async function onRequestPost(context) {
             });
           } catch (e) {
             clearTimeout(cronometro);
+            if (cancelado) break; // lo cortó el cliente: el proveedor no tiene la culpa
             const motivoAbort = e?.name === "AbortError";
-            ultimoMotivo = motivoAbort ? "sin primer token en 12s" : "fallo de red";
+            ultimoMotivo = motivoAbort ? `sin respuesta en ${SLA_PRIMER_TOKEN_MS / 1000}s` : "fallo de red";
             marcarFrio(env, waitUntil, upstream, motivoAbort ? 408 : 0, ultimoMotivo);
             continue;
           }
@@ -406,93 +446,131 @@ export async function onRequestPost(context) {
             continue;
           }
 
+          // Decoder propio por intento: si el anterior se cortó a mitad de un
+          // carácter multibyte, sus bytes sueltos no ensucian al siguiente.
+          const decoder = new TextDecoder();
           const reader = res.body.getReader();
           let emitted = false;
           let buffered = "";
-          let heldRaw = "";
           let tail = "";
           let promptTokens = 0;
           let completionTokens = 0;
+          let cortado = false; // timeout, red o cancelación a mitad del stream
+          let errorUpstream = ""; // el proveedor mandó {"error":...} dentro del stream
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            // Trajo bytes: el proveedor está vivo, se reinicia la ventana de silencio.
+          const procesar = (line) => {
+            const t = line.trim();
+            if (!t.startsWith("data:")) return; // comentarios ": OPENROUTER PROCESSING", etc.
+            // Sólo cuentan como señal de vida las líneas de datos: los keep-alive
+            // de OpenRouter llegan cada pocos segundos aunque el modelo esté
+            // colgado en cola, y con ellos el SLA del primer token no saltaba nunca.
             rearmar();
-            const lines = (tail + decoder.decode(value, { stream: true })).split("\n");
-            tail = lines.pop() ?? "";
-            const processedRaw = lines.join("\n") + "\n";
-
-            for (const line of lines) {
-              const t = line.trim();
-              if (!t.startsWith("data:")) continue;
-              const payload = t.slice(5).trim();
-              if (payload === "[DONE]") continue;
-              try {
-                const j = JSON.parse(payload);
-                if (j.usage) {
-                  promptTokens = j.usage.prompt_tokens || promptTokens;
-                  completionTokens = j.usage.completion_tokens || completionTokens;
-                }
-                const delta = j.choices?.[0]?.delta?.content ?? "";
-                if (delta) {
-                  if (emitted) outChars += delta.length;
-                  else buffered += delta;
-                }
-              } catch {
-                /* línea parcial o no-JSON */
-              }
+            const payload = t.slice(5).trim();
+            if (payload === "[DONE]") return;
+            let j;
+            try {
+              j = JSON.parse(payload);
+            } catch {
+              return; /* no-JSON */
             }
-
+            if (j?.error) {
+              const e = j.error;
+              errorUpstream = `stream: ${e.code ?? ""} ${String(e.message || "").slice(0, 100)}`.trim();
+              return;
+            }
+            if (j?.usage) {
+              promptTokens = j.usage.prompt_tokens || promptTokens;
+              completionTokens = j.usage.completion_tokens || completionTokens;
+            }
+            const d = j?.choices?.[0]?.delta?.content;
+            if (typeof d !== "string" || !d) return;
             if (emitted) {
-              controller.enqueue(encoder.encode(processedRaw));
+              outChars += d.length;
+              enviar(delta(d));
             } else {
-              heldRaw += processedRaw;
+              buffered += d;
               if (buffered.length >= BUFFER_THRESHOLD) {
                 emitted = true;
+                // Desde acá el usuario ya vio texto: el turno se cobra a este
+                // slot aunque después se corte o el cliente aborte.
+                usedSlot = key;
                 outChars += buffered.length;
-                controller.enqueue(encoder.encode(heldRaw));
-                heldRaw = "";
+                enviar(delta(buffered));
+                buffered = "";
               }
             }
+          };
+
+          try {
+            while (!errorUpstream && !cancelado) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              const lines = (tail + decoder.decode(value, { stream: true })).split("\n");
+              tail = lines.pop() ?? "";
+              for (const line of lines) {
+                procesar(line);
+                if (errorUpstream) break;
+              }
+            }
+            if (!errorUpstream && !cancelado) {
+              tail += decoder.decode();
+              if (tail) procesar(tail);
+            }
+          } catch {
+            cortado = true;
+          }
+          clearTimeout(cronometro);
+          if (cancelado || cortado || errorUpstream) {
+            try { await reader.cancel(); } catch { /* noop */ }
+          }
+
+          if (cancelado) {
+            // Lo que el usuario llegó a ver se cobra (usedSlot ya está puesto si
+            // hubo texto). Nada más que mandar: nadie escucha.
+            usedPrompt = promptTokens;
+            usedCompletion = completionTokens;
+            break;
           }
 
           if (!emitted) {
-            clearTimeout(cronometro);
-            if (isDegenerateOutput(buffered)) {
-              try { await reader.cancel(); } catch { /* noop */ }
-              // Respuesta sin contenido: los modelos de razonamiento se comen el
-              // presupuesto de tokens y devuelven vacío. Es un fallo recuperable.
-              ultimoMotivo = "respuesta vacía (razonamiento se comió el presupuesto)";
+            const motivo = errorUpstream
+              ? errorUpstream
+              : cortado
+                ? "stream cortado antes de responder"
+                : isDegenerateOutput(buffered)
+                  ? "respuesta vacía (razonamiento se comió el presupuesto)"
+                  : "";
+            if (motivo) {
+              // Respuesta sin contenido o cortada antes de mostrar nada: es un
+              // fallo recuperable y el usuario todavía no vio nada.
+              ultimoMotivo = motivo;
               marcarFrio(env, waitUntil, upstream, 408, ultimoMotivo);
               continue;
             }
             emitted = true;
+            usedSlot = key;
             outChars += buffered.length;
-            controller.enqueue(encoder.encode(heldRaw + tail));
-            tail = "";
-          } else if (tail) {
-            controller.enqueue(encoder.encode(tail));
-            tail = "";
+            enviar(delta(buffered));
+            buffered = "";
+          } else if (cortado || errorUpstream) {
+            // Ya había texto en pantalla: no se puede cambiar de modelo sin que
+            // se note. Se cierra con lo que llegó y se anota el fallo.
+            ultimoMotivo = errorUpstream || "stream cortado a mitad de la respuesta";
+            marcarFrio(env, waitUntil, upstream, 408, ultimoMotivo);
           }
-          clearTimeout(cronometro);
 
-          usedSlot = key;
-          usedUpstream = upstream;
           usedPrompt = promptTokens;
           usedCompletion = completionTokens;
           usedTokens = promptTokens + completionTokens || Math.round((messagesCharLen(messages) + outChars) / 4);
-          sanarFrio(env, waitUntil, upstream);
-          controller.enqueue(
-            encoder.encode(
-              `event: nova\ndata: ${JSON.stringify({ model: slot.label, key, tokens: usedTokens, upstream })}\n\n`
-            )
+          if (!cortado && !errorUpstream) sanarFrio(env, waitUntil, upstream);
+          enviar(
+            `event: nova\ndata: ${JSON.stringify({ model: slot.label, key, tokens: usedTokens, upstream })}\n\n` +
+              "data: [DONE]\n\n"
           );
-          controller.close();
           break;
         }
 
-        if (!usedSlot) {
+        if (!usedSlot && !cancelado) {
           // El usuario recibe lenguaje llano. Los números internos (quedan 32 de
           // 50 requests gratuitos, qué status devolvió cada proveedor) NO van al
           // navegador: se anotan en upstream_health y se ven en el panel admin.
@@ -501,46 +579,51 @@ export async function onRequestPost(context) {
             : "Se cortó la conexión con los modelos. Reintentá en unos segundos: si no vuelve, escribinos por WhatsApp.";
           // El aviso va ANTES del texto: si llega sólo como delta, el frente no
           // tiene cómo saber que no fue una respuesta del modelo y lo sube al canvas.
-          controller.enqueue(
-            encoder.encode(`event: nova\ndata: ${JSON.stringify({ model: null, key: null, error: true })}\n\n`)
-          );
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: msg } }] })}\n\ndata: [DONE]\n\n`)
-          );
+          enviar(`event: nova\ndata: ${JSON.stringify({ model: null, key: null, error: true })}\n\n`);
+          enviar(delta(msg) + "data: [DONE]\n\n");
         }
       } catch {
         /* el cliente cerró la conexión o el upstream se cortó */
       } finally {
+        controlActual = null;
+        try { request.signal?.removeEventListener?.("abort", cancelar); } catch { /* noop */ }
         try { controller.close(); } catch { /* ya cerrado */ }
         marcarListo({ outChars });
       }
     },
+    // El navegador cerró la conexión: Cloudflare cancela el stream de salida.
+    cancel() {
+      cancelar();
+    },
   });
 
   // ---- registro de consumo: por modelo y acumulado diario ----
+  // Corre cuando termina el stream, también si se cortó o el cliente abortó:
+  // si hubo texto visible, se cobra (con los tokens reales si llegaron, o con la
+  // estimación por caracteres si el corte se llevó el chunk de usage).
   if (userId && env.DB) {
     const day = new Date().toISOString().slice(0, 10);
     waitUntil(
       finished
         .then(async () => {
+          // Sin texto entregado no hay nada que cobrar: los intentos fallidos
+          // y los aborts antes del primer token no descuentan.
+          if (!usedSlot) return;
           // Se anotan los tokens REALES que reportó el proveedor. Antes el
           // acumulado diario usaba caracteres/4, así que "Uso y tokens" mostraba
           // 161 tokens totales mientras el saldo por modelo ya había descontado
           // 1.022 del mismo mes: dos números distintos en la misma pantalla.
-          const estimado = Math.round((messagesCharLen(messages) + outChars) / 4);
           const tokensIn = usedPrompt || Math.round(messagesCharLen(messages) / 4);
           const tokensOut = usedCompletion || Math.round(outChars / 4);
-          const total = usedTokens || estimado;
+          const total = usedTokens || usedPrompt + usedCompletion || tokensIn + tokensOut;
           if (!total) return;
-          if (usedSlot) {
-            await env.DB
-              .prepare(
-                `INSERT INTO model_usage (user_id, model, month, tokens) VALUES (?, ?, ?, ?)
-                 ON CONFLICT(user_id, model, month) DO UPDATE SET tokens = tokens + excluded.tokens`
-              )
-              .bind(userId, usedSlot, month, total)
-              .run();
-          }
+          await env.DB
+            .prepare(
+              `INSERT INTO model_usage (user_id, model, month, tokens) VALUES (?, ?, ?, ?)
+               ON CONFLICT(user_id, model, month) DO UPDATE SET tokens = tokens + excluded.tokens`
+            )
+            .bind(userId, usedSlot, month, total)
+            .run();
           return env.DB
             .prepare(
               `INSERT INTO usage_daily (user_id, day, tokens_in, tokens_out)
@@ -561,8 +644,8 @@ export async function onRequestPost(context) {
   return new Response(composite, {
     headers: {
       "Content-Type": "text/event-stream; charset=utf-8",
-      "Cache-Control": "no-cache",
-      "X-Nova-Model": usedSlot || "pending",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
     },
   });
 }
@@ -614,7 +697,11 @@ function ssePlaceholder(text) {
     `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n` + `data: [DONE]\n\n`;
   return new Response(payload, {
     status: 200,
-    headers: { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache" },
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
+    },
   });
 }
 

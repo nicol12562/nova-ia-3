@@ -326,7 +326,7 @@ function PerfilNegocio({ auth, go }) {
       setRecienGuardado(true);
       showToast("Perfil guardado. Nova ya conoce tu negocio.");
     } catch (err) {
-      showToast(err?.message && !/fetch/i.test(err.message) ? err.message : "Se cortó la conexión; probá de nuevo.", { tone: "error" });
+      showToast(mensaje(err), { tone: "error" });
     } finally {
       // Lo que llegó a guardarse queda como base, aunque un campo haya fallado.
       setOrig(despues);
