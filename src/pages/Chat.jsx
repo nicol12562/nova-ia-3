@@ -352,7 +352,7 @@ export default function Chat({ auth, convId, go }) {
           setLoginPrompt(true);
           return;
         }
-        if (res.status === 403 && data.agentas) {
+        if (res.status === 403 && data.agentes) {
           try { sessionStorage.removeItem(AGENT_KEY); } catch { /* sin storage */ }
           setAgent(null);
           setMsgs(previos);

@@ -260,7 +260,7 @@ function parseBlocks(src, depth = 0) {
         code.push(lines[i].replace(new RegExp(`^ {0,${ind}}`), ""));
         i += 1;
       }
-      blocks.push({ type: "code", lang: f[3].replace(/^\{?\.?|\}$/g, ""), code: code.join("\n"), open });
+      blocks.push({ type: "code", lang: f[3].replace(/^\{?\.?|\}$/g, ""), code: code.join("\n").replace(/\n+$/, ""), open });
       continue;
     }
 

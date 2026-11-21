@@ -21,7 +21,8 @@ Inicio y Login, en Shrikhand con sombra dura oro + rojo, más un adorno de volut
 | `--ink` | `#14183a` | `#eceef8` | Texto y botón primario |
 | `--side` | `#14183a` | `#090b1c` | Barra lateral, login |
 | `--oro` | `#f2b705` | | **Nova Flash**, saldo de la barra |
-| `--celeste` | `#3a8dde` | | **Nova Pro**, foco |
+| `--celeste` | `#3a8dde` | | **Nova Pro** |
+| `--focus` | `#1b5fa6` (`--celeste-ink`) | `#7db7f0` | Anillo de foco (≥ 4.5:1 sobre `--sunk` en ambos temas) |
 | `--verde` | `#138a5e` | | **Nova Pro 3.1**, confirmaciones |
 | `--rojo` | `#d7263d` | | Error, saldo agotado y sombra del letrero |
 

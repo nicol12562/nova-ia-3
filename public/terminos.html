@@ -8,13 +8,7 @@
     <meta name="robots" content="noindex" />
     <meta name="theme-color" content="#14183a" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <script>
-      // Mismo tema que eligió la persona en la app; si nunca eligió, manda el sistema.
-      try {
-        var t = localStorage.getItem("novaia_theme");
-        if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
-      } catch (e) {}
-    </script>
+    <script src="/legal-tema.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -433,32 +427,6 @@
       </main>
     </div>
 
-    <script>
-      // Marca en el índice la sección que se está leyendo.
-      (function () {
-        if (!("IntersectionObserver" in window)) return;
-        var links = {};
-        document.querySelectorAll(".indice ol a").forEach(function (a) {
-          links[a.getAttribute("href").slice(1)] = a;
-        });
-        var obs = new IntersectionObserver(
-          function (entries) {
-            entries.forEach(function (e) {
-              if (!e.isIntersecting) return;
-              Object.keys(links).forEach(function (id) { links[id].removeAttribute("aria-current"); });
-              var a = links[e.target.id];
-              if (a) a.setAttribute("aria-current", "true");
-            });
-          },
-          { rootMargin: "-15% 0px -70% 0px" }
-        );
-        document.querySelectorAll("article section[id]").forEach(function (s) { obs.observe(s); });
-        // En móvil el índice arranca plegado para no tapar el texto.
-        if (window.matchMedia("(max-width: 860px)").matches) {
-          var d = document.querySelector(".indice details");
-          if (d) d.removeAttribute("open");
-        }
-      })();
-    </script>
+    <script src="/legal-indice.js"></script>
   </body>
 </html>
