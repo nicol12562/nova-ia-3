@@ -39,3 +39,25 @@ export function origenPermitido(origen, env) {
     .filter(Boolean);
   return extra.includes(u.origin);
 }
+
+// PKCE (RFC 7636) sin tocar el esquema: el code_verifier se deriva del state
+// con HMAC usando GOOGLE_CLIENT_SECRET, así start.js y callback.js lo calculan
+// igual sin guardarlo. Quien intercepte el ?code (y vea el state en la URL) no
+// puede canjearlo sin el secreto.
+export async function pkceVerifier(state, secreto) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", enc.encode(String(secreto)), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const firma = await crypto.subtle.sign("HMAC", key, enc.encode("pkce:" + state));
+  return b64urlBytes(new Uint8Array(firma)); // 43 caracteres, dentro de 43..128
+}
+
+export async function pkceChallenge(verifier) {
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  return b64urlBytes(new Uint8Array(hash));
+}
+
+function b64urlBytes(bytes) {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Icon } from "../icons.jsx";
 import Md from "../md.jsx";
-import { plans, comparison, notes } from "../data/plans.js";
+import { plans, comparison, faq } from "../data/plans.js";
 import { AGENTS } from "../data/agents.js";
 import { showToast } from "../ui.jsx";
 
@@ -11,14 +11,33 @@ const WHATS = "5493416116096";
 const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
 const MULT = (a, b) => (b > 0 ? Math.round((a / b) * 10) / 10 : 0);
 const NOMBRE = { gratis: "Gratis", plus: "Plus", pro: "Pro" };
+const ORDEN = { gratis: 0, plus: 1, pro: 2 };
 
-const whatsappLink = (p, email) => {
-  const msg =
-    `Hola, quiero contratar el plan ${p.name} de Nova IA (${p.price}).` +
-    (email ? ` Mi cuenta: ${email}` : "") +
-    ` (${p.tokensPerMonth} tokens/mes).`;
-  return `https://wa.me/${WHATS}?text=${encodeURIComponent(msg)}`;
+// El mensaje llega a una persona que activa a mano: tiene que decir qué plan,
+// para qué cuenta y si es alta, renovación o cambio, sin que haya que preguntar.
+const pedidoWhatsapp = (p, email, actual) => {
+  const accion =
+    actual === p.id
+      ? `renovar mi plan ${p.name} de Nova IA`
+      : actual && actual !== "gratis"
+      ? `pasar del plan ${NOMBRE[actual]} al plan ${p.name} de Nova IA`
+      : `activar el plan ${p.name} de Nova IA`;
+  return (
+    `Hola, quiero ${accion} (${p.price}, ${p.tokensPerMonth} tokens por mes).` +
+    (email ? `\nMi cuenta: ${email}` : "") +
+    `\n¿Cómo sigo con el pago?`
+  );
 };
+
+const whatsappLink = (p, email, actual) =>
+  `https://wa.me/${WHATS}?text=${encodeURIComponent(pedidoWhatsapp(p, email, actual))}`;
+
+const textoBoton = (p, actual) =>
+  actual === p.id
+    ? `Renovar ${p.name} por WhatsApp`
+    : actual && ORDEN[actual] > ORDEN[p.id]
+    ? `Pasar a ${p.name} por WhatsApp`
+    : `Pedir ${p.name} por WhatsApp`;
 
 // El link a WhatsApp no cambia: lo que faltaba era la señal de que la acción
 // pasó. Sin estado, el usuario vuelve a la tarjeta y no sabe si funcionó.
@@ -48,7 +67,9 @@ const cuando = (iso) => {
 };
 
 export default function Planes({ go, auth }) {
-  const planIndex = auth?.plan === "pro" ? 3 : auth?.plan === "plus" ? 2 : 1;
+  // Sin sesión no hay plan actual: el invitado tiene 3 mensajes por día, no el plan Gratis.
+  const actual = auth ? (NOMBRE[auth.plan] ? auth.plan : "gratis") : null;
+  const planIndex = actual ? ORDEN[actual] + 1 : 0;
   const [techos, setTechos] = useState(null);
   const [demo, setDemo] = useState({ tareas: [], restantes: 3, elegida: null, resultado: null, cargando: false, error: null });
   const [solicitudes, setSolicitudes] = useState(leerSolicitudes);
@@ -115,8 +136,8 @@ export default function Planes({ go, auth }) {
         <h1>Planes</h1>
         <p>
           Los tres planes usan los mismos modelos. Cambia cuánto los podés usar, qué tan larga sale
-          cada respuesta y si tenés mini agentes. Todo en pesos, y se activa escribiendo al mismo
-          WhatsApp que te contesta después.
+          cada respuesta y si tenés mini agentes. Todo en pesos y sin pasarela de pagos: lo pedís
+          por WhatsApp y una persona te lo activa en el día.
         </p>
       </header>
 
@@ -124,11 +145,12 @@ export default function Planes({ go, auth }) {
         {plans.map((p) => (
           <div
             key={p.id}
-            className={"plan-box plan-" + p.id + (auth?.plan === p.id || (!auth && p.id === "gratis") ? " current" : "")}
+            className={"plan-box plan-" + p.id + (actual === p.id ? " current" : "")}
+            aria-current={actual === p.id ? "true" : undefined}
           >
             <div className="top">
               <h2>{p.name}</h2>
-              {auth?.plan === p.id ? <span className="chip chip-plan">Tu plan</span> : p.badge ? <span className="chip">{p.badge}</span> : null}
+              {actual === p.id ? <span className="chip chip-plan">Tu plan</span> : p.badge ? <span className="chip">{p.badge}</span> : null}
             </div>
             <div className="price-big">
               {p.price === "Gratis" ? <>$0<small>para siempre</small></> : <>{p.price.replace(/\/.*$/, "").replace(/ ?ARS/, "")}<small>por mes</small></>}
@@ -159,9 +181,15 @@ export default function Planes({ go, auth }) {
               })}
             </ul>
             {p.id === "gratis" ? (
-              <button className="btn btn-primary btn-block" onClick={() => go("chat")}>
-                {p.cta}
-              </button>
+              actual ? (
+                <button className="btn btn-quiet btn-block" onClick={() => go("chat")}>
+                  {actual === "gratis" ? "Seguir en el chat" : "Abrir el chat"}
+                </button>
+              ) : (
+                <button className="btn btn-primary btn-block" onClick={() => go("login")}>
+                  {p.cta}
+                </button>
+              )
             ) : !auth ? (
               <button
                 className="btn btn-primary btn-block"
@@ -175,12 +203,13 @@ export default function Planes({ go, auth }) {
             ) : (
               <a
                 className="btn btn-primary btn-block"
-                href={whatsappLink(p, auth.email)}
+                href={whatsappLink(p, auth.email, actual)}
                 target="_blank"
                 rel="noopener noreferrer"
+                title={pedidoWhatsapp(p, auth.email, actual)}
                 onClick={() => marcarSolicitud(p.id)}
               >
-                <Icon name="chat" size={16} /> Pedir {p.name} por WhatsApp
+                <Icon name="chat" size={16} /> {textoBoton(p, actual)}
               </a>
             )}
             {solicitudes[claveSolicitud(p.id)] ? (
@@ -190,7 +219,13 @@ export default function Planes({ go, auth }) {
               </p>
             ) : (
               <p className="foot-note">
-                {p.id === "gratis" ? `Activación: ${p.activation}` : "Activación: por WhatsApp, en el día"}
+                {p.id === "gratis"
+                  ? actual
+                    ? "Sin vencimiento y sin tarjeta."
+                    : "Sin tarjeta. Sin cuenta tenés 3 mensajes por día."
+                  : auth
+                  ? "Abre WhatsApp con el pedido ya escrito. Se activa a mano, en el día."
+                  : "Se pide por WhatsApp y se activa a mano, en el día."}
               </p>
             )}
           </div>
@@ -295,7 +330,7 @@ export default function Planes({ go, auth }) {
 
             {!auth ? (
               <div className="demo-cta">
-                                <p>Iniciá sesión para correr la comparación. Crear la cuenta toma un minuto.</p>
+                <p>Iniciá sesión para correr la comparación. Crear la cuenta toma un minuto.</p>
                 <button className="btn btn-primary" onClick={() => go("login")}>
                   Iniciar sesión
                 </button>
@@ -361,8 +396,9 @@ export default function Planes({ go, auth }) {
           <thead>
             <tr>
               {comparison.headers.map((h, i) => (
-                <th key={h} scope="col" className={i === planIndex ? "col-current" : ""}>
+                <th key={h} scope="col" className={i > 0 && i === planIndex ? "col-current" : ""}>
                   {h}
+                  {i > 0 && i === planIndex && <span className="th-tu-plan">Tu plan</span>}
                 </th>
               ))}
             </tr>
@@ -372,7 +408,7 @@ export default function Planes({ go, auth }) {
               <tr key={r[0]}>
                 <td><strong>{r[0]}</strong></td>
                 {r.slice(1).map((c, i) => (
-                  <td key={i} className={i + 1 === planIndex ? "col-current" : ""}>
+                  <td key={i} className={planIndex > 0 && i + 1 === planIndex ? "col-current" : ""}>
                     {c}
                   </td>
                 ))}
@@ -381,11 +417,31 @@ export default function Planes({ go, auth }) {
           </tbody>
         </table>
       </div>
-      <div className="notes">
-        {notes.map((n, i) => (
-          <p key={i} className="foot-note">{n}</p>
+      <h2 className="section-h2">Preguntas frecuentes</h2>
+      <p className="section-sub">Cómo se paga, cuánto tarda y qué pasa después. Sin letra chica.</p>
+      <div className="faq">
+        {faq.map((f) => (
+          <details key={f.q} className="faq-item">
+            <summary>
+              {f.q}
+              <Icon name="chevronDown" size={16} />
+            </summary>
+            <p>{f.a}</p>
+          </details>
         ))}
       </div>
+      <p className="faq-pie">
+        ¿Otra duda?{" "}
+        <a
+          className="link"
+          href={`https://wa.me/${WHATS}?text=${encodeURIComponent("Hola, tengo una pregunta sobre los planes de Nova IA.")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Escribí al WhatsApp
+        </a>{" "}
+        y te contesta la misma persona que activa los planes.
+      </p>
     </section>
   );
 }

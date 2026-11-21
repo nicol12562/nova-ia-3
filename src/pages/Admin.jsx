@@ -39,6 +39,23 @@ function cuando(iso) {
   return d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
 }
 
+const fechaCorta = (iso) => {
+  const d = fecha(iso);
+  return d ? d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
+};
+
+const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+
+// Barra de consumo del mes: se pone en rojo cuando la cuenta está por agotar el cupo.
+function Barra({ pct, grande }) {
+  const v = Math.max(0, Math.min(100, pct || 0));
+  return (
+    <span className={"adm-barra" + (grande ? " grande" : "") + (v >= 90 ? " alto" : "")} aria-hidden="true">
+      <span style={{ width: v + "%" }} />
+    </span>
+  );
+}
+
 const fechaLarga = (iso) => {
   const d = fecha(iso);
   return d ? d.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" }) : "";
@@ -136,7 +153,16 @@ export default function Admin({ auth, setAuth, go }) {
     setError(null);
     try {
       const { res, out } = await pedir("/api/admin/users", clave);
-      if (res.status === 401) throw new Error("La clave no es válida.");
+      if (res.status === 401) {
+        // Una clave guardada que dejó de servir no puede dejar el panel en blanco:
+        // se olvida y se vuelve a pedir.
+        localStorage.removeItem(ADMIN_STORE);
+        sessionStorage.removeItem(ADMIN_STORE);
+        setKey("");
+        setGate(false);
+        setData(null);
+        throw new Error(gate ? "La clave guardada ya no es válida. Ingresala de nuevo." : "La clave no es válida.");
+      }
       if (!res.ok) throw new Error(out.error || "El servidor respondió " + res.status + ".");
       setData(out);
       setGate(true);
@@ -155,9 +181,15 @@ export default function Admin({ auth, setAuth, go }) {
       const enCola = c?.pendientes?.find((x) => x.kind === "model");
       setModeloDraft(enCola ? enCola.after : actual || "");
       revisarModelos(clave); // no bloquea la lista: pinta cuando termina
+      return true;
     } catch (e) {
-      setError(e.message || "No se pudo cargar el panel.");
-      setData(null);
+      // Si ya había datos, se quedan: un refresco fallido no borra lo que se estaba mirando.
+      setError(
+        e instanceof TypeError
+          ? "No hay conexión con el servidor. Revisá la red y probá de nuevo."
+          : e.message || "No se pudo cargar el panel."
+      );
+      return false;
     } finally {
       setLoading(false);
     }
@@ -362,6 +394,8 @@ export default function Admin({ auth, setAuth, go }) {
   const mensajes = useCountUp(data?.resumen?.mensajes ?? 0);
 
   const abiertos = cola.pendientes;
+  const listos = abiertos.filter((c) => !c.local);
+  const hayFiltro = filtro !== "todos" || q.trim() !== "";
   const enConfirmacion = confirmar ? abiertos.filter((c) => confirmar.ids.includes(c.id)) : [];
   const cuentaAbierta = detalle != null ? (data?.usuarios || []).find((u) => u.id === detalle) || null : null;
 
@@ -387,12 +421,13 @@ export default function Admin({ auth, setAuth, go }) {
             <input
               id="clave-admin"
               type="password"
+              aria-invalid={!!error}
               autoComplete="off"
               placeholder="La clave definida como secreto ADMIN_KEY"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
             />
-            {error && <p className="adm-error">{error}</p>}
+            {error && <p className="adm-error" role="alert">{error}</p>}
             <label className="adm-check">
               <input type="checkbox" checked={recordar} onChange={(e) => setRecordar(e.target.checked)} />
               Recordar en este navegador
@@ -422,12 +457,12 @@ export default function Admin({ auth, setAuth, go }) {
           <button
             className="adm-btn"
             disabled={loading}
-            onClick={() => {
-              cargar(key);
-              showToast("Datos actualizados.");
+            onClick={async () => {
+              if (await cargar(key)) showToast("Datos actualizados.");
             }}
           >
-            <Icon name="pulse" size={14} /> Actualizar
+            {loading ? <span className="spinner" aria-hidden="true" /> : <Icon name="pulse" size={14} />}
+            {loading ? "Actualizando…" : "Actualizar"}
           </button>
           <button className="adm-btn" onClick={salir} title="Olvidar la clave guardada en este navegador">
             <Icon name="logout" size={14} /> Olvidar clave
@@ -435,8 +470,21 @@ export default function Admin({ auth, setAuth, go }) {
         </div>
       </div>
 
-      {error && <p className="adm-error">{error}</p>}
-      {loading && !data && <p className="adm-lede">Cargando…</p>}
+      {error && (
+        <div className="adm-falla" role="alert">
+          <span>{error}</span>
+          <button className="adm-btn" onClick={() => cargar(key)} disabled={loading}>
+            <Icon name="refresh" size={14} /> Reintentar
+          </button>
+        </div>
+      )}
+      {loading && !data && (
+        <div className="adm-cargando" aria-busy="true" aria-label="Cargando el panel">
+          <div className="adm-skel cifras" />
+          <div className="adm-skel cola" />
+          <div className="adm-skel tabla" />
+        </div>
+      )}
 
       {data && (
         <>
@@ -469,14 +517,22 @@ export default function Admin({ auth, setAuth, go }) {
               <div className="adm-tabs" role="tablist" aria-label="Ver la cola">
                 <button
                   role="tab"
+                  id="tab-pendientes"
+                  aria-controls="panel-cola"
+                  tabIndex={vista === "pendientes" ? 0 : -1}
+                  onKeyDown={(e) => (e.key === "ArrowRight" || e.key === "ArrowLeft") && (setVista("registro"), document.getElementById("tab-registro")?.focus())}
                   aria-selected={vista === "pendientes"}
                   className={"adm-tab" + (vista === "pendientes" ? " on" : "")}
                   onClick={() => setVista("pendientes")}
                 >
-                  Pendientes <b aria-live="polite">{abiertos.length}</b>
+                  Pendientes <b>{abiertos.length}</b>
                 </button>
                 <button
                   role="tab"
+                  id="tab-registro"
+                  aria-controls="panel-cola"
+                  tabIndex={vista === "registro" ? 0 : -1}
+                  onKeyDown={(e) => (e.key === "ArrowRight" || e.key === "ArrowLeft") && (setVista("pendientes"), document.getElementById("tab-pendientes")?.focus())}
                   aria-selected={vista === "registro"}
                   className={"adm-tab" + (vista === "registro" ? " on" : "")}
                   onClick={() => setVista("registro")}
@@ -484,19 +540,22 @@ export default function Admin({ auth, setAuth, go }) {
                   Registro <b>{cola.registro.length}</b>
                 </button>
               </div>
-              {vista === "pendientes" && abiertos.length > 1 && (
+              {vista === "pendientes" && listos.length > 1 && (
                 <button
                   className="adm-btn claro"
                   disabled={!!resolviendo.length}
-                  onClick={() =>
-                    setConfirmar({ accion: "aprobar", ids: abiertos.filter((c) => !c.local).map((c) => c.id) })
-                  }
+                  onClick={() => setConfirmar({ accion: "aprobar", ids: listos.map((c) => c.id) })}
                 >
-                  <Icon name="check" size={14} /> Aprobar las {abiertos.length}
+                  <Icon name="check" size={14} /> Aprobar las {listos.length}
                 </button>
               )}
             </div>
 
+            <div
+              id="panel-cola"
+              role="tabpanel"
+              aria-labelledby={vista === "pendientes" ? "tab-pendientes" : "tab-registro"}
+            >
             {vista === "pendientes" ? (
               abiertos.length ? (
                 <ul className="adm-lista">
@@ -580,6 +639,7 @@ export default function Admin({ auth, setAuth, go }) {
             ) : (
               <p className="adm-vacio">Todavía no se aprobó ni descartó nada.</p>
             )}
+            </div>
           </section>
 
           <div className="adm-dos">
@@ -652,7 +712,7 @@ export default function Admin({ auth, setAuth, go }) {
               <div className="adm-bloque-head">
                 <h2>Estado de los modelos</h2>
                 <button className="adm-btn" onClick={() => revisarModelos(key)} disabled={chequeando}>
-                  {chequeando ? "Revisando…" : "Revisar ahora"}
+                  {chequeando ? (<><span className="spinner" aria-hidden="true" /> Revisando…</>) : "Revisar ahora"}
                 </button>
               </div>
               {health?.gratis && (
@@ -664,8 +724,8 @@ export default function Admin({ auth, setAuth, go }) {
               {health?.error && <p className="adm-error">{health.error}</p>}
               {health?.items && (
                 <p className={"adm-resumen " + (health.ok ? "ok" : "malo")}>
-                  {health.totalUpstreams} upstreams ·{" "}
-                  {health.ok ? "todos existen en el catálogo" : `${health.rotos.length} caído(s)`}
+                  {plural(health.totalUpstreams, "upstream", "upstreams")} ·{" "}
+                  {health.ok ? "todos existen en el catálogo" : `${health.rotos.length} ${health.rotos.length === 1 ? "caído" : "caídos"}`}
                 </p>
               )}
               {health?.breakers?.length > 0 && (
@@ -674,7 +734,7 @@ export default function Admin({ auth, setAuth, go }) {
                     <li key={b.upstream} className="malo">
                       <code>{b.upstream}</code>
                       <span>
-                        {b.quedanSeg}s de enfriamiento · {b.fails} fallo(s) · HTTP {String(b.status)}
+                        {b.quedanSeg} s de enfriamiento · {plural(b.fails, "fallo", "fallos")} · HTTP {String(b.status)}
                         {b.motivo ? ` · ${b.motivo}` : ""}
                       </span>
                     </li>
@@ -694,6 +754,9 @@ export default function Admin({ auth, setAuth, go }) {
                   ))}
                 </ul>
               )}
+              {!health && chequeando && (
+                <p className="adm-vacio"><span className="spinner" aria-hidden="true" /> Consultando OpenRouter…</p>
+              )}
               {!health && !chequeando && <p className="adm-vacio">Todavía no se revisó OpenRouter.</p>}
               {health && !health.items && !health.error && !health.breakers?.length && (
                 <p className="adm-vacio">Ningún proveedor en enfriamiento ahora.</p>
@@ -704,18 +767,20 @@ export default function Admin({ auth, setAuth, go }) {
           <section className="adm-bloque">
             <div className="adm-bloque-head">
               <h2>Cuentas</h2>
-              <span className="adm-conteo">
-                {visibles.length} de {data.resumen.total}
+              <span className="adm-conteo" aria-live="polite">
+                {visibles.length === data.resumen.total
+                  ? plural(data.resumen.total, "cuenta", "cuentas")
+                  : `${visibles.length} de ${data.resumen.total}`}
               </span>
             </div>
 
             <div className="adm-toolbar">
-              <div className="adm-filtros" role="tablist" aria-label="Filtrar por plan">
+              <div className="adm-filtros" role="group" aria-label="Filtrar por plan">
                 {FILTROS.map((f) => (
                   <button
                     key={f}
-                    role="tab"
-                    aria-selected={filtro === f}
+                    type="button"
+                    aria-pressed={filtro === f}
                     className={"adm-chip" + (filtro === f ? " on" : "")}
                     onClick={() => setFiltro(f)}
                   >
@@ -727,10 +792,12 @@ export default function Admin({ auth, setAuth, go }) {
               <label className="adm-buscar">
                 <Icon name="search" size={15} />
                 <input
+                  type="search"
                   placeholder="Buscar por email o nombre"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  aria-label="Buscar usuario"
+                  onKeyDown={(e) => e.key === "Escape" && q && (e.preventDefault(), setQ(""))}
+                  aria-label="Buscar cuenta por email o nombre"
                 />
                 {q && (
                   <button className="adm-x" onClick={() => setQ("")} aria-label="Limpiar la búsqueda">
@@ -742,6 +809,9 @@ export default function Admin({ auth, setAuth, go }) {
 
             <div className="adm-tabla-wrap">
               <table className="adm-tabla">
+                <caption className="sr-only">
+                  Cuentas registradas{filtro !== "todos" ? ` con plan ${PLAN_LABEL[filtro]}` : ""}. Los encabezados ordenan la tabla.
+                </caption>
                 <thead>
                   <tr>
                     {COLUMNAS.map((c) => (
@@ -752,7 +822,8 @@ export default function Admin({ auth, setAuth, go }) {
                         aria-sort={orden.col === c.k ? (orden.dir === "asc" ? "ascending" : "descending") : "none"}
                       >
                         <button
-                          className="adm-orden"
+                          type="button"
+                          className={"adm-orden" + (orden.col === c.k ? " on" : "")}
                           onClick={() =>
                             setOrden((o) => ({ col: c.k, dir: o.col === c.k && o.dir === "desc" ? "asc" : "desc" }))
                           }
@@ -777,7 +848,11 @@ export default function Admin({ auth, setAuth, go }) {
                     return (
                       <tr key={u.id} className={pend ? "con-propuesta" : ""}>
                         <td>
-                          <button className="adm-quien" onClick={() => setDetalle(u.id)}>
+                          <button
+                            className="adm-quien"
+                            onClick={() => setDetalle(u.id)}
+                            aria-label={`Ver el detalle de ${u.email}`}
+                          >
                             <span className="avatar" aria-hidden="true">
                               {(u.name || u.email || "N")[0].toUpperCase()}
                             </span>
@@ -815,27 +890,47 @@ export default function Admin({ auth, setAuth, go }) {
                         </td>
                         <td className="num">
                           <div className="adm-num">{fmt(u.mes)}</div>
-                          <div className="plan-bar mini" aria-hidden="true">
-                            <span style={{ width: (u.pct || 0) + "%" }} />
-                          </div>
-                          <div className="adm-sub">{u.pct || 0}% de {fmt(u.limite)}</div>
+                          <Barra pct={u.pct} />
+                          <div className={"adm-sub" + ((u.pct || 0) >= 90 ? " alto" : "")}>{u.pct || 0}% de {fmt(u.limite)}</div>
                         </td>
                         <td className="num">
                           <div className="adm-num">{fmt(u.total)}</div>
-                          <div className="adm-sub">↑{fmt(u.in)} · ↓{fmt(u.out)}</div>
+                          <div className="adm-sub" title="Tokens de entrada · tokens de salida">
+                            {fmt(u.in)} entr. · {fmt(u.out)} sal.
+                          </div>
                         </td>
                         <td className="num">
                           <div className="adm-num">{fmt(u.conversaciones)}</div>
                           <div className="adm-sub">{fmt(u.mensajes)} mensajes</div>
                         </td>
-                        <td><span className="adm-sub">{(u.alta || "").slice(0, 10)}</span></td>
+                        <td>
+                          <span className="adm-sub" title={fechaLarga(u.alta)}>{fechaCorta(u.alta)}</span>
+                        </td>
                       </tr>
                     );
                   })}
                   {visibles.length === 0 && (
                     <tr>
                       <td colSpan={COLUMNAS.length}>
-                        <p className="adm-vacio">Ningún usuario coincide con el filtro.</p>
+                        <p className="adm-vacio">
+                          {hayFiltro ? (
+                            <>
+                              Ninguna cuenta coincide{q.trim() ? ` con “${q.trim()}”` : ""}
+                              {filtro !== "todos" ? ` en ${PLAN_LABEL[filtro]}` : ""}.{" "}
+                              <button
+                                className="adm-link"
+                                onClick={() => {
+                                  setQ("");
+                                  setFiltro("todos");
+                                }}
+                              >
+                                Limpiar filtros
+                              </button>
+                            </>
+                          ) : (
+                            "Todavía no hay cuentas registradas."
+                          )}
+                        </p>
                       </td>
                     </tr>
                   )}
@@ -860,13 +955,14 @@ export default function Admin({ auth, setAuth, go }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="titulo-confirm"
+            aria-describedby="nota-confirm"
             tabIndex={-1}
             ref={cajaConfirm}
           >
             <h2 id="titulo-confirm">
               {enConfirmacion.length > 1 ? `Aprobar ${enConfirmacion.length} cambios` : "Aprobar el cambio"}
             </h2>
-            <p className="adm-nota">Al aprobar se escribe en la base y la cuenta lo ve al toque.</p>
+            <p className="adm-nota" id="nota-confirm">Al aprobar se escribe en la base y la cuenta lo ve al toque.</p>
             <ul className="adm-confirm-lista">
               {enConfirmacion.map((c) => (
                 <li key={c.id}>
@@ -892,7 +988,8 @@ export default function Admin({ auth, setAuth, go }) {
                 disabled={!!resolviendo.length}
                 onClick={() => resolver(confirmar.ids, "aprobar")}
               >
-                <Icon name="check" size={15} /> Aprobar y aplicar
+                {resolviendo.length ? <span className="spinner" aria-hidden="true" /> : <Icon name="check" size={15} />}{" "}
+                Aprobar y aplicar
               </button>
             </div>
           </div>
@@ -924,24 +1021,26 @@ export default function Admin({ auth, setAuth, go }) {
                 <dt>Plan</dt>
                 <dd>{PLAN_LABEL[cuentaAbierta.plan]}{cuentaAbierta.role === "admin" ? " · admin" : ""}</dd>
               </div>
-              <div><dt>Alta</dt><dd>{(cuentaAbierta.alta || "").slice(0, 10)}</dd></div>
+              <div><dt>Alta</dt><dd>{fechaLarga(cuentaAbierta.alta) || "—"}</dd></div>
               <div><dt>Este mes</dt><dd>{fmt(cuentaAbierta.mes)} de {fmt(cuentaAbierta.limite)}</dd></div>
               <div><dt>Histórico</dt><dd>{fmt(cuentaAbierta.total)}</dd></div>
-              <div><dt>Entrada / salida</dt><dd>↑{fmt(cuentaAbierta.in)} · ↓{fmt(cuentaAbierta.out)}</dd></div>
+              <div><dt>Tokens de entrada</dt><dd>{fmt(cuentaAbierta.in)}</dd></div>
+              <div><dt>Tokens de salida</dt><dd>{fmt(cuentaAbierta.out)}</dd></div>
               <div><dt>Conversaciones</dt><dd>{fmt(cuentaAbierta.conversaciones)}</dd></div>
               <div><dt>Mensajes</dt><dd>{fmt(cuentaAbierta.mensajes)}</dd></div>
             </dl>
-            <div className="plan-bar" aria-hidden="true">
-              <span style={{ width: (cuentaAbierta.pct || 0) + "%" }} />
-            </div>
+            <Barra pct={cuentaAbierta.pct} grande />
+            <p className={"adm-sub" + ((cuentaAbierta.pct || 0) >= 90 ? " alto" : "")}>
+              {cuentaAbierta.pct || 0}% del cupo mensual usado
+            </p>
 
-            <h3>Cambiar el plan</h3>
+            <h3><label htmlFor="plan-drawer">Cambiar el plan</label></h3>
             <div className="adm-fila">
               <select
+                id="plan-drawer"
                 value={pendienteDe(cuentaAbierta.id)?.after || cuentaAbierta.plan}
                 disabled={proponiendo === "plan:" + cuentaAbierta.id}
                 onChange={(e) => cambiarPlan(cuentaAbierta, e.target.value)}
-                aria-label={`Plan de ${cuentaAbierta.email}`}
               >
                 {PLANES.map((p) => <option key={p} value={p}>{PLAN_LABEL[p]}</option>)}
               </select>

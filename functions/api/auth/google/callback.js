@@ -3,7 +3,7 @@
 // en D1 y devuelve un ticket de un solo uso que el frontend canjea en /#/google/<ticket>.
 // Si el login empezó en una vista previa, el ticket vuelve a esa dirección.
 
-import { origenPermitido } from "../../../_lib/oauth.js";
+import { origenPermitido, pkceVerifier } from "../../../_lib/oauth.js";
 
 export async function onRequestGet({ request, env }) {
   try {
@@ -46,15 +46,15 @@ async function callback(request, env) {
   }
 
   if (!clientId || !clientSecret) return fail("no_config");
-  if (!code || !state) return fail("faltan_datos");
+  if (!code || !state || state.length > 512) return fail("faltan_datos");
 
-  // Validamos el state (anti-CSRF) y lo quemamos: un solo uso
+  // Validamos el state (anti-CSRF) y lo quemamos en la misma sentencia: con
+  // SELECT + DELETE separados, dos callbacks en paralelo podían usarlo dos veces.
   const row = await env.DB
-    .prepare("SELECT id FROM sessions WHERE kind = 'oauth_state' AND token = ? AND expires_at > datetime('now')")
+    .prepare("DELETE FROM sessions WHERE kind = 'oauth_state' AND token = ? AND expires_at > datetime('now') RETURNING id")
     .bind(state)
     .first();
   if (!row) return fail("estado_invalido");
-  await env.DB.prepare("DELETE FROM sessions WHERE id = ?").bind(row.id).run();
   destino = volverDe(state);
 
   // Intercambio de código por tokens
@@ -69,6 +69,7 @@ async function callback(request, env) {
         client_secret: clientSecret,
         redirect_uri: origin + "/api/auth/google/callback",
         grant_type: "authorization_code",
+        code_verifier: await pkceVerifier(state, clientSecret),
       }),
     });
     tokens = await tokenRes.json().catch(() => ({}));
@@ -92,8 +93,10 @@ async function callback(request, env) {
   // lo obtuvimos nosotros directo de Google con el client_secret.
   const payload = b64urlJson(tokens.id_token);
   if (!payload || payload.aud !== clientId || !payload.email) return fail("token_invalido");
-  if (payload.exp * 1000 < Date.now()) return fail("token_vencido");
-  if (payload.email_verified === false) return fail("email_no_verificado");
+  if (payload.iss !== "https://accounts.google.com" && payload.iss !== "accounts.google.com") return fail("token_invalido");
+  if (!(Number(payload.exp) * 1000 > Date.now())) return fail("token_vencido");
+  // Solo emails verificados por Google: si falta el campo, no se asume nada.
+  if (payload.email_verified !== true && payload.email_verified !== "true") return fail("email_no_verificado");
 
   const email = String(payload.email).toLowerCase();
   const name = String(payload.name || email.split("@")[0]).slice(0, 60);

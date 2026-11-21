@@ -3,217 +3,492 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Política de Privacidad — Nova IA</title>
+    <title>Política de privacidad · Nova IA</title>
+    <meta name="description" content="Qué datos guarda Nova IA, con quién se procesan tus mensajes, cuánto tiempo quedan y cómo los borrás." />
     <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#14183a" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script src="/legal-tema.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Schibsted+Grotesk:wght@400..800&family=Shrikhand&display=swap"
       rel="stylesheet"
     />
     <style>
-      /* Mismos tokens de la app: estas páginas no pueden parecer otro producto. */
+      /* Tokens del mundo "Filete" (src/nova.css). Estas páginas no pueden parecer otro producto. */
       :root {
-        --bg: #ffffff;
-        --panel: #ffffff;
-        --surface: #f4f4f5;
-        --border: #e4e4e7;
-        --text: #09090b;
-        --muted: #71717a;
-        --accent: #004de5;
-        --radius: 8px;
-        --radius-xl: 12px;
+        --ground: #f3f5f8;
+        --surface: #ffffff;
+        --sunk: #e8ecf2;
+        --ink: #14183a;
+        --ink-2: #474d70;
+        --ink-3: #61678a;
+        --line: #d9dee7;
+        --line-strong: #b9c1d0;
+        --side: #14183a;
+        --side-ink: #eef0f8;
+        --side-dim: #a9aecb;
+        --oro: #f2b705;
+        --rojo: #d7263d;
+        --celeste: #3a8dde;
+        --celeste-ink: #1b5fa6;
+        --oro-ink: #7f5c00;
+        --f-ui: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+        --f-letrero: "Shrikhand", Georgia, serif;
+        color-scheme: light;
       }
       @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #09090b;
-          --panel: #0c0c0e;
-          --surface: #18181b;
-          --border: #27272a;
-          --text: #fafafa;
-          --muted: #a1a1aa;
-          --accent: #4d8bff;
+        :root:not([data-theme="light"]) {
+          --ground: #0f1228;
+          --surface: #171b38;
+          --sunk: #1e2345;
+          --ink: #eceef8;
+          --ink-2: #bcc0db;
+          --ink-3: #9196b8;
+          --line: #2a3058;
+          --line-strong: #3b4373;
+          --side: #090b1c;
+          --celeste-ink: #7db7f0;
+          --oro-ink: #f5c63c;
+          color-scheme: dark;
         }
       }
-      * { box-sizing: border-box; }
+      :root[data-theme="dark"] {
+        --ground: #0f1228;
+        --surface: #171b38;
+        --sunk: #1e2345;
+        --ink: #eceef8;
+        --ink-2: #bcc0db;
+        --ink-3: #9196b8;
+        --line: #2a3058;
+        --line-strong: #3b4373;
+        --side: #090b1c;
+        --celeste-ink: #7db7f0;
+        --oro-ink: #f5c63c;
+        color-scheme: dark;
+      }
+
+      *, *::before, *::after { box-sizing: border-box; }
+      html { scrollbar-color: var(--line-strong) var(--ground); -webkit-text-size-adjust: 100%; }
+      @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
       body {
         margin: 0;
-        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-        background: var(--bg);
-        color: var(--text);
+        background: var(--ground);
+        color: var(--ink);
+        font-family: var(--f-ui);
+        font-size: 17px;
         line-height: 1.65;
-        font-size: 15px;
         -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
       }
-      main { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+      ::selection { background: rgba(242, 183, 5, 0.35); }
+      :focus-visible { outline: 2px solid var(--celeste); outline-offset: 2px; border-radius: 4px; }
+      a { color: var(--celeste-ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+      a:hover { text-decoration-thickness: 2px; }
+
+      .skip {
+        position: absolute; left: 12px; top: 10px; z-index: 50;
+        background: var(--oro); color: #14183a; font-weight: 700;
+        padding: 8px 14px; border-radius: 6px; text-decoration: none;
+        transform: translateY(-160%);
+      }
+      .skip:focus-visible { transform: none; outline-color: #14183a; }
+
+      /* Barra índigo con filete oro, como la barra superior de la app. */
+      .barra {
+        background: var(--side);
+        color: var(--side-ink);
+        border-bottom: 2px solid var(--oro);
+      }
+      .barra-in {
+        max-width: 1120px; margin: 0 auto;
+        display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        padding: 12px 24px;
+      }
+      .barra :focus-visible { outline-color: var(--oro); }
+      .wordmark {
+        font-family: var(--f-letrero);
+        font-size: 27px; line-height: 1;
+        color: var(--side-ink);
+        text-decoration: none;
+        text-shadow: 2px 2px 0 var(--oro), 4px 4px 0 var(--rojo);
+        padding: 2px 6px 6px 0;
+      }
       .volver {
-        display: inline-flex; align-items: center; gap: 6px;
-        color: var(--muted); text-decoration: none; font-size: 13.5px; font-weight: 500;
+        display: inline-flex; align-items: center; gap: 8px;
+        color: var(--side-ink); text-decoration: none;
+        font-size: 15px; font-weight: 600;
+        padding: 8px 12px; border-radius: 8px;
       }
-      .volver:hover { color: var(--accent); }
-      .eyebrow {
-        color: var(--accent); font-size: 11.5px; letter-spacing: 0.16em;
-        text-transform: uppercase; font-weight: 700; margin: 40px 0 0;
+      .volver:hover { background: rgba(238, 240, 248, 0.08); }
+      .volver svg { flex: none; }
+
+      .hoja {
+        max-width: 1120px; margin: 0 auto;
+        padding: 56px 24px 96px;
+        display: grid;
+        grid-template-columns: 232px minmax(0, 1fr);
+        gap: 64px;
+        align-items: start;
       }
+
+      /* Índice */
+      .indice { position: sticky; top: 28px; font-size: 15px; }
+      .indice-t { font-size: 14px; font-weight: 700; color: var(--ink-3); margin: 0 0 10px; }
+      .indice ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); counter-reset: idx; }
+      .indice li { counter-increment: idx; border-bottom: 1px solid var(--line); }
+      .indice li a {
+        display: grid; grid-template-columns: 22px 1fr; gap: 4px;
+        padding: 8px 0; color: var(--ink-2); text-decoration: none; line-height: 1.4;
+      }
+      .indice li a::before { content: counter(idx); color: var(--ink-3); }
+      .indice li a:hover { color: var(--ink); }
+      .indice li a[aria-current="true"] { color: var(--ink); font-weight: 650; }
+      .indice li a[aria-current="true"]::before { color: var(--oro-ink); }
+      .indice-otro { margin: 18px 0 0; color: var(--ink-3); font-size: 14.5px; }
+
+      /* Texto */
+      article { max-width: 68ch; min-width: 0; }
       h1 {
-        font-family: "Fraunces", Georgia, serif; font-weight: 600;
-        font-size: 40px; letter-spacing: -0.5px; margin: 8px 0 6px;
+        font-size: 38px; font-weight: 750; line-height: 1.15;
+        letter-spacing: -0.025em; margin: 0 0 10px; text-wrap: balance;
       }
-      .vigencia { color: var(--muted); font-size: 13.5px; margin: 0 0 28px; }
+      .actualizado { color: var(--ink-3); font-size: 15px; margin: 0 0 28px; }
+      .bajada { font-size: 19px; line-height: 1.6; color: var(--ink-2); margin: 0 0 8px; }
+      section { padding-top: 40px; scroll-margin-top: 20px; }
+      section + section { border-top: 1px solid var(--line); margin-top: 40px; }
       h2 {
-        font-family: "Fraunces", Georgia, serif; font-weight: 600;
-        font-size: 22px; letter-spacing: -0.2px; margin: 34px 0 8px;
+        font-size: 23px; font-weight: 720; line-height: 1.25;
+        letter-spacing: -0.015em; margin: 0 0 12px; text-wrap: balance;
       }
+      h2 .n { color: var(--ink-3); font-weight: 600; margin-right: 8px; }
       p { margin: 0 0 14px; }
       ul { margin: 0 0 14px; padding-left: 22px; }
       li { margin-bottom: 6px; }
-      .card {
-        background: var(--panel); border: 1px solid var(--border);
-        border-radius: var(--radius-xl); padding: 26px 28px; margin: 24px 0;
+      li::marker { color: var(--ink-3); }
+      strong { font-weight: 700; }
+      em { font-style: normal; font-weight: 600; }
+
+      .aviso {
+        background: var(--sunk);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin: 20px 0 14px;
       }
-      .table { width: 100%; border-collapse: collapse; margin: 18px 0 6px; font-size: 14px; }
-      .table th, .table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-      .table th { color: var(--muted); font-weight: 600; font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; }
-      .table td:first-child { font-weight: 600; white-space: nowrap; }
-      a { color: var(--accent); }
+      .aviso p:last-child { margin-bottom: 0; }
+
+      .pie {
+        margin-top: 56px; padding-top: 24px;
+        border-top: 2px solid var(--line-strong);
+        color: var(--ink-2); font-size: 15.5px;
+      }
+      .pie p { margin: 0 0 8px; }
+
+      @media (max-width: 860px) {
+        .hoja { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 36px 16px 72px; }
+        .indice { position: static; margin: 0 0 8px; order: 0; }
+        .indice details { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+        .indice summary {
+          cursor: pointer; padding: 12px 16px; font-weight: 650; color: var(--ink);
+          list-style-position: inside;
+        }
+        .indice ol { margin: 0 16px; }
+        .indice li:last-child { border-bottom: 0; }
+        .indice-t { display: none; }
+        .indice-otro { margin: 0; padding: 12px 16px; border-top: 1px solid var(--line); }
+        article { order: 1; padding-top: 28px; }
+        h1 { font-size: 31px; }
+        .bajada { font-size: 18px; }
+        .barra-in { padding: 10px 16px; }
+        .wordmark { font-size: 24px; }
+      }
+      @media (min-width: 861px) {
+        /* En desktop el índice va siempre abierto, sin el resumen plegable. */
+        .indice summary { display: none; }
+      }
+      @media print {
+        .barra, .indice, .skip { display: none; }
+        .hoja { display: block; padding: 0; }
+        body { background: #fff; color: #000; font-size: 12pt; }
+      }
+      /* Listas de datos: filas regladas por filetes, no tabla ni tarjetas. */
+      .datos { margin: 16px 0 18px; border-top: 1px solid var(--line); }
+      .datos > div {
+        display: grid; grid-template-columns: 13rem minmax(0, 1fr); gap: 4px 24px;
+        padding: 12px 0; border-bottom: 1px solid var(--line);
+      }
+      .datos dt { font-weight: 700; }
+      .datos dd { margin: 0; color: var(--ink-2); }
       code {
-        font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px;
-        background: var(--surface); border: 1px solid var(--border);
-        border-radius: var(--radius); padding: 1px 6px;
+        font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; font-size: 0.84em;
+        background: var(--sunk); border-radius: 5px; padding: 1px 5px;
       }
-      .contacto {
-        display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
-        font-weight: 600; font-size: 14px; border-radius: var(--radius); padding: 12px 20px; margin-top: 6px;
+      @media (max-width: 640px) {
+        .datos > div { grid-template-columns: minmax(0, 1fr); }
       }
-      .contacto:hover { opacity: 0.92; }
     </style>
   </head>
   <body>
-    <main>
-      <a class="volver" href="/">← Volver a Nova IA</a>
-      <p class="eyebrow">Nova IA</p>
-      <h1>Política de Privacidad</h1>
-      <p class="vigencia">Vigencia: 6 de noviembre de 2026</p>
+    <a class="skip" href="#texto">Saltar al texto</a>
 
-      <p>
-        Esta política explica, en lenguaje claro, qué datos guarda Nova IA, para qué los usamos y qué
-        podés hacer con ellos. Está escrita para que se pueda verificar contra la app: si algo cambia,
-        cambia esta página.
-      </p>
-
-      <h2>1. Quién es el responsable</h2>
-      <p>
-        Nova IA es un asistente conversacional desarrollado y operado en Argentina de forma
-        independiente, sin una empresa detrás que responda por él. Para cualquier tema de privacidad
-        escribinos a <strong>gonzaloangio@gmail.com</strong>.
-      </p>
-
-      <h2>2. Qué guardamos, y por qué</h2>
-      <div class="card">
-        <table class="table">
-          <thead>
-            <tr><th>Dato</th><th>Con qué fin</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Nombre y email</td>
-              <td>Identificar tu cuenta. Con Google recibimos nombre, email y foto del perfil si los compartís.</td>
-            </tr>
-            <tr>
-              <td>Hash de contraseña</td>
-              <td>Verificarte sin guardar la contraseña. Usamos PBKDF2-SHA256 con 100.000 iteraciones y sal por cuenta; el texto nunca se almacena.</td>
-            </tr>
-            <tr>
-              <td>Tus mensajes y las respuestas</td>
-              <td>Mostrarte el historial y dejar retomar una conversación. Se envían al modelo en cada turno para que tenga contexto.</td>
-            </tr>
-            <tr>
-              <td>Notas de memoria</td>
-              <td>Las que vos guardás desde Ajustes o desde un mensaje. Se agregan al inicio de cada conversación para que no tengas que repetir el dato.</td>
-            </tr>
-            <tr>
-              <td>Contadores de uso</td>
-              <td>Tokens por día y por modelo, para aplicar los límites del plan y mostrarte el saldo.</td>
-            </tr>
-            <tr>
-              <td>Sesión</td>
-              <td>Un token aleatorio en una cookie <code>HttpOnly</code> durante 30 días, para reconocer tu cuenta sin volver a pedir la contraseña.</td>
-            </tr>
-            <tr>
-              <td>Dirección IP</td>
-              <td>Sólo dos cosas: contar los 3 mensajes diarios de quien entra sin cuenta, y limitar intentos de inicio de sesión para frenar fuerza bruta.</td>
-            </tr>
-            <tr>
-              <td>Preferencias</td>
-              <td>Idioma de respuesta, largo, tema y modelo preferido quedan en tu navegador (localStorage), no en nuestro servidor.</td>
-            </tr>
-          </tbody>
-        </table>
-        <p style="margin:0">
-          <strong>No pedimos ni guardamos</strong> datos sensibles, números de tarjeta ni agenda de
-          contactos. Los planes pago hoy se coordinan por WhatsApp y se cobran fuera de la app: no
-          procesamos pagos con tarjeta.
-        </p>
+    <header class="barra">
+      <div class="barra-in">
+        <a class="wordmark" href="/" aria-label="Nova IA, ir al inicio">novaia</a>
+        <a class="volver" href="/">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5" /><path d="m11 18-6-6 6-6" /></svg>
+          Volver a la app
+        </a>
       </div>
+    </header>
 
-      <h2>3. Para qué los usamos</h2>
-      <ul>
-        <li>Prestar el servicio: responder, mantener el historial y aplicar la memoria que pediste.</li>
-        <li>Aplicar los límites de uso de tu plan y mostrarte el saldo.</li>
-        <li>Detectar abuso que afecte la disponibilidad (cuentas masivas, ataques al login).</li>
-      </ul>
-      <p>
-        <strong>No vendemos tus datos.</strong> No hay publicidad ni rastreadores de terceros en la
-        aplicación. Nova no entrena modelos con tus conversaciones: no tenemos modelos propios.
-      </p>
+    <div class="hoja">
+      <aside class="indice">
+        <nav aria-labelledby="indice-titulo">
+          <details open>
+            <summary>En esta página</summary>
+            <p class="indice-t" id="indice-titulo">En esta página</p>
+            <ol>
+              <li><a href="#responsable">Quién es el responsable</a></li>
+              <li><a href="#datos">Qué guardamos y por qué</a></li>
+              <li><a href="#navegador">Qué queda en tu navegador</a></li>
+              <li><a href="#fines">Para qué los usamos</a></li>
+              <li><a href="#terceros">Con quién se procesan tus mensajes</a></li>
+              <li><a href="#acceso">Quién puede verlos</a></li>
+              <li><a href="#plazos">Cuánto tiempo quedan</a></li>
+              <li><a href="#seguridad">Seguridad</a></li>
+              <li><a href="#derechos">Tus derechos</a></li>
+              <li><a href="#cambios">Cambios en esta política</a></li>
+            </ol>
+            <p class="indice-otro">Ver también los <a href="/terminos.html">Términos y condiciones</a>.</p>
+          </details>
+        </nav>
+      </aside>
 
-      <h2>4. Con quién se procesan tus mensajes</h2>
-      <p>
-        Para generar una respuesta, tu mensaje —junto con el contexto de la conversación— se envía a
-        <strong>OpenRouter</strong>, que lo deriva a un modelo de un tercero. Los proveedores que atienden
-        hoy los tres roles son <strong>NVIDIA (Nemotron)</strong>, <strong>DeepSeek</strong> y
-        <strong>Google (Gemini)</strong>, además de un router de modelos gratuitos. Qué proveedor atiende
-        cada rol lo ves al lado del nombre en el Inicio y puede cambiar.
-      </p>
-      <p>
-        Cada proveedor tiene sus propias condiciones sobre el contenido que procesa y puede conservarlo
-        según sus políticas. Nova no puede prometer lo que ellos prometen; si necesitás esa garantía por
-        escrito, escribinos antes de usarlo con información sensible de terceros.
-      </p>
-      <ul>
-        <li><strong>OpenRouter</strong>: intermediario que ejecuta los modelos.</li>
-        <li><strong>NVIDIA / DeepSeek / Google</strong>: procesan el texto para generar la respuesta.</li>
-        <li><strong>Google (login)</strong>: confirma tu identidad si entrás con “Continuar con Google”.</li>
-        <li><strong>Cloudflare</strong>: aloja la app, la base de datos y las funciones del servidor.</li>
-      </ul>
+      <main id="texto" tabindex="-1">
+        <article>
+          <h1>Política de privacidad</h1>
+          <p class="actualizado">Última actualización: <time datetime="2026-11-21">21 de noviembre de 2026</time></p>
+          <p class="bajada">
+            Qué datos guarda Nova IA, para qué, con quién se procesan y qué podés hacer con ellos.
+            Está escrita para que la puedas comparar con la app: si la app cambia, cambia esta página.
+          </p>
 
-      <h2>5. Dónde queda y cuánto tiempo</h2>
-      <p>
-        En una base de datos de Cloudflare (D1) y en el almacenamiento local de tu navegador. Las
-        conversaciones y las notas de memoria se guardan hasta que las borrés vos desde la app o pidas
-        la eliminación de la cuenta. Los contadores de uso de visitantes sin cuenta y los contadores
-        antiabuso se purgan en ventanas cortas (día y horas).
-      </p>
+          <section id="responsable" aria-labelledby="h-responsable">
+            <h2 id="h-responsable"><span class="n" aria-hidden="true">1</span>Quién es el responsable</h2>
+            <p>
+              Nova IA lo hace y lo opera una persona, en Argentina, sin una empresa detrás. Esa persona
+              es la responsable de los datos que se guardan. Para cualquier tema de privacidad escribí a
+              <a href="mailto:gonzaloangio@gmail.com">gonzaloangio@gmail.com</a>.
+            </p>
+          </section>
 
-      <h2>6. Tus derechos</h2>
-      <ul>
-        <li><strong>Borrar una conversación</strong>: desde <em>Historial</em>, o todo de una vez.</li>
-        <li><strong>Borrar una nota de memoria</strong>: desde <em>Ajustes → Memoria de Nova</em>, o con ✕ en cada nota.</li>
-        <li><strong>Cerrar sesión en un dispositivo</strong>: desde <em>Ajustes</em>; invalida la cookie del servidor, no sólo la de tu navegador.</li>
-        <li><strong>Eliminar la cuenta</strong>: escribinos a gonzaloangio@gmail.com y borramos cuenta, conversaciones, memoria y contadores.</li>
-      </ul>
-      <p>
-        Todavía no hay exportación de tus chats a un archivo. Si la necesitás antes de borrar la cuenta,
-        pedila por email y la preparamos a mano.
-      </p>
+          <section id="datos" aria-labelledby="h-datos">
+            <h2 id="h-datos"><span class="n" aria-hidden="true">2</span>Qué guardamos y por qué</h2>
+            <p>Esto es lo que queda en la base de datos de Nova cuando tenés cuenta:</p>
+            <dl class="datos">
+              <div>
+                <dt>Nombre y email</dt>
+                <dd>Para identificar tu cuenta. Si entrás con Google, recibimos de Google tu nombre y tu email; nada más.</dd>
+              </div>
+              <div>
+                <dt>Contraseña, cifrada</dt>
+                <dd>Solo si creaste la cuenta con email. Guardamos un hash PBKDF2-SHA256 con 100.000 iteraciones y una sal propia de tu cuenta; la contraseña en texto nunca se guarda.</dd>
+              </div>
+              <div>
+                <dt>Plan</dt>
+                <dd>Gratis, Plus o Pro, y la fecha en que se creó la cuenta.</dd>
+              </div>
+              <div>
+                <dt>Conversaciones</dt>
+                <dd>Tus mensajes, las respuestas, el título de cada charla y si la fijaste. Sirven para el historial, la búsqueda y para retomar una charla.</dd>
+              </div>
+              <div>
+                <dt>Memoria de Nova</dt>
+                <dd>Las notas que vos guardás desde <em>Ajustes</em> o desde un mensaje, incluido el perfil de tu negocio. Se suman a cada conversación para que no tengas que repetir el dato.</dd>
+              </div>
+              <div>
+                <dt>Contadores de uso</dt>
+                <dd>Tokens por día y por modelo en el mes, para aplicar los límites de tu plan y mostrarte el saldo.</dd>
+              </div>
+              <div>
+                <dt>Sesión</dt>
+                <dd>Un código aleatorio, con vencimiento, que vincula tu cookie de sesión con tu cuenta.</dd>
+              </div>
+              <div>
+                <dt>Dirección IP</dt>
+                <dd>Solo para dos cosas: contar los 3 mensajes diarios de quien usa Nova sin cuenta, y limitar los intentos de ingreso y de registro para frenar ataques.</dd>
+              </div>
+            </dl>
+            <div class="aviso">
+              <p>
+                <strong>No pedimos ni guardamos</strong> números de tarjeta, datos bancarios, documento ni
+                tu agenda de contactos. Los planes pagos se coordinan por WhatsApp y se cobran fuera de la
+                app. Si querés que Nova recuerde algo, lo decidís vos: la memoria no se llena sola.
+              </p>
+            </div>
+          </section>
 
-      <h2>7. Cambios de esta política</h2>
-      <p>
-        Si cambia algo importante, lo avisamos dentro de la app antes de que aplique. La fecha de
-        vigencia siempre queda arriba de esta página.
-      </p>
+          <section id="navegador" aria-labelledby="h-navegador">
+            <h2 id="h-navegador"><span class="n" aria-hidden="true">3</span>Qué queda en tu navegador</h2>
+            <ul>
+              <li>
+                <strong>Una cookie de sesión</strong> (<code>novaia_s</code>), <code>HttpOnly</code>, que
+                dura hasta 30 días. Es la única cookie de Nova y sirve para que no tengas que volver a
+                ingresar.
+              </li>
+              <li>
+                <strong>Preferencias</strong> en el almacenamiento local: idioma y largo de las respuestas,
+                modelo elegido y tema claro u oscuro. El idioma y el largo viajan con cada mensaje para
+                armar la respuesta, pero no se guardan en el servidor.
+              </li>
+              <li>
+                <strong>Una copia de tu perfil</strong> (nombre, email y plan) para que la app cargue rápido,
+                el contador de mensajes sin cuenta, los planes que pediste por WhatsApp y el borrador de un
+                mensaje mientras navegás.
+              </li>
+            </ul>
+            <p>
+              Lo podés borrar cuando quieras limpiando los datos del sitio en tu navegador. Las tipografías
+              de la app se cargan desde Google Fonts.
+            </p>
+          </section>
 
-      <a class="contacto" href="mailto:gonzaloangio@gmail.com">Escribir por privacidad</a>
-    </main>
+          <section id="fines" aria-labelledby="h-fines">
+            <h2 id="h-fines"><span class="n" aria-hidden="true">4</span>Para qué los usamos</h2>
+            <ul>
+              <li>Prestar el servicio: responder, mantener el historial y aplicar la memoria que guardaste.</li>
+              <li>Aplicar los límites de tu plan y mostrarte cuánto saldo te queda en cada modelo.</li>
+              <li>Activar el plan que pediste y responderte cuando escribís.</li>
+              <li>Frenar abusos que afecten a los demás: cuentas en masa y ataques al ingreso.</li>
+            </ul>
+            <p>
+              <strong>No vendemos tus datos.</strong> No hay publicidad ni rastreadores de terceros en la
+              app. Nova no tiene modelos propios, así que no entrena nada con tus conversaciones.
+            </p>
+          </section>
+
+          <section id="terceros" aria-labelledby="h-terceros">
+            <h2 id="h-terceros"><span class="n" aria-hidden="true">5</span>Con quién se procesan tus mensajes</h2>
+            <p>
+              Para generar una respuesta, tu mensaje, junto con el resto de la conversación y tus notas de
+              memoria, se envía a <strong>OpenRouter</strong>, que lo deriva al proveedor del modelo. Hoy son
+              estos:
+            </p>
+            <dl class="datos">
+              <div>
+                <dt>Nova Flash</dt>
+                <dd>El enrutador de modelos gratuitos de OpenRouter, que elige entre modelos de distintos proveedores.</dd>
+              </div>
+              <div>
+                <dt>Nova Pro</dt>
+                <dd>NVIDIA (Nemotron).</dd>
+              </div>
+              <div>
+                <dt>Nova Pro 3.1</dt>
+                <dd>DeepSeek en los planes Gratis y Plus; Google (Gemini) en el plan Pro.</dd>
+              </div>
+              <div>
+                <dt>Reserva</dt>
+                <dd>Si todos fallan, Nova prueba con modelos pagos de OpenAI, Mistral y Z.ai, siempre a través de OpenRouter.</dd>
+              </div>
+            </dl>
+            <p>
+              Qué proveedor atiende cada modelo lo ves en la app y puede cambiar; cuando cambie, se
+              actualiza esta lista. Cada proveedor tiene sus propias condiciones y puede conservar el texto
+              que procesa según sus políticas, en especial los modelos gratuitos. Nova no puede prometer lo
+              que ellos no prometen: evitá pegar datos sensibles tuyos o de terceros.
+            </p>
+            <p>Además intervienen:</p>
+            <ul>
+              <li><strong>Cloudflare</strong>, que aloja la app, las funciones del servidor y la base de datos.</li>
+              <li><strong>Google</strong>, que confirma tu identidad si usás “Continuar con Google”.</li>
+              <li><strong>WhatsApp</strong>, cuando escribís para pedir o pagar un plan: esa charla queda en WhatsApp, no en Nova.</li>
+            </ul>
+            <p>
+              Estos servicios operan fuera de la Argentina, así que tus datos se procesan también en
+              servidores de otros países.
+            </p>
+          </section>
+
+          <section id="acceso" aria-labelledby="h-acceso">
+            <h2 id="h-acceso"><span class="n" aria-hidden="true">6</span>Quién puede verlos</h2>
+            <p>
+              El panel de administración de Nova muestra, por cuenta, el nombre, el email, el plan y
+              cuántas conversaciones y mensajes hay, pero no su contenido. Quien opera Nova tiene acceso
+              técnico a la base de datos, como cualquier responsable de un servicio. No compartimos tus
+              datos con nadie más que los servicios de la sección anterior, salvo que una autoridad
+              competente lo exija conforme a la ley.
+            </p>
+          </section>
+
+          <section id="plazos" aria-labelledby="h-plazos">
+            <h2 id="h-plazos"><span class="n" aria-hidden="true">7</span>Cuánto tiempo quedan</h2>
+            <ul>
+              <li><strong>Conversaciones y memoria</strong>: hasta que las borres vos o pidas la baja de la cuenta.</li>
+              <li><strong>Sesión</strong>: hasta 30 días, o hasta que cierres la sesión.</li>
+              <li><strong>Contador de visitantes sin cuenta</strong>: se borra a los dos días.</li>
+              <li><strong>Contadores de intentos de ingreso</strong>: se borran en cuestión de horas.</li>
+              <li><strong>Cuenta y contadores de uso</strong>: mientras la cuenta exista.</li>
+            </ul>
+          </section>
+
+          <section id="seguridad" aria-labelledby="h-seguridad">
+            <h2 id="h-seguridad"><span class="n" aria-hidden="true">8</span>Seguridad</h2>
+            <p>
+              Todo viaja cifrado por HTTPS. La cookie de sesión es <code>HttpOnly</code>, <code>Secure</code>
+              y <code>SameSite=Lax</code>, así que el código de una página no la puede leer. Tu identidad
+              sale siempre de esa cookie, nunca de lo que manda el navegador en el pedido. Los intentos de
+              ingreso tienen un tope por IP.
+            </p>
+            <p>
+              Ningún sistema es invulnerable. Si detectamos un problema que afecte tus datos, te lo vamos a
+              contar.
+            </p>
+          </section>
+
+          <section id="derechos" aria-labelledby="h-derechos">
+            <h2 id="h-derechos"><span class="n" aria-hidden="true">9</span>Tus derechos</h2>
+            <p>Mucho lo resolvés vos, desde la app:</p>
+            <ul>
+              <li><strong>Borrar una conversación</strong>, o todas juntas, desde <em>Historial</em>.</li>
+              <li><strong>Borrar una nota de memoria</strong> desde <em>Ajustes → Memoria de Nova</em>.</li>
+              <li><strong>Descargar una conversación</strong> en Markdown desde el chat.</li>
+              <li><strong>Cerrar la sesión</strong> desde <em>Ajustes</em> o el menú de tu usuario: se invalida en el servidor, no solo en tu navegador.</li>
+            </ul>
+            <p>
+              Para todo lo demás, como pedir una copia de tus datos, corregirlos o <strong>eliminar la
+              cuenta</strong>, escribí a <a href="mailto:gonzaloangio@gmail.com">gonzaloangio@gmail.com</a>.
+              La baja borra la cuenta, las conversaciones, la memoria y los contadores asociados. No hay
+              todavía una exportación de todo el historial de una vez: si la necesitás, se prepara a mano.
+            </p>
+            <div class="aviso">
+              <p>
+                Por la Ley 25.326 de Protección de los Datos Personales tenés derecho a acceder a tus datos
+                en forma gratuita a intervalos no inferiores a seis meses, salvo que acredites un interés
+                legítimo, y a pedir que se rectifiquen, actualicen o supriman. La Agencia de Acceso a la
+                Información Pública, órgano de control de esa ley, atiende las denuncias y reclamos de
+                quienes vean afectados esos derechos.
+              </p>
+            </div>
+          </section>
+
+          <section id="cambios" aria-labelledby="h-cambios">
+            <h2 id="h-cambios"><span class="n" aria-hidden="true">10</span>Cambios en esta política</h2>
+            <p>
+              Si cambia algo, actualizamos esta página y la fecha de arriba. Si el cambio es importante,
+              lo avisamos antes de que aplique.
+            </p>
+          </section>
+
+          <footer class="pie">
+            <p>¿Dudas sobre tus datos? <a href="mailto:gonzaloangio@gmail.com?subject=Privacidad%20en%20Nova%20IA">Escribinos por email</a>.</p>
+            <p><a href="/terminos.html">Términos y condiciones</a> · <a href="/">Volver a Nova IA</a></p>
+          </footer>
+        </article>
+      </main>
+    </div>
+
+    <script src="/legal-indice.js"></script>
   </body>
 </html>

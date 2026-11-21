@@ -11,6 +11,13 @@ export async function onRequestGet({ request, env }) {
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
   if (!from || !to) return json({ error: "Faltan parámetros" }, 400);
+  if (!fechaValida(from) || !fechaValida(to)) {
+    return json({ error: "Fechas inválidas: usá el formato AAAA-MM-DD." }, 400);
+  }
+  if (from > to) return json({ error: "La fecha de inicio es posterior a la de fin." }, 400);
+  if ((Date.parse(to) - Date.parse(from)) / 864e5 > MAX_DIAS) {
+    return json({ error: `El período no puede superar los ${MAX_DIAS} días.` }, 400);
+  }
 
   const user = await leerSesion(request, env);
   const userId = user?.id || null;
@@ -25,7 +32,7 @@ export async function onRequestGet({ request, env }) {
 
   // Sin sesión devolvemos sólo los techos del plan Gratis (datos publicados),
   // para que el selector de modelo y la página de planes funcionen igual.
-  const rows = userId
+  const rows = userId && env.DB
     ? (await env.DB
         .prepare(
           "SELECT day, tokens_in, tokens_out FROM usage_daily WHERE user_id = ? AND day >= ? AND day <= ? ORDER BY day"
@@ -40,7 +47,7 @@ export async function onRequestGet({ request, env }) {
   const plan = user?.plan || "gratis";
   const month = from.slice(0, 7) + "-01";
   let usados = {};
-  if (userId) {
+  if (userId && env.DB) {
     const usadosQ = await env.DB
       .prepare("SELECT model, tokens FROM model_usage WHERE user_id = ? AND month = ?")
       .bind(userId, month)
@@ -68,7 +75,7 @@ export async function onRequestGet({ request, env }) {
     days: rows, totalIn, totalOut, total: totalIn + totalOut, plan,
     forzado: !!forzado,
     cuota: CUOTA[plan] ?? CUOTA.gratis, modelos,
-    racha: userId ? await racha(env, userId) : 0,
+    racha: userId && env.DB ? await racha(env, userId) : 0,
     // Techos de los 3 planes, para que la tabla comparativa no duplique números.
     planes: Object.keys(CUOTA).map((p) => ({
       plan: p,
@@ -76,6 +83,15 @@ export async function onRequestGet({ request, env }) {
       techos: Object.fromEntries(SLOTS.map((s) => [s.key, s.techo[p]])),
     })),
   });
+}
+
+const MAX_DIAS = 366;
+
+// AAAA-MM-DD que además sea una fecha real (no 2026-02-31).
+function fechaValida(s) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(s + "T00:00:00Z");
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
 }
 
 // Días consecutivos con actividad, contando hacia atrás desde hoy. Si hoy aún

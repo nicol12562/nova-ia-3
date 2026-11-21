@@ -1,26 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Icon } from "../icons.jsx";
 import { showToast } from "../ui.jsx";
-import { IDIOMAS, LARGOS, leerPrefs, escribirPrefs } from "../data/prefs.js";
+import { IDIOMAS, LARGOS, MODELOS, leerPrefs, escribirPrefs } from "../data/prefs.js";
+
+const LARGO_NOTA = 220;
 
 export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
   const planName = auth?.plan === "plus" ? "Plus" : auth?.plan === "pro" ? "Pro" : "Gratis";
   const [prefs, setPrefs] = useState(leerPrefs);
   const [abierto, setAbierto] = useState(false);
+  // null hasta el primer cambio; después "ok" o "sin-storage".
+  const [guardado, setGuardado] = useState(null);
+  const [saliendo, setSaliendo] = useState(false);
 
   function cambiar(parche) {
     const next = { ...prefs, ...parche };
     setPrefs(next);
-    escribirPrefs(next);
+    setGuardado(escribirPrefs(next) ? "ok" : "sin-storage");
   }
 
-  function logout() {
+  async function logout() {
+    if (saliendo) return;
+    setSaliendo(true);
+    // La sesión real está en una cookie HttpOnly: hay que pedirle al server que la tire.
+    // Si la red falla igual se cierra acá; la cookie vence sola.
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     localStorage.removeItem("novaia_user");
     setAuth(null);
-    // La sesión real está en una cookie HttpOnly: hay que pedirle al server que la tire.
-    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    showToast("Cerraste sesión en este dispositivo.");
     go("");
   }
+
+  const idioma = IDIOMAS.find((i) => i.id === prefs.idioma);
+  const largo = LARGOS.find((l) => l.id === prefs.largo);
+  const modelo = MODELOS.find((m) => m.id === prefs.modelo);
 
   return (
     <section className="page">
@@ -70,15 +83,15 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
 
           <div className="settings-row prefs-row">
             <div>
-              <strong>Preferencias de respuesta</strong>
+              <strong id="prefs-titulo">Preferencias de respuesta</strong>
               <p>
-                {IDIOMAS.find((i) => i.id === prefs.idioma)?.label},{" "}
-                {LARGOS.find((l) => l.id === prefs.largo)?.label.toLowerCase()}
+                {idioma?.label}, {largo?.label.toLowerCase()}, {modelo?.label}
               </p>
             </div>
             <button
               className="btn btn-quiet"
               aria-expanded={abierto}
+              aria-controls="prefs-panel"
               onClick={() => setAbierto((v) => !v)}
             >
               {abierto ? "Listo" : "Personalizar"}
@@ -86,41 +99,23 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
           </div>
 
           {abierto && (
-            <div className="prefs-panel">
-              <div className="prefs-group">
-                <span className="prefs-label">Idioma de la respuesta</span>
-                <div className="opt-row">
-                  {IDIOMAS.map((i) => (
-                    <button
-                      key={i.id}
-                      className={"opt" + (prefs.idioma === i.id ? " on" : "")}
-                      onClick={() => cambiar({ idioma: i.id })}
-                    >
-                      <strong>{i.label}</strong>
-                      <span>{i.hint}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="prefs-panel" id="prefs-panel" aria-labelledby="prefs-titulo">
+              <Opciones
+                id="pref-idioma"
+                titulo="Idioma de la respuesta"
+                lista={IDIOMAS}
+                valor={prefs.idioma}
+                onElegir={(id) => cambiar({ idioma: id })}
+              />
 
-              <div className="prefs-group">
-                <span className="prefs-label">Largo de la respuesta</span>
-                <div className="opt-row">
-                  {LARGOS.map((l) => (
-                    <button
-                      key={l.id}
-                      className={"opt" + (prefs.largo === l.id ? " on" : "")}
-                      onClick={() => cambiar({ largo: l.id })}
-                    >
-                      <strong>{l.label}</strong>
-                      <span>{l.hint}</span>
-                    </button>
-                  ))}
-                </div>
-                <p className="prefs-hint">
-                      {` Breve responde más rápido: limita la salida a ${LARGOS.find((l) => l.id === "breve").maxTokens} tokens.`}
-                </p>
-              </div>
+              <Opciones
+                id="pref-largo"
+                titulo="Largo de la respuesta"
+                lista={LARGOS}
+                valor={prefs.largo}
+                onElegir={(id) => cambiar({ largo: id })}
+                pie={`Breve responde más rápido: limita la salida a ${LARGOS.find((l) => l.id === "breve").maxTokens} tokens.`}
+              />
 
               <div className="prefs-group">
                 <label className="prefs-label" htmlFor="pref-modelo">Modelo preferido</label>
@@ -128,16 +123,31 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
                   id="pref-modelo"
                   className="prefs-select"
                   value={prefs.modelo}
+                  aria-describedby="pref-modelo-hint"
                   onChange={(e) => cambiar({ modelo: e.target.value })}
                 >
-                  <option value="flash">Nova Flash · el de saldo más grande</option>
-                  <option value="pro">Nova Pro · saldo medio, texto y código</option>
-                  <option value="pro31">Nova Pro 3.1 · saldo corto, para lo importante</option>
+                  {MODELOS.map((m) => (
+                    <option key={m.id} value={m.id}>{`${m.label} · ${m.hint}`}</option>
+                  ))}
                 </select>
-                <p className="prefs-hint">
+                <p className="prefs-hint" id="pref-modelo-hint">
                   Se aplica al abrir el chat; igual lo podés cambiar desde el composer.
                 </p>
               </div>
+
+              <p
+                className={"prefs-estado" + (guardado === "sin-storage" ? " is-error" : "")}
+                role="status"
+              >
+                {guardado === "ok" && (
+                  <>
+                    <Icon name="check" size={16} />
+                    Guardado en este dispositivo. Vale desde tu próximo mensaje.
+                  </>
+                )}
+                {guardado === "sin-storage" &&
+                  "Tu navegador no dejó guardarlo (¿ventana privada?). Vale hasta que cierres esta pestaña."}
+              </p>
             </div>
           )}
 
@@ -145,10 +155,11 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
             <div className="settings-row">
               <div>
                 <strong>Sesión</strong>
-                <p>Salí de tu cuenta en este dispositivo</p>
+                <p>Salí de tu cuenta en este dispositivo. Tus chats y notas quedan guardados.</p>
               </div>
-              <button className="btn btn-quiet" onClick={logout}>
-                Cerrar sesión
+              <button className="btn btn-quiet" onClick={logout} disabled={saliendo}>
+                <Icon name="logout" size={16} />
+                {saliendo ? "Saliendo…" : "Cerrar sesión"}
               </button>
             </div>
           )}
@@ -168,24 +179,72 @@ export default function Ajustes({ go, auth, setAuth, dark, toggleTheme }) {
 
           <div className="settings-row">
             <div>
-              <strong>Tema de la aplicación</strong>
-              <p>Cambiá entre apariencia clara y oscura.</p>
+              <strong id="tema-titulo">Tema de la aplicación</strong>
+              <p>Cambiá entre apariencia clara y oscura. Queda guardado en este dispositivo.</p>
             </div>
-            <div className={"seg" + (dark ? " is-dark" : "")} role="group" aria-label="Tema de la aplicación">
+            <div className={"seg" + (dark ? " is-dark" : "")} role="group" aria-labelledby="tema-titulo">
               <span className="seg-thumb" aria-hidden="true" />
-              <button className={!dark ? "on" : ""} onClick={() => dark && toggleTheme()}>
+              <button type="button" aria-pressed={!dark} className={!dark ? "on" : ""} onClick={() => dark && toggleTheme()}>
                 <Icon name="sun" size={14} /> Claro
               </button>
-              <button className={dark ? "on" : ""} onClick={() => !dark && toggleTheme()}>
+              <button type="button" aria-pressed={dark} className={dark ? "on" : ""} onClick={() => !dark && toggleTheme()}>
                 <Icon name="moon" size={14} /> Oscuro
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </section>
   );
+}
+
+// Grupo de opciones excluyentes con semántica de radio: Tab entra al elegido y las
+// flechas recorren el grupo, como un radio nativo.
+function Opciones({ id, titulo, lista, valor, onElegir, pie }) {
+  const refs = useRef([]);
+
+  function onKeyDown(e, i) {
+    const delta = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!delta) return;
+    e.preventDefault();
+    const j = (i + delta + lista.length) % lista.length;
+    onElegir(lista[j].id);
+    refs.current[j]?.focus();
+  }
+
+  return (
+    <div className="prefs-group">
+      <span className="prefs-label" id={`${id}-titulo`}>{titulo}</span>
+      <div className="opt-row" role="radiogroup" aria-labelledby={`${id}-titulo`}>
+        {lista.map((o, i) => {
+          const on = valor === o.id;
+          return (
+            <button
+              key={o.id}
+              ref={(el) => (refs.current[i] = el)}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              tabIndex={on ? 0 : -1}
+              className={"opt" + (on ? " on" : "")}
+              onClick={() => onElegir(o.id)}
+              onKeyDown={(e) => onKeyDown(e, i)}
+            >
+              <strong>{o.label}</strong>
+              <span>{o.hint}</span>
+            </button>
+          );
+        })}
+      </div>
+      {pie && <p className="prefs-hint">{pie}</p>}
+    </div>
+  );
+}
+
+// Lee el error que manda el backend ({ error }) o arma uno genérico.
+async function errorDe(r, fallback) {
+  const d = await r.json().catch(() => ({}));
+  return d.error || fallback;
 }
 
 // Perfil del negocio. Se guarda como notas de la memoria con un prefijo fijo, así
@@ -198,65 +257,87 @@ const PERFIL = [
   { prefijo: "Contacto:", label: "Datos del negocio", ph: "WhatsApp 341-XXXXXX, de lunes a viernes 9 a 18" },
 ];
 
-function PerfilNegocio({ auth, go }) {
-  const [campos, setCampos] = useState(() => Object.fromEntries(PERFIL.map((p) => [p.prefijo, ""])));
-  const [orig, setOrig] = useState(() => Object.fromEntries(PERFIL.map((p) => [p.prefijo, ""])));
-  const [ids, setIds] = useState(() => Object.fromEntries(PERFIL.map((p) => [p.prefijo, null])));
-  const [listo, setListo] = useState(false);
-  const [guardando, setGuardando] = useState(false);
+const esDelPerfil = (nota) => PERFIL.some((p) => (nota || "").startsWith(p.prefijo));
+const vacio = (v) => Object.fromEntries(PERFIL.map((p) => [p.prefijo, v]));
 
-  useEffect(() => {
-    if (!auth?.id) return;
-    fetch("/api/memories")
-      .then((r) => (r.ok ? r.json() : null))
+function PerfilNegocio({ auth, go }) {
+  const [campos, setCampos] = useState(() => vacio(""));
+  const [orig, setOrig] = useState(() => vacio(""));
+  const [ids, setIds] = useState(() => vacio(null));
+  // "cargando" | "listo" | "error"
+  const [estado, setEstado] = useState("cargando");
+  const [guardando, setGuardando] = useState(false);
+  const [recienGuardado, setRecienGuardado] = useState(false);
+
+  function cargar() {
+    setEstado("cargando");
+    return fetch("/api/memories")
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
-        if (!d) return;
-        const nextCampos = { ...campos };
-        const nextIds = { ...ids };
+        const nextCampos = vacio("");
+        const nextIds = vacio(null);
         for (const p of PERFIL) {
           const nota = (d.notas || []).find((n) => (n.note || "").startsWith(p.prefijo));
-          nextCampos[p.prefijo] = nota ? nota.note.slice(p.prefijo.length + 1) : "";
+          nextCampos[p.prefijo] = nota ? nota.note.slice(p.prefijo.length).trim() : "";
           nextIds[p.prefijo] = nota ? nota.id : null;
         }
         setCampos(nextCampos);
         setOrig({ ...nextCampos });
         setIds(nextIds);
-        setListo(true);
+        setEstado("listo");
       })
-      .catch(() => setListo(true));
+      .catch(() => setEstado("error"));
+  }
+
+  useEffect(() => {
+    if (auth?.id) cargar();
   }, [auth?.id]);
 
-  async function guardar() {
+  const sucio = PERFIL.some((p) => (campos[p.prefijo] || "").trim() !== (orig[p.prefijo] || "").trim());
+
+  async function guardar(e) {
+    e.preventDefault();
+    if (!sucio || guardando) return;
     setGuardando(true);
     const despues = { ...orig };
+    const nextIds = { ...ids };
     try {
       for (const p of PERFIL) {
         const texto = (campos[p.prefijo] || "").trim();
         if (texto === (orig[p.prefijo] || "").trim()) continue; // no tocó este campo
-        const viejo = ids[p.prefijo];
-        if (!texto) {
-          await fetch(`/api/memories?id=${viejo}`, { method: "DELETE" });
-          setIds((v) => ({ ...v, [p.prefijo]: null }));
+        const viejo = nextIds[p.prefijo];
+        if (viejo) {
+          const r = await fetch(`/api/memories?id=${viejo}`, { method: "DELETE" });
+          if (!r.ok) throw new Error(await errorDe(r, `No pude actualizar "${p.label}".`));
+          nextIds[p.prefijo] = null;
           despues[p.prefijo] = "";
-          continue;
         }
-        if (viejo) await fetch(`/api/memories?id=${viejo}`, { method: "DELETE" });
+        if (!texto) continue;
         const r = await fetch("/api/memories", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ note: `${p.prefijo} ${texto}` }),
         });
+        if (!r.ok) throw new Error(await errorDe(r, `No pude guardar "${p.label}".`));
         const d = await r.json().catch(() => ({}));
-        setIds((v) => ({ ...v, [p.prefijo]: d.id || null }));
+        nextIds[p.prefijo] = d.id || null;
         despues[p.prefijo] = texto;
       }
-      setOrig(despues);
-      showToast("Nova ya conoce tu negocio.");
-    } catch {
-      showToast("Se cortó la conexión; probá de nuevo.", { tone: "error" });
+      setRecienGuardado(true);
+      showToast("Perfil guardado. Nova ya conoce tu negocio.");
+    } catch (err) {
+      showToast(mensaje(err), { tone: "error" });
     } finally {
+      // Lo que llegó a guardarse queda como base, aunque un campo haya fallado.
+      setOrig(despues);
+      setIds(nextIds);
       setGuardando(false);
     }
+  }
+
+  function editar(prefijo, valor) {
+    setRecienGuardado(false);
+    setCampos((v) => ({ ...v, [prefijo]: valor }));
   }
 
   return (
@@ -278,32 +359,47 @@ function PerfilNegocio({ auth, go }) {
             Entrar
           </button>
         </div>
+      ) : estado === "cargando" ? (
+        <p className="mem-vacio" role="status">Cargando tu perfil…</p>
+      ) : estado === "error" ? (
+        <div className="settings-row">
+          <div>
+            <strong>No pude traer tu perfil</strong>
+            <p>Puede ser la conexión. Lo que ya guardaste sigue en tu cuenta.</p>
+          </div>
+          <button className="btn btn-quiet" onClick={cargar}>
+            <Icon name="refresh" size={16} /> Reintentar
+          </button>
+        </div>
       ) : (
-        <>
-          {!listo ? (
-            <p className="mem-vacio">Cargando…</p>
-          ) : (
-            <div className="perfil-grid">
-              {PERFIL.map((p) => (
-                <label key={p.prefijo} className="perfil-campo">
-                  <span>{p.label}</span>
-                  <textarea
-                    rows={2}
-                    maxLength={220}
-                    value={campos[p.prefijo]}
-                    placeholder={p.ph}
-                    onChange={(e) => setCampos((v) => ({ ...v, [p.prefijo]: e.target.value }))}
-                  />
-                </label>
-              ))}
-              <div className="perfil-foot">
-                <button className="btn btn-primary" onClick={guardar} disabled={guardando}>
-                  {guardando ? "Guardando…" : "Guardar perfil"}
-                </button>
-              </div>
-            </div>
-          )}
-        </>
+        <form className="perfil-grid" onSubmit={guardar}>
+          {PERFIL.map((p) => (
+            <label key={p.prefijo} className="perfil-campo">
+              <span>{p.label}</span>
+              <textarea
+                rows={2}
+                maxLength={LARGO_NOTA - p.prefijo.length - 1}
+                value={campos[p.prefijo]}
+                placeholder={p.ph}
+                onChange={(e) => editar(p.prefijo, e.target.value)}
+              />
+            </label>
+          ))}
+          <div className="perfil-foot">
+            <p className={"prefs-estado" + (sucio ? " is-pendiente" : "")} role="status">
+              {sucio ? (
+                "Tenés cambios sin guardar."
+              ) : recienGuardado ? (
+                <>
+                  <Icon name="check" size={16} /> Guardado en tu cuenta.
+                </>
+              ) : null}
+            </p>
+            <button className="btn btn-primary" type="submit" disabled={guardando || !sucio}>
+              {guardando ? "Guardando…" : "Guardar perfil"}
+            </button>
+          </div>
+        </form>
       )}
     </div>
   );
@@ -312,27 +408,52 @@ function PerfilNegocio({ auth, go }) {
 // Lo que Nova sabe de vos entre conversaciones. Es la parte del producto que
 // mejora con el uso: el mismo modelo de OpenRouter, pero ya enterado de tu
 // contexto. Se guarda en D1 y entra al system prompt de cada mensaje.
+// Las notas del perfil del negocio también viven acá, pero se editan arriba.
 function Memoria({ auth, go }) {
-  const [notas, setNotas] = useState(null);
+  const [todas, setTodas] = useState(null);
+  const [error, setError] = useState(false);
   const [limite, setLimite] = useState(40);
   const [texto, setTexto] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editando, setEditando] = useState(null); // { id, texto }
+  const [ocupada, setOcupada] = useState(null); // id de la nota que se está guardando o borrando
+  const [borrada, setBorrada] = useState(null); // { note } para deshacer
+  const deshacerTimer = useRef(0);
+  const inputRef = useRef(null);
 
   function cargar() {
     return fetch("/api/memories")
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
-        if (!d) return;
-        setNotas(d.notas || []);
+        setTodas(d.notas || []);
+        setError(false);
         if (d.limite) setLimite(d.limite);
       })
-      .catch(() => setNotas([]));
+      .catch(() => {
+        setError(true);
+        setTodas((t) => t ?? []);
+      });
   }
 
   useEffect(() => {
     if (auth?.id) cargar();
-    else setNotas(null);
+    else setTodas(null);
   }, [auth?.id]);
+
+  useEffect(() => () => clearTimeout(deshacerTimer.current), []);
+
+  const notas = (todas || []).filter((n) => !esDelPerfil(n.note));
+  const usadas = (todas || []).length;
+  const lleno = usadas >= limite;
+
+  async function crear(note) {
+    const r = await fetch("/api/memories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note }),
+    });
+    if (!r.ok) throw new Error(await errorDe(r, "No la pude guardar."));
+  }
 
   async function guardar(e) {
     e.preventDefault();
@@ -340,32 +461,78 @@ function Memoria({ auth, go }) {
     if (!t || busy) return;
     setBusy(true);
     try {
-      const r = await fetch("/api/memories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ note: t }),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        showToast(d.error || "No lo pude guardar.", { tone: "error" });
-        return;
-      }
+      await crear(t);
       setTexto("");
       showToast("Listo, Nova va a recordar esto.");
       await cargar();
-    } catch {
-      showToast("Se cayó la conexión. Probá de nuevo.", { tone: "error" });
+    } catch (err) {
+      showToast(mensaje(err), { tone: "error" });
     } finally {
       setBusy(false);
+      inputRef.current?.focus();
     }
   }
 
-  async function borrar(id) {
-    setNotas((ns) => (ns || []).filter((n) => n.id !== id));
+  // No hay endpoint para editar: se borra la nota y se crea la nueva. Si la segunda
+  // parte falla, se vuelve a crear la original para no perder nada.
+  async function guardarEdicion(e) {
+    e.preventDefault();
+    if (!editando || ocupada) return;
+    const nota = notas.find((n) => n.id === editando.id);
+    const t = editando.texto.trim();
+    if (!nota) return setEditando(null);
+    if (!t) return borrar(nota);
+    if (t === nota.note) return setEditando(null);
+    setOcupada(nota.id);
     try {
-      await fetch(`/api/memories?id=${id}`, { method: "DELETE" });
+      const r = await fetch(`/api/memories?id=${nota.id}`, { method: "DELETE" });
+      if (!r.ok) throw new Error(await errorDe(r, "No la pude cambiar."));
+      try {
+        await crear(t);
+      } catch (err) {
+        await crear(nota.note).catch(() => {});
+        throw err;
+      }
+      setEditando(null);
+      showToast("Nota actualizada.");
+    } catch (err) {
+      showToast(mensaje(err), { tone: "error" });
+    } finally {
+      setOcupada(null);
       await cargar();
-    } catch {
+    }
+  }
+
+  async function borrar(nota) {
+    if (ocupada) return;
+    setOcupada(nota.id);
+    try {
+      const r = await fetch(`/api/memories?id=${nota.id}`, { method: "DELETE" });
+      if (!r.ok) throw new Error(await errorDe(r, "No la pude borrar."));
+      setTodas((ns) => (ns || []).filter((n) => n.id !== nota.id));
+      if (editando?.id === nota.id) setEditando(null);
+      clearTimeout(deshacerTimer.current);
+      setBorrada({ note: nota.note });
+      deshacerTimer.current = window.setTimeout(() => setBorrada(null), 8000);
+      await cargar();
+    } catch (err) {
+      showToast(mensaje(err), { tone: "error" });
+    } finally {
+      setOcupada(null);
+    }
+  }
+
+  async function deshacer() {
+    if (!borrada) return;
+    clearTimeout(deshacerTimer.current);
+    const { note } = borrada;
+    setBorrada(null);
+    try {
+      await crear(note);
+      showToast("Nota recuperada.");
+    } catch (err) {
+      showToast(mensaje(err), { tone: "error" });
+    } finally {
       await cargar();
     }
   }
@@ -392,21 +559,51 @@ function Memoria({ auth, go }) {
       ) : (
         <>
           <form className="mem-form" onSubmit={guardar}>
+            <label className="prefs-label" htmlFor="mem-nueva">Nueva nota</label>
             <input
+              id="mem-nueva"
+              ref={inputRef}
               type="text"
               value={texto}
-              maxLength={220}
+              maxLength={LARGO_NOTA}
+              disabled={lleno}
               placeholder="Ej: vendo repuestos en Rosario y escribo para clientes, no para técnicos."
               onChange={(e) => setTexto(e.target.value)}
-              aria-label="Nueva nota para la memoria"
+              aria-describedby="mem-nueva-hint"
             />
-            <button className="btn btn-primary" type="submit" disabled={busy || !texto.trim()}>
-              Guardar nota
+            <button className="btn btn-primary" type="submit" disabled={busy || lleno || !texto.trim()}>
+              {busy ? "Guardando…" : "Guardar nota"}
             </button>
+            <p className="prefs-hint mem-contador" id="mem-nueva-hint">
+              {lleno
+                ? `Llegaste a las ${limite} notas. Borrá alguna para agregar otra.`
+                : texto.length > LARGO_NOTA - 40
+                  ? `Te quedan ${LARGO_NOTA - texto.length} caracteres.`
+                  : "Una idea por nota: es más fácil de editar después."}
+            </p>
           </form>
 
-          {notas === null ? (
-            <p className="mem-vacio">Cargando…</p>
+          {borrada && (
+            <div className="mem-deshacer" role="status">
+              <span>Nota olvidada.</span>
+              <button type="button" className="btn btn-quiet btn-sm" onClick={deshacer}>
+                Deshacer
+              </button>
+            </div>
+          )}
+
+          {todas === null ? (
+            <p className="mem-vacio" role="status">Cargando tus notas…</p>
+          ) : error && todas.length === 0 ? (
+            <div className="settings-row">
+              <div>
+                <strong>No pude traer tus notas</strong>
+                <p>Puede ser la conexión. Siguen guardadas en tu cuenta.</p>
+              </div>
+              <button className="btn btn-quiet" onClick={cargar}>
+                <Icon name="refresh" size={16} /> Reintentar
+              </button>
+            </div>
           ) : notas.length === 0 ? (
             <p className="mem-vacio">
               Todavía no guardaste nada. Probá con a qué te dedicás, cómo te gusta que te
@@ -414,24 +611,69 @@ function Memoria({ auth, go }) {
             </p>
           ) : (
             <ul className="mem-lista">
-              {notas.map((n) => (
-                <li key={n.id}>
-                  <span>{n.note}</span>
-                  <button type="button" className="icon-btn icon-danger" onClick={() => borrar(n.id)} aria-label={`Olvidar: ${n.note}`} title="Olvidar esta nota">
-                    <Icon name="trash" size={16} />
-                  </button>
-                </li>
-              ))}
+              {notas.map((n) =>
+                editando?.id === n.id ? (
+                  <li key={n.id} className="is-editando">
+                    <form className="mem-editar" onSubmit={guardarEdicion}>
+                      <input
+                        type="text"
+                        value={editando.texto}
+                        maxLength={LARGO_NOTA}
+                        autoFocus
+                        aria-label="Editar nota"
+                        onChange={(e) => setEditando({ id: n.id, texto: e.target.value })}
+                        onKeyDown={(e) => e.key === "Escape" && setEditando(null)}
+                      />
+                      <button type="submit" className="btn btn-primary btn-sm" disabled={ocupada === n.id}>
+                        {ocupada === n.id ? "Guardando…" : "Guardar"}
+                      </button>
+                      <button type="button" className="btn btn-quiet btn-sm" onClick={() => setEditando(null)}>
+                        Cancelar
+                      </button>
+                    </form>
+                  </li>
+                ) : (
+                  <li key={n.id} aria-busy={ocupada === n.id}>
+                    <span>{n.note}</span>
+                    <div className="mem-acciones">
+                      <button
+                        type="button"
+                        className="btn btn-quiet btn-sm"
+                        disabled={!!ocupada}
+                        onClick={() => setEditando({ id: n.id, texto: n.note })}
+                        aria-label={`Editar: ${n.note}`}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn icon-danger"
+                        disabled={!!ocupada}
+                        onClick={() => borrar(n)}
+                        aria-label={`Olvidar: ${n.note}`}
+                        title="Olvidar esta nota"
+                      >
+                        <Icon name="trash" size={16} />
+                      </button>
+                    </div>
+                  </li>
+                )
+              )}
             </ul>
           )}
 
-          {notas && (
+          {todas && !(error && todas.length === 0) && (
             <p className="prefs-hint">
-              {`${notas.length} de ${limite} notas. Entran al inicio de cada mensaje que mandás.`}
+              {`${usadas} de ${limite} notas${usadas > notas.length ? ", contando las del perfil del negocio" : ""}. Entran al inicio de cada mensaje que mandás.`}
             </p>
           )}
         </>
       )}
     </div>
   );
+}
+
+function mensaje(err) {
+  const m = err?.message || "";
+  return m && !/fetch|network/i.test(m) ? m : "Se cayó la conexión. Probá de nuevo.";
 }

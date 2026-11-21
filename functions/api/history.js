@@ -12,24 +12,38 @@
 
 import { leerSesion, mismoOrigen } from "../_lib/session.js";
 
+const MAX_CONTENIDO = 20000;
+const MAX_CONVERSACIONES = 500;
+const MAX_MENSAJES = 2000;
+
+// Entero positivo seguro o null. Number("1e3"), "1.5", "-2" o "abc" no pasan.
+function idValido(v) {
+  const s = String(v ?? "").trim();
+  if (!/^[1-9]\d{0,15}$/.test(s)) return null;
+  const n = Number(s);
+  return Number.isSafeInteger(n) ? n : null;
+}
+
 export async function onRequestGet({ request, env }) {
   const user = await leerSesion(request, env);
   if (!user) return json({ error: "Iniciá sesión para ver tu historial." }, 401);
 
   const url = new URL(request.url);
-  const convId = Number(url.searchParams.get("conv_id"));
+  const convParam = url.searchParams.get("conv_id");
   const q = (url.searchParams.get("q") || "").trim().slice(0, 80);
   const db = env.DB;
 
-  if (convId) {
+  if (convParam !== null) {
+    const convId = idValido(convParam);
+    if (!convId) return json({ error: "Conversación inválida." }, 400);
     const conv = await db
       .prepare("SELECT id, title, pinned, created_at FROM conversations WHERE id = ? AND user_id = ?")
       .bind(convId, user.id)
       .first();
     if (!conv) return json({ error: "Conversación no encontrada" }, 404);
     const { results } = await db
-      .prepare("SELECT role, content, created_at FROM messages WHERE conversation_id = ? ORDER BY id")
-      .bind(convId)
+      .prepare("SELECT role, content, created_at FROM messages WHERE conversation_id = ? ORDER BY id LIMIT ?")
+      .bind(convId, MAX_MENSAJES)
       .all();
     return json({ conversation: conv, messages: results });
   }
@@ -38,14 +52,15 @@ export async function onRequestGet({ request, env }) {
   if (q) {
     const { results } = await db
       .prepare(
-        `SELECT DISTINCT c.id, c.title, c.pinned, c.created_at,
-                substr(m.content, 1, 160) AS extracto
+        `SELECT c.id, c.title, c.pinned, c.created_at,
+                substr(MIN(m.content), 1, 160) AS extracto
          FROM conversations c
          JOIN messages m ON m.conversation_id = c.id
-         WHERE c.user_id = ? AND m.content LIKE ?
+         WHERE c.user_id = ? AND m.content LIKE ? ESCAPE '\\'
+         GROUP BY c.id
          ORDER BY c.id DESC LIMIT 30`
       )
-      .bind(user.id, `%${q.replace(/[%_]/g, "")}%`)
+      .bind(user.id, `%${q.replace(/[\\%_]/g, (c) => "\\" + c)}%`)
       .all();
     return json({ busqueda: q, resultados: results });
   }
@@ -56,9 +71,10 @@ export async function onRequestGet({ request, env }) {
        FROM conversations c LEFT JOIN messages m ON m.conversation_id = c.id
        WHERE c.user_id = ?
        GROUP BY c.id
-       ORDER BY c.pinned DESC, c.id DESC`
+       ORDER BY c.pinned DESC, c.id DESC
+       LIMIT ?`
     )
-    .bind(user.id)
+    .bind(user.id, MAX_CONVERSACIONES)
     .all();
   return json(results);
 }
@@ -69,24 +85,29 @@ export async function onRequestPost({ request, env }) {
   if (!mismoOrigen(request)) return json({ error: "Origen no permitido." }, 403);
 
   const b = await request.json().catch(() => null);
+  if (!b || typeof b !== "object") return json({ error: "Pedido inválido." }, 400);
   const role = b?.role === "assistant" ? "assistant" : "user";
   const db = env.DB;
 
   // Fijar/soltar desde la lista: no trae contenido, va antes de la validación.
   if (b?.accion === "fijar") {
-    const convId = Number(b?.conv_id);
+    const convId = idValido(b?.conv_id);
     if (!convId) return json({ error: "Falta conv_id." }, 400);
-    await db
+    const r = await db
       .prepare("UPDATE conversations SET pinned = 1 - pinned WHERE id = ? AND user_id = ?")
       .bind(convId, user.id)
       .run();
+    if (!r?.meta?.changes) return json({ error: "Conversación no encontrada" }, 404);
     return json({ ok: true });
   }
 
-  const content = String(b?.content || "").slice(0, 20000);
-  if (!content) return json({ error: "Falta el contenido." }, 400);
+  if (b.content != null && typeof b.content !== "string") {
+    return json({ error: "El contenido tiene que ser texto." }, 400);
+  }
+  const content = String(b.content || "").slice(0, MAX_CONTENIDO);
+  if (!content.trim()) return json({ error: "Falta el contenido." }, 400);
 
-  let convId = Number(b?.conv_id) || null;
+  let convId = idValido(b?.conv_id);
   if (convId) {
     const owned = await db
       .prepare("SELECT id FROM conversations WHERE id = ? AND user_id = ?")
@@ -116,10 +137,14 @@ export async function onRequestDelete({ request, env }) {
   if (!mismoOrigen(request)) return json({ error: "Origen no permitido." }, 403);
 
   const url = new URL(request.url);
-  const convId = Number(url.searchParams.get("id"));
+  const idParam = url.searchParams.get("id");
   const db = env.DB;
 
-  if (convId) {
+  // Ojo: antes un ?id=abc daba NaN, caía al else y BORRABA TODO el historial.
+  // Si vino un id, tiene que ser válido; sólo la ausencia total significa "todo".
+  if (idParam !== null) {
+    const convId = idValido(idParam);
+    if (!convId) return json({ error: "Conversación inválida." }, 400);
     // Borramos la conversación si es de esta cuenta; antes borraba los mensajes
     // primero sin verificar la propiedad.
     const owned = await db
@@ -127,14 +152,17 @@ export async function onRequestDelete({ request, env }) {
       .bind(convId, user.id)
       .first();
     if (!owned) return json({ error: "Conversación no encontrada" }, 404);
-    await db.prepare("DELETE FROM messages WHERE conversation_id = ?").bind(convId).run();
-    await db.prepare("DELETE FROM conversations WHERE id = ?").bind(convId).run();
+    await db.batch([
+      db.prepare("DELETE FROM messages WHERE conversation_id = ?").bind(convId),
+      db.prepare("DELETE FROM conversations WHERE id = ? AND user_id = ?").bind(convId, user.id),
+    ]);
   } else {
-    await db
-      .prepare("DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE user_id = ?)")
-      .bind(user.id)
-      .run();
-    await db.prepare("DELETE FROM conversations WHERE user_id = ?").bind(user.id).run();
+    await db.batch([
+      db
+        .prepare("DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE user_id = ?)")
+        .bind(user.id),
+      db.prepare("DELETE FROM conversations WHERE user_id = ?").bind(user.id),
+    ]);
   }
   return json({ ok: true });
 }

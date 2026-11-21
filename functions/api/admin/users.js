@@ -3,16 +3,15 @@
 // La clave se guarda solo en el servidor; el rol en localStorage es cosmético.
 
 import { CUOTA } from "../../_lib/models.js";
+import { puerta } from "../../_lib/cambios.js";
 
 const P = CUOTA; // techos del plan, los mismos que cumple el chat
 
 export async function onRequestGet(context) {
   const { request, env } = context;
 
-  if (!env.ADMIN_KEY) return json({ error: "Falta el secreto ADMIN_KEY en el servidor." }, 503);
-  if (request.headers.get("x-admin-key") !== env.ADMIN_KEY) {
-    return json({ error: "Clave de administración incorrecta." }, 401);
-  }
+  const corte = puerta(request, env);
+  if (corte) return corte;
 
   const desde = new Date().toISOString().slice(0, 7) + "-01";
 
@@ -36,7 +35,8 @@ export async function onRequestGet(context) {
     const res = await env.DB.prepare(sql).bind(desde).all();
     rows = res.results || [];
   } catch (e) {
-    return json({ error: "No se pudo leer la base: " + String(e && e.message || e) }, 500);
+    console.error("admin/users:", e);
+    return json({ error: "No se pudo leer la base. Probá de nuevo en un rato." }, 500);
   }
 
   const usuarios = rows.map((u) => {
