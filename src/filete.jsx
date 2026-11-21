@@ -19,24 +19,28 @@ function espiral(cx, cy, vueltas, paso, sentido = 1) {
   return { d, x, y: cy };
 }
 
+// Voluta izquierda (gira horario) y derecha (antihorario), unidas por un tallo en S.
+// La geometría es fija: se calcula una vez al cargar el módulo, no en cada render.
+const IZQ = espiral(46, 62, 2, 7, 1);
+const DER = espiral(274, 38, 2, 7, 0);
+const TALLO = `M ${IZQ.x} ${IZQ.y} C ${IZQ.x + 10} 10, 150 96, 172 52 S ${DER.x - 14} 4, ${DER.x} ${DER.y}`;
+
+// Decorativo: aria-hidden y sin foco, para que el lector de pantalla lo saltee.
 export default function Filete({ className = "", flip = false }) {
-  // Voluta izquierda (gira horario) y derecha (antihorario), unidas por un tallo en S.
-  const izq = espiral(46, 62, 2, 7, 1);
-  const der = espiral(274, 38, 2, 7, 0);
-  const tallo = `M ${izq.x} ${izq.y} C ${izq.x + 10} 10, 150 96, 172 52 S ${der.x - 14} 4, ${der.x} ${der.y}`;
   return (
     <svg
       className={"filete " + className}
       viewBox="0 0 320 100"
       aria-hidden="true"
       focusable="false"
+      role="presentation"
       style={flip ? { transform: "scaleX(-1)" } : undefined}
     >
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d={izq.d} className="f-oro" strokeWidth="5" />
-        <path d={der.d} className="f-oro" strokeWidth="5" />
-        <path d={tallo} className="f-oro" strokeWidth="5" />
-        <path d={tallo} className="f-rojo" strokeWidth="1.8" transform="translate(0 7)" />
+        <path d={IZQ.d} className="f-oro" strokeWidth="5" />
+        <path d={DER.d} className="f-oro" strokeWidth="5" />
+        <path d={TALLO} className="f-oro" strokeWidth="5" />
+        <path d={TALLO} className="f-rojo" strokeWidth="1.8" transform="translate(0 7)" />
       </g>
       {/* Hojas de acanto, una a cada lado del tallo */}
       <path className="f-verde" d="M118 58 C 104 40, 86 42, 76 34 C 92 58, 104 62, 118 58 Z" />

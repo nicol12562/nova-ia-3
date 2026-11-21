@@ -110,12 +110,73 @@ function isDegenerateOutput(text) {
   return false;
 }
 
+// Límites del pedido. El historial lo arma el navegador, así que se valida acá:
+// sin esto, un body de varios MB o un mensaje con role "system" llegaba tal cual
+// al proveedor (y el usuario podía reescribirle las reglas a Nova).
+const MAX_BODY_BYTES = 256 * 1024;
+const MAX_MENSAJES = 20;
+const MAX_CHARS_MENSAJE = 32000;
+const MAX_CHARS_TOTAL = 64000;
+
+// Deja sólo { role: user|assistant, content: string no vacío }. Recorta el
+// historial viejo para entrar en el tope total; el último mensaje no se recorta:
+// si es demasiado largo se rechaza con un mensaje claro.
+function limpiarHistorial(crudo) {
+  if (!Array.isArray(crudo)) return { error: "Falta el historial de mensajes." };
+  const limpios = [];
+  for (const m of crudo.slice(-MAX_MENSAJES * 3)) {
+    if (!m || typeof m !== "object") continue;
+    if (m.role !== "user" && m.role !== "assistant") continue;
+    if (typeof m.content !== "string" || !m.content.trim()) continue;
+    limpios.push({ role: m.role, content: m.content });
+  }
+  const mensajes = limpios.slice(-MAX_MENSAJES);
+  if (!mensajes.some((m) => m.role === "user")) return { error: "Falta el historial de mensajes." };
+  const ultimo = mensajes[mensajes.length - 1];
+  if (ultimo.content.length > MAX_CHARS_MENSAJE) {
+    return {
+      error: `Tu mensaje es demasiado largo (máximo ${fmt(MAX_CHARS_MENSAJE)} caracteres). Probá dividirlo en partes.`,
+      status: 413,
+    };
+  }
+  for (let i = 0; i < mensajes.length - 1; i++) {
+    if (mensajes[i].content.length > MAX_CHARS_MENSAJE) {
+      mensajes[i] = { ...mensajes[i], content: mensajes[i].content.slice(0, MAX_CHARS_MENSAJE) };
+    }
+  }
+  let total = messagesCharLen(mensajes);
+  while (mensajes.length > 1 && total > MAX_CHARS_TOTAL) total -= mensajes.shift().content.length;
+  return { mensajes };
+}
+
+async function leerBody(request) {
+  const declarado = Number(request.headers.get("content-length") || 0);
+  if (declarado > MAX_BODY_BYTES) return { error: "El pedido es demasiado grande.", status: 413 };
+  let texto;
+  try {
+    texto = await request.text();
+  } catch {
+    return { error: "No pude leer el pedido.", status: 400 };
+  }
+  if (texto.length > MAX_BODY_BYTES) return { error: "El pedido es demasiado grande.", status: 413 };
+  try {
+    const body = JSON.parse(texto);
+    if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("no es objeto");
+    return { body };
+  } catch {
+    return { error: "El pedido no es JSON válido.", status: 400 };
+  }
+}
+
 export async function onRequestPost(context) {
   const { request, env, waitUntil } = context;
-  const body = await request.json().catch(() => null);
+  const leido = await leerBody(request);
+  if (leido.error) return json({ error: leido.error }, leido.status);
+  const body = leido.body;
 
-  const messages = Array.isArray(body?.messages) ? body.messages.slice(-20) : [];
-  if (messages.length === 0) return json({ error: "Falta el historial de mensajes" }, 400);
+  const historial = limpiarHistorial(body.messages);
+  if (historial.error) return json({ error: historial.error }, historial.status || 400);
+  const messages = historial.mensajes;
 
   const apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) {
@@ -134,6 +195,9 @@ export async function onRequestPost(context) {
   const plan = user && MAX_TOKENS[user.plan] ? user.plan : "gratis";
 
   // ---- visitantes: tope diario por IP ----
+  // El mensaje se descuenta recién cuando el pedido pasó todas las validaciones:
+  // antes, un agente inválido o bloqueado le comía uno de los 3 del día.
+  let cobrarInvitado = null;
   if (!userId && env.DB) {
     const ip = request.headers.get("cf-connecting-ip") || "sin-ip";
     const day = new Date().toISOString().slice(0, 10);
@@ -147,6 +211,26 @@ export async function onRequestPost(context) {
         402
       );
     }
+    cobrarInvitado = { ip, day };
+  }
+
+  // ---- los mini agentes son de plan pago ----
+  const agent = String(body?.agent || "");
+  if (agent && !Object.hasOwn(AGENT_PROMPTS, agent)) return json({ error: "Ese agente no existe." }, 400);
+  if (agent && plan === "gratis") {
+    return json(
+      { error: "Los mini agentes son de Pro o Plus. Elegí un plan para desbloquearlos.", agentes: true },
+      403
+    );
+  }
+  // Preferencias del dispositivo: se validan contra las listas del servidor.
+  // hasOwn: con "constructor" o "toString" el lookup devolvía una función heredada
+  // y se colaba en el system prompt (y max_tokens quedaba en NaN).
+  const idioma = Object.hasOwn(IDIOMAS, body.prefs?.idioma ?? "") ? body.prefs.idioma : "ar";
+  const largo = Object.hasOwn(LARGOS, body.prefs?.largo ?? "") ? body.prefs.largo : "breve";
+
+  if (cobrarInvitado) {
+    const { ip, day } = cobrarInvitado;
     waitUntil(
       env.DB
         .prepare(
@@ -165,19 +249,6 @@ export async function onRequestPost(context) {
         .catch(() => {})
     );
   }
-
-  // ---- los mini agentes son de plan pago ----
-  const agent = String(body?.agent || "");
-  if (agent && !AGENT_PROMPTS[agent]) return json({ error: "Ese agente no existe." }, 400);
-  if (agent && plan === "gratis") {
-    return json(
-      { error: "Los mini agentes son de Pro o Plus. Elegí un plan para desbloquearlos.", agentes: true },
-      403
-    );
-  }
-  // Preferencias del dispositivo: se validan contra las listas del servidor.
-  const idioma = IDIOMAS[body?.prefs?.idioma] ? body.prefs.idioma : "ar";
-  const largo = LARGOS[body?.prefs?.largo] ? body.prefs.largo : "breve";
 
   // Memoria de largo plazo: lo que esta persona pidió que Nova recuerde.
   const notas = await notasDe(env, userId);

@@ -1,7 +1,22 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../icons.jsx";
 import { showToast } from "../ui.jsx";
 import Filete from "../filete.jsx";
+
+// El servidor exige lo mismo (functions/api/auth.js): se valida antes para no gastar intentos.
+const MIN_PASS = 6;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validar(mode, email, password) {
+  const errs = {};
+  const e = email.trim();
+  if (!e) errs.email = "Escribí tu email.";
+  else if (!EMAIL_RE.test(e)) errs.email = "Ese email no parece completo. Revisá que tenga @ y el dominio.";
+  if (!password) errs.password = mode === "register" ? "Elegí una contraseña." : "Escribí tu contraseña.";
+  else if (mode === "register" && password.length < MIN_PASS)
+    errs.password = `Necesita al menos ${MIN_PASS} caracteres (van ${password.length}).`;
+  return errs;
+}
 
 export default function Login({ go, setAuth }) {
   const [mode, setMode] = useState("login"); // "login" | "register"
@@ -9,32 +24,107 @@ export default function Login({ go, setAuth }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null); // { text, status }
+  const [fieldErrs, setFieldErrs] = useState({});
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const emailRef = useRef(null);
+  const passRef = useRef(null);
+  const nameRef = useRef(null);
+  const firstRender = useRef(true);
+
+  // Al cambiar de pestaña, el foco va al primer campo útil (no en la carga inicial).
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    (mode === "register" ? nameRef : emailRef).current?.focus();
+  }, [mode]);
+
+  // Volver del ida y vuelta a Google con "Atrás" deja la página en caché: se destraba el botón.
+  useEffect(() => {
+    const onShow = () => setGoogleBusy(false);
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
+
+  function switchMode(next) {
+    if (next === mode) return;
+    setMode(next);
+    setError(null);
+    setFieldErrs({});
+  }
 
   async function submit(e) {
     e.preventDefault();
     if (busy) return;
-    setError("");
+    setError(null);
+    const errs = validar(mode, email, password);
+    setFieldErrs(errs);
+    if (errs.email) return emailRef.current?.focus();
+    if (errs.password) return passRef.current?.focus();
+
     setBusy(true);
     try {
-      const res = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: mode, name, email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Algo salió mal. Probá de nuevo.");
-      localStorage.setItem("novaia_user", JSON.stringify(data.user));
+      let res;
+      try {
+        res = await fetch("/api/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: mode, name: name.trim(), email: email.trim(), password }),
+        });
+      } catch {
+        throw Object.assign(new Error("No hay conexión con Nova. Revisá internet y probá de nuevo."), { status: 0 });
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.user) {
+        const fallback =
+          res.status >= 500
+            ? "El servidor tuvo un problema. Probá de nuevo en un momento."
+            : "Algo salió mal. Probá de nuevo.";
+        throw Object.assign(new Error(data.error || fallback), { status: res.status });
+      }
+      try {
+        localStorage.setItem("novaia_user", JSON.stringify(data.user));
+      } catch {
+        /* almacenamiento bloqueado: la sesión sigue en la cookie */
+      }
       setAuth(data.user);
       showToast(mode === "register" ? "Cuenta creada. Ya podés empezar." : "Sesión iniciada.");
       go("");
     } catch (err) {
-      setError(err.message);
+      setError({ text: err.message, status: err.status });
+      if (err.status === 401 && mode === "login") passRef.current?.select();
     } finally {
       setBusy(false);
     }
   }
+
+  function startGoogle() {
+    if (googleBusy) return;
+    setGoogleBusy(true);
+    window.location.href = "/api/auth/google/start";
+  }
+
+  // Acción concreta para los errores que la tienen.
+  let errorAction = null;
+  if (error?.status === 409 && mode === "register") {
+    errorAction = (
+      <button type="button" className="linklike" onClick={() => switchMode("login")}>
+        Iniciar sesión con este email
+      </button>
+    );
+  } else if (error?.status === 401 && /Google/.test(error.text)) {
+    errorAction = (
+      <button type="button" className="linklike" onClick={startGoogle}>
+        Continuar con Google
+      </button>
+    );
+  }
+
+  const passHint = mode === "register" ? `Mínimo ${MIN_PASS} caracteres.` : null;
+  const passDescribedBy = [fieldErrs.password && "password-err", passHint && "password-hint"].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className="login-page">
@@ -53,7 +143,7 @@ export default function Login({ go, setAuth }) {
         <p className="login-pie">Hecho en Argentina por una persona.</p>
       </div>
 
-      <div className="login-right">
+      <main className="login-right">
         <button className="back" onClick={() => go("chat")}>
           Volver al chat
         </button>
@@ -66,36 +156,54 @@ export default function Login({ go, setAuth }) {
               : "Después de crearla ya tenés historial guardado, búsqueda y el saldo del mes a la vista."}
           </p>
 
-          <div className="tabs">
+          <div className="tabs" role="tablist" aria-label="Elegí cómo entrar">
             <button
+              type="button"
+              role="tab"
+              id="tab-login"
+              aria-selected={mode === "login"}
+              aria-controls="auth-form"
               className={mode === "login" ? "tab active" : "tab"}
-              onClick={() => {
-                setMode("login");
-                setError("");
-              }}
+              onClick={() => switchMode("login")}
             >
               Iniciar sesión
             </button>
             <button
+              type="button"
+              role="tab"
+              id="tab-register"
+              aria-selected={mode === "register"}
+              aria-controls="auth-form"
               className={mode === "register" ? "tab active" : "tab"}
-              onClick={() => {
-                setMode("register");
-                setError("");
-              }}
+              onClick={() => switchMode("register")}
             >
               Crear cuenta
             </button>
           </div>
 
-          <form key={mode} className="auth-form" onSubmit={submit}>
+          <form
+            id="auth-form"
+            role="tabpanel"
+            aria-labelledby={mode === "login" ? "tab-login" : "tab-register"}
+            className="auth-form"
+            onSubmit={submit}
+            noValidate
+            aria-busy={busy}
+          >
             {mode === "register" && (
               <div className="field">
-                <label htmlFor="name">Nombre (opcional)</label>
+                <label htmlFor="name">
+                  Nombre <span className="field-opt">(opcional)</span>
+                </label>
                 <input
                   id="name"
+                  ref={nameRef}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Cómo querés que te llame Nova"
+                  autoComplete="name"
+                  autoCapitalize="words"
+                  maxLength={80}
                 />
               </div>
             )}
@@ -103,53 +211,105 @@ export default function Login({ go, setAuth }) {
               <label htmlFor="email">Email</label>
               <input
                 id="email"
+                ref={emailRef}
                 type="email"
+                inputMode="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldErrs.email) setFieldErrs((f) => ({ ...f, email: undefined }));
+                }}
                 placeholder="tu@email.com"
-                autoComplete="email"
+                autoComplete={mode === "register" ? "email" : "username"}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                aria-invalid={fieldErrs.email ? true : undefined}
+                aria-describedby={fieldErrs.email ? "email-err" : undefined}
               />
+              {fieldErrs.email && (
+                <p className="field-err" id="email-err">
+                  {fieldErrs.email}
+                </p>
+              )}
             </div>
             <div className="field">
               <label htmlFor="password">Contraseña</label>
               <div className="pass-wrap">
                 <input
                   id="password"
+                  ref={passRef}
                   type={showPass ? "text" : "password"}
                   required
+                  minLength={mode === "register" ? MIN_PASS : undefined}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (fieldErrs.password) setFieldErrs((f) => ({ ...f, password: undefined }));
+                  }}
+                  placeholder={mode === "register" ? `Al menos ${MIN_PASS} caracteres` : "Tu contraseña"}
                   autoComplete={mode === "register" ? "new-password" : "current-password"}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  aria-invalid={fieldErrs.password ? true : undefined}
+                  aria-describedby={passDescribedBy}
                 />
                 <button
                   type="button"
                   className="pass-toggle"
                   aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-pressed={showPass}
+                  aria-controls="password"
                   onClick={() => setShowPass(!showPass)}
                 >
                   <Icon name={showPass ? "eyeOff" : "eye"} size={17} />
                 </button>
               </div>
+              {fieldErrs.password ? (
+                <p className="field-err" id="password-err">
+                  {fieldErrs.password}
+                </p>
+              ) : (
+                passHint && (
+                  <p className="field-hint" id="password-hint">
+                    {passHint}
+                  </p>
+                )
+              )}
             </div>
-            {error && <p className="error">{error}</p>}
 
-            <p className="forgot">
-              <button
-                type="button"
-                className="linklike"
-                style={{ fontWeight: 500 }}
-                onClick={() => showToast("Todavía no hay recuperación por email. Si no recordás la contraseña, creá otra cuenta o escribinos por WhatsApp.")}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            </p>
+            <div className="auth-error" role="alert" aria-live="assertive">
+              {error && (
+                <p className="error">
+                  {error.text}
+                  {errorAction && <> {errorAction}</>}
+                </p>
+              )}
+            </div>
 
-            <button className="btn btn-primary btn-block" disabled={busy}>
+            {mode === "login" && (
+              <p className="forgot">
+                <button
+                  type="button"
+                  className="linklike"
+                  onClick={() =>
+                    showToast(
+                      "Todavía no hay recuperación por email. Si no recordás la contraseña, creá otra cuenta o escribinos por WhatsApp."
+                    )
+                  }
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </p>
+            )}
+
+            <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
               {busy ? (
                 <>
-                  <span className="spinner" /> Un segundo…
+                  <span className="spinner" aria-hidden="true" />
+                  {mode === "login" ? "Entrando…" : "Creando tu cuenta…"}
                 </>
               ) : mode === "login" ? (
                 "Iniciar sesión"
@@ -161,13 +321,9 @@ export default function Login({ go, setAuth }) {
 
           <div className="divider">o continuar con</div>
 
-          <button
-            className="btn-google"
-            onClick={() => {
-              window.location.href = "/api/auth/google/start";
-            }}
-          >
-            <Icon name="google" size={17} /> Continuar con Google
+          <button type="button" className="btn-google" onClick={startGoogle} disabled={googleBusy} aria-busy={googleBusy}>
+            {googleBusy ? <span className="spinner" aria-hidden="true" /> : <Icon name="google" size={17} />}
+            {googleBusy ? "Abriendo Google…" : "Continuar con Google"}
           </button>
 
           <p className="legal">
@@ -182,21 +338,21 @@ export default function Login({ go, setAuth }) {
             {mode === "login" ? (
               <>
                 ¿Todavía no tenés cuenta?{" "}
-                <button className="linklike" onClick={() => { setMode("register"); setError(""); }}>
+                <button type="button" className="linklike" onClick={() => switchMode("register")}>
                   Crear una cuenta
                 </button>
               </>
             ) : (
               <>
                 ¿Ya tenés cuenta?{" "}
-                <button className="linklike" onClick={() => { setMode("login"); setError(""); }}>
+                <button type="button" className="linklike" onClick={() => switchMode("login")}>
                   Iniciar sesión
                 </button>
               </>
             )}
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

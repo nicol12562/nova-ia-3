@@ -23,6 +23,9 @@ export default function Home({ go, auth, racha = 0 }) {
   const [modelos, setModelos] = useState([]);
   const [cuota, setCuota] = useState(null);
   const [forzado, setForzado] = useState(false);
+  // "cargando" | "listo" | "error": sin esto, una falla dejaba "Cargando…" para siempre.
+  const [estado, setEstado] = useState("cargando");
+  const [intento, setIntento] = useState(0);
   const pago = !!auth && (auth.plan === "pro" || auth.plan === "plus");
 
   useEffect(() => {
@@ -34,17 +37,22 @@ export default function Home({ go, auth, racha = 0 }) {
 
   // Los techos los sirve el backend; así el Inicio no duplica números que pueden desactualizarse.
   useEffect(() => {
+    let vivo = true;
+    setEstado("cargando");
     const hoy = new Date().toISOString().slice(0, 10);
     fetch(`/api/usage?from=${hoy.slice(0, 8)}01&to=${hoy}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (!d) return;
-        if (Array.isArray(d.modelos)) setModelos(d.modelos);
+        if (!vivo) return;
+        if (!d || !Array.isArray(d.modelos) || !d.modelos.length) return setEstado("error");
+        setModelos(d.modelos);
         if (d.cuota) setCuota(d.cuota);
         setForzado(!!d.forzado);
+        setEstado("listo");
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => vivo && setEstado("error"));
+    return () => { vivo = false; };
+  }, [intento]);
 
   const empezar = (texto) => {
     const contenido = (texto ?? q).trim();
@@ -103,7 +111,7 @@ export default function Home({ go, auth, racha = 0 }) {
           aria-label="Escribí tu primera pregunta"
         />
         <div className="ask-row">
-          <span className="ask-hint">
+          <span className={"ask-hint" + (auth ? "" : " ask-hint-invitado")}>
             {auth ? "Enter para mandar, Shift + Enter para otra línea" : "Sin cuenta: 3 mensajes por día, sin tarjeta"}
           </span>
           <button type="submit" className="btn btn-primary" disabled={!q.trim()}>
@@ -115,7 +123,7 @@ export default function Home({ go, auth, racha = 0 }) {
       <ul className="arranques" aria-label="Ideas para arrancar">
         {ARRANQUES.map((a) => (
           <li key={a.t}>
-            <button onClick={() => usarArranque(a)}>{a.t}</button>
+            <button type="button" onClick={() => usarArranque(a)}>{a.t}</button>
           </li>
         ))}
       </ul>
@@ -129,20 +137,37 @@ export default function Home({ go, auth, racha = 0 }) {
               : "Cada uno descuenta de su propia bolsa mensual. Abajo de cada nombre está quién lo atiende hoy."}
           </p>
         </div>
-        <ul className="modelos">
-          {(modelos.length ? modelos : []).map((m) => (
-            <li key={m.key} className={"modelo m-" + (COLOR_MODELO[m.key] || "oro")}>
+        <ul className="modelos" aria-busy={estado === "cargando"}>
+          {modelos.map((m) => (
+            <li key={m.key} className={"modelo m-" + (COLOR_MODELO[m.key] || "oro") + (auth && m.agotado ? " agotado" : "")}>
               <span className="modelo-nombre">{m.label}</span>
               <span className="modelo-desc">{m.desc}</span>
               <span className="modelo-cifra">
-                <b>{fmt(auth ? m.restantes : m.techo)}</b>
-                {auth ? "tokens te quedan" : "tokens por mes, gratis"}
+                {auth && m.agotado ? (
+                  <>
+                    <b>Agotado</b>
+                    {`usaste los ${fmt(m.techo)} tokens de este mes`}
+                  </>
+                ) : (
+                  <>
+                    <b>{fmt(auth ? m.restantes : m.techo)}</b>
+                    {auth ? `de ${fmt(m.techo)} tokens te quedan este mes` : "tokens por mes, gratis"}
+                  </>
+                )}
               </span>
               {m.upstream && <span className="modelo-up">{m.upstream}</span>}
             </li>
           ))}
-          {!modelos.length && (
-            <li className="modelo modelo-cargando">Cargando los saldos…</li>
+          {!modelos.length && estado === "cargando" && (
+            <li className="modelo modelo-cargando" role="status">Leyendo los saldos de cada modelo…</li>
+          )}
+          {!modelos.length && estado === "error" && (
+            <li className="modelo modelo-cargando modelo-error" role="alert">
+              <span>No pudimos leer los saldos, por la conexión o el servidor. Podés preguntar igual.</span>
+              <button type="button" className="link" onClick={() => setIntento((n) => n + 1)}>
+                Volver a intentar
+              </button>
+            </li>
           )}
         </ul>
       </section>
@@ -157,18 +182,23 @@ export default function Home({ go, auth, racha = 0 }) {
         <ul className="agentes-lista">
           {AGENTS.slice(0, 4).map((a) => (
             <li key={a.id}>
-              <button onClick={() => go(pago ? "mini-agentes" : "planes")}>
+              <button type="button" onClick={() => go(pago ? "mini-agentes" : "planes")}>
                 <Icon name={a.icon} size={17} />
                 <span>
                   <strong>{a.name}</strong>
                   <small>{a.desc}</small>
                 </span>
-                {!pago && <Icon name="lock" size={14} />}
+                {!pago && (
+                  <>
+                    <span className="sr-only">Viene con Plus o Pro: te llevo a los planes</span>
+                    <Icon name="lock" size={14} />
+                  </>
+                )}
               </button>
             </li>
           ))}
         </ul>
-        <button className="link" onClick={() => go("mini-agentes")}>
+        <button type="button" className="link" onClick={() => go("mini-agentes")}>
           Ver los {AGENTS.length} agentes
         </button>
       </section>
@@ -181,7 +211,7 @@ export default function Home({ go, auth, racha = 0 }) {
               {`${cuota ? fmt(cuota) : "1.000.000"} tokens por mes, historial con búsqueda y una memoria que Nova lee en cada charla. Sin tarjeta.`}
             </p>
           </div>
-          <button className="btn btn-primary" onClick={() => go("login")}>Crear mi cuenta</button>
+          <button type="button" className="btn btn-primary" onClick={() => go("login")}>Crear mi cuenta</button>
         </aside>
       )}
     </section>

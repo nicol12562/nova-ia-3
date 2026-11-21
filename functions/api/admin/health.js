@@ -10,16 +10,15 @@
 //   probe=1   → además manda un chat de 1 token a cada id (cuesta poco, tarda ~2s)
 
 import { SLOTS } from "../../_lib/models.js";
+import { puerta } from "../../_lib/cambios.js";
 
 const PLANS = ["gratis", "plus", "pro"];
 
 export async function onRequestGet(context) {
   const { request, env } = context;
 
-  if (!env.ADMIN_KEY) return json({ error: "Falta el secreto ADMIN_KEY en el servidor." }, 503);
-  if (request.headers.get("x-admin-key") !== env.ADMIN_KEY) {
-    return json({ error: "Clave de administración incorrecta." }, 401);
-  }
+  const corte = puerta(request, env);
+  if (corte) return corte;
   if (!env.OPENROUTER_API_KEY) return json({ error: "Falta OPENROUTER_API_KEY." }, 503);
 
   const quiereProbe = new URL(request.url).searchParams.get("probe") === "1";
@@ -29,6 +28,7 @@ export async function onRequestGet(context) {
     const res = await fetch("https://openrouter.ai/api/v1/models", {
       headers: { Authorization: `Bearer ${env.OPENROUTER_API_KEY}` },
     });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     catalogo = new Set((data.data || []).map((m) => m.id));
   } catch {

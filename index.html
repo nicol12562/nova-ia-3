@@ -17,10 +17,25 @@
       property="og:description"
       content="Estudiar, programar, trabajar y crear con un asistente que arranca en español rioplatense. Tres modelos, un saldo que se ve y soporte por WhatsApp. Los primeros mensajes son gratis y no piden tarjeta."
     />
+    <meta property="og:image" content="https://novaia-4ig.pages.dev/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Logo de Nova IA: una estrella oro con sombra roja sobre índigo" />
     <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Nova IA — IA en español, precios en pesos" />
+    <meta
+      name="twitter:description"
+      content="Un asistente que arranca en español rioplatense: tres modelos, saldo a la vista y soporte por WhatsApp. Empezá gratis, sin tarjeta."
+    />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#14183a" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#090b1c" />
+    <meta name="application-name" content="Nova IA" />
+    <meta name="apple-mobile-web-app-title" content="Nova IA" />
+    <meta name="format-detection" content="telephone=no" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <title>Nova IA — IA en español, precios en pesos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -64,10 +79,25 @@
     </script>
   </head>
   <body>
+    <script>
+      // Tema elegido antes del primer pintado: sin esto, quien usa el oscuro
+      // ve un destello claro hasta que monta React. App.jsx sigue mandando después.
+      (function () {
+        try {
+          if (localStorage.getItem("novaia_theme") === "dark") {
+            document.body.classList.add("dark");
+            var metas = document.querySelectorAll('meta[name="theme-color"]');
+            for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", "#090b1c");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <noscript>
-      <div style="font-family: system-ui, sans-serif; padding: 40px; text-align: center;">
-        Nova IA necesita JavaScript para funcionar. Activá JavaScript y volvé a cargar la página.
+      <div style="font-family: system-ui, sans-serif; max-width: 34rem; margin: 0 auto; padding: 48px 16px; color: #14183a; line-height: 1.5;">
+        <p style="font-size: 20px; font-weight: 700; margin: 0 0 8px;">Nova IA necesita JavaScript</p>
+        <p style="margin: 0 0 16px;">El chat corre en el navegador. Activá JavaScript y volvé a cargar la página.</p>
+        <p style="margin: 0;"><a href="https://wa.me/5493416116096" style="color: #14183a;">¿No podés? Escribinos por WhatsApp</a> · <a href="/privacidad.html" style="color: #14183a;">Privacidad</a> · <a href="/terminos.html" style="color: #14183a;">Términos</a></p>
       </div>
     </noscript>
     <script type="module" src="/src/main.jsx"></script>

@@ -58,6 +58,36 @@ const SUGGESTIONS = [
 
 const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
 
+// Lo que escucha un lector de pantalla al terminar una respuesta: texto plano,
+// sin la sintaxis de Markdown y con un tope para no leer una página entera.
+const textoPlano = (md) =>
+  (md || "")
+    .replace(/```[\s\S]*?```/g, " (bloque de código) ")
+    .replace(/[#*_`>|~]+/g, "")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+const resumenParaLeer = (md) => {
+  const t = textoPlano(md);
+  return t.length > 600 ? t.slice(0, 600) + "… La respuesta sigue en pantalla." : t;
+};
+
+// Mensaje entendible para un fallo de red o del servidor, nunca el error crudo.
+const explicarError = (e) => {
+  if (e instanceof TypeError || /failed to fetch|network|load failed/i.test(e?.message || "")) {
+    return "Se cortó la conexión antes de que llegara la respuesta. Revisá internet y reintentá.";
+  }
+  return e?.message || "Algo falló del lado del servidor. Reintentá en un momento.";
+};
+
+const reducirMovimiento = () => {
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+};
+
 export const DRAFT_KEY = "novaia_draft";
 
 export default function Chat({ auth, convId, go }) {
@@ -98,6 +128,12 @@ export default function Chat({ auth, convId, go }) {
   const detenidoRef = useRef(false);
   const [lejos, setLejos] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerBtnRef = useRef(null);
+  // Lo que se anuncia a lectores de pantalla: el hilo no es "live" para no
+  // dictar cada token; acá se avisa el arranque, la demora y el final.
+  const [aviso, setAviso] = useState("");
+  const [cargandoConv, setCargandoConv] = useState(Boolean(convId && auth));
+  const forzarScrollRef = useRef(false);
 
   // Botón explícito: cualquier respuesta se puede subir a la pieza sin que el
   // heuristic decida por el usuario. Toma el pedido anterior como título.
@@ -162,24 +198,47 @@ export default function Chat({ auth, convId, go }) {
   useEffect(() => {
     if (!convId || !auth || loadedRef.current) return;
     loadedRef.current = true;
+    setCargandoConv(true);
     (async () => {
       try {
         const res = await fetch(`/api/history?conv_id=${convId}`);
-        if (!res.ok) return;
+        if (!res.ok) {
+          showToast(
+            res.status === 404
+              ? "No encontramos esa conversación. Arrancá una nueva."
+              : "No pudimos abrir la conversación. Probá recargar.",
+            { tone: "error" }
+          );
+          return;
+        }
         const data = await res.json();
         setConv(data.conversation.id);
+        forzarScrollRef.current = true;
         setMsgs(data.messages.map((m) => ({ role: m.role, content: m.content })));
       } catch {
-        /* sin conexión: arranca vacío */
+        showToast("Sin conexión: no pudimos abrir la conversación.", { tone: "error" });
+      } finally {
+        setCargandoConv(false);
       }
     })();
   }, [convId, auth?.id]);
 
-  // Auto-scroll solo si el usuario está mirando el final de la conversación
+  // Auto-scroll solo si el usuario está mirando el final de la conversación,
+  // salvo al mandar o abrir una charla: ahí siempre se baja al último mensaje.
   useEffect(() => {
     const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 260;
-    if (nearBottom) endRef.current?.scrollIntoView({ block: "end", behavior: "instant" });
+    if (nearBottom || forzarScrollRef.current) endRef.current?.scrollIntoView({ block: "end", behavior: "instant" });
+    forzarScrollRef.current = false;
   }, [msgs]);
+
+  // En desktop el cursor ya espera en el composer; en táctil no se abre el teclado solo.
+  useEffect(() => {
+    try {
+      if (window.matchMedia("(pointer: fine)").matches) taRef.current?.focus({ preventScroll: true });
+    } catch {
+      /* sin matchMedia */
+    }
+  }, []);
 
   // Guarda un mensaje en D1 (si hay sesión). Devuelve el id de conversación a usar.
   async function save(role, content, convOverride) {
@@ -246,7 +305,9 @@ export default function Chat({ auth, convId, go }) {
     const history = [...previos, { role: "user", content }];
     // La burbuja vacia se pinta ANTES de pedir: el backend tarda entre 3 y 14
     // segundos en el primer token, y sin esto el usuario mira una pantalla quieta.
+    forzarScrollRef.current = true;
     setMsgs([...history, { role: "assistant", content: "" }]);
+    setAviso("Nova está pensando la respuesta.");
     setInput("");
     setBusy(true);
     setWaiting(true);
@@ -259,8 +320,16 @@ export default function Chat({ auth, convId, go }) {
     detenidoRef.current = false;
     let acc = "";
     let currentConv = conv;
-    const relojLento = setTimeout(() => setLento(true), 18000);
+    const relojLento = setTimeout(() => {
+      setLento(true);
+      setAviso("Está tardando más de lo normal. Podés esperar o detenerla con Escape.");
+    }, 18000);
+    // El corte de 45 s es solo para el primer token: una respuesta larga que ya
+    // está escribiendo no se interrumpe por tiempo.
     const relojCorte = setTimeout(() => control.abort(), 45000);
+    let primerToken = false;
+    // Si el stream se queda mudo 30 s en el medio, se corta igual.
+    let relojSilencio = 0;
     try {
       if (!reintento) currentConv = await save("user", content);
       const res = await fetch("/api/chat", {
@@ -290,7 +359,12 @@ export default function Chat({ auth, convId, go }) {
           setAgentBlock(true);
           return;
         }
-        throw new Error(data.error || "El backend respondió " + res.status);
+        throw new Error(
+          data.error ||
+            (res.status === 429
+              ? "Hay muchos pedidos juntos. Esperá unos segundos y reintentá."
+              : `El servidor respondió con un error (${res.status}). Reintentá en un momento.`)
+        );
       }
       if (!auth) {
         const n = Math.min(GUEST_LIMIT, guest.n + 1);
@@ -335,8 +409,16 @@ export default function Chat({ auth, convId, go }) {
             }
             const delta = json.choices?.[0]?.delta?.content ?? "";
             if (delta) {
-              if (waiting) setWaiting(false);
-              clearTimeout(relojLento);
+              if (!primerToken) {
+                primerToken = true;
+                setWaiting(false);
+                setLento(false);
+                clearTimeout(relojLento);
+                clearTimeout(relojCorte);
+                setAviso("Nova está escribiendo.");
+              }
+              clearTimeout(relojSilencio);
+              relojSilencio = setTimeout(() => control.abort(), 30000);
               acc += delta;
               pushDelta(delta);
               // Se espeja en el canvas cada ~48 caracteres: alcanza para que se
@@ -371,9 +453,15 @@ export default function Chat({ auth, convId, go }) {
       if (acc) {
         if (!fallo) actualizarPieza(acc, titulo, content); // la versión completa, sin recortes del throttle
         vivaRef.current = -1;
+        setAviso(
+          (fallo ? "No hubo respuesta del modelo. " : `Nova respondió${asiento.model ? " con " + asiento.model : ""}. `) +
+            resumenParaLeer(acc)
+        );
         await save("assistant", acc, currentConv);
       } else {
-        setMsgs([...history, { role: "assistant", content: "No llegó ninguna respuesta. Reintentá: si pasa dos veces, cambiá de modelo desde el menú de abajo.", asiento: asientoCorto(fallo) }]);
+        const vacio = "No llegó ninguna respuesta. Reintentá: si pasa dos veces, cambiá de modelo desde el menú de abajo.";
+        setMsgs([...history, { role: "assistant", content: vacio, asiento: asientoCorto(true) }]);
+        setAviso(vacio);
       }
     } catch (e) {
       // Lo cortó el usuario: queda lo que llegó, con su asiento, y se guarda.
@@ -388,28 +476,37 @@ export default function Chat({ auth, convId, go }) {
               : m
           )
         );
+        setAviso(acc ? "Detuviste la respuesta. Queda lo que alcanzó a escribir." : "Detuviste la respuesta antes de que empezara.");
         if (acc) await save("assistant", acc, currentConv);
         return;
       }
       const cortado = e?.name === "AbortError";
+      const explicacion = cortado
+        ? "Tardó demasiado en responder y corté la espera para no dejarte colgado. Probá de nuevo."
+        : explicarError(e);
       setMsgs([
         ...history,
         {
           role: "assistant",
-          content: cortado
-            ? "Tardó demasiado en responder y corté la espera para no dejarte colgado. Probá de nuevo."
-            : "Error: " + e.message,
+          content: explicacion,
           asiento: asientoCorto(true),
         },
       ]);
+      setAviso(explicacion);
       showToast(cortado ? "Se cortó la espera. Reintentá." : "No pudimos obtener la respuesta.", { tone: "error" });
     } finally {
       clearTimeout(relojLento);
       clearTimeout(relojCorte);
+      clearTimeout(relojSilencio);
       controlRef.current = null;
       setLento(false);
       setBusy(false);
       setWaiting(false);
+      // Si el foco estaba en Detener (que desaparece), vuelve al composer.
+      requestAnimationFrame(() => {
+        const activo = document.activeElement;
+        if (!activo || activo === document.body) taRef.current?.focus({ preventScroll: true });
+      });
       cargarModelos();
       window.dispatchEvent(new Event("novaia:saldo"));
     }
@@ -518,7 +615,47 @@ export default function Chat({ auth, convId, go }) {
   const modeloActual = listaModelos.find((m) => m.key === modelKey) || listaModelos[0];
   const titulo = tituloDe(msgs.find((m) => m.role === "user")?.content);
   const ultimo = msgs[msgs.length - 1];
-  const puedeReintentar = !busy && ultimo?.role === "assistant" && ultimo.asiento?.fallo && msgs[msgs.length - 2]?.role === "user";
+  // Se reintenta una respuesta fallida o una que se detuvo antes de escribir nada
+  // (esa no quedó guardada, así que no se duplica en el historial).
+  const puedeReintentar =
+    !busy &&
+    ultimo?.role === "assistant" &&
+    (ultimo.asiento?.fallo || (ultimo.detenida && !ultimo.content)) &&
+    msgs[msgs.length - 2]?.role === "user";
+
+  function irAlFinal() {
+    endRef.current?.scrollIntoView({ block: "end", behavior: reducirMovimiento() ? "instant" : "smooth" });
+    taRef.current?.focus({ preventScroll: true });
+  }
+
+  function cerrarPicker() {
+    setPickerOpen(false);
+    pickerBtnRef.current?.focus();
+  }
+
+  // Flechas, Inicio y Fin recorren los modelos disponibles dentro del menú.
+  function navegarPicker(e) {
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      cerrarPicker();
+      return;
+    }
+    if (e.key === "Tab") {
+      setPickerOpen(false);
+      return;
+    }
+    const opciones = [...e.currentTarget.querySelectorAll("[role='option']:not(:disabled)")];
+    if (!opciones.length) return;
+    const actual = opciones.indexOf(document.activeElement);
+    let sig = null;
+    if (e.key === "ArrowDown") sig = (actual + 1) % opciones.length;
+    else if (e.key === "ArrowUp") sig = (actual - 1 + opciones.length) % opciones.length;
+    else if (e.key === "Home") sig = 0;
+    else if (e.key === "End") sig = opciones.length - 1;
+    if (sig == null) return;
+    e.preventDefault();
+    opciones[sig].focus();
+  }
   const quedanGuest = Math.max(0, GUEST_LIMIT - guest.n);
 
   return (
@@ -543,7 +680,14 @@ export default function Chat({ auth, convId, go }) {
         </header>
       )}
 
-      {!conversando && (
+      {!conversando && cargandoConv && (
+        <p className="chat-cargando" role="status">
+          <span className="dots" aria-hidden="true"><i /><i /><i /></span>
+          Abriendo la conversación…
+        </p>
+      )}
+
+      {!conversando && !cargandoConv && (
         <div className="chat-intro">
           <h1>{agent ? agent.name : "¿Qué hacemos?"}</h1>
           <p>
@@ -568,7 +712,9 @@ export default function Chat({ auth, convId, go }) {
         </div>
       )}
 
-      <div className="chat-log" role="log" aria-live="polite" aria-busy={busy}>
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{aviso}</p>
+
+      <div className="chat-log" role="log" aria-live="off" aria-label="Conversación">
         {msgs.map((m, i) => {
           const streaming = busy && i === msgs.length - 1 && m.role === "assistant";
           const isUser = m.role === "user";
@@ -613,13 +759,15 @@ export default function Chat({ auth, convId, go }) {
                   )}
                 </p>
               )}
-              {!isUser && !streaming && m.content && (
+              {!isUser && !streaming && (m.content || (puedeReintentar && i === msgs.length - 1)) && (
                 <div className="msg-actions">
-                  <button className="msg-act" onClick={() => handleCopy(m.content, i)}>
-                    <Icon name={copiedIdx === i ? "check" : "copy"} size={14} />
-                    {copiedIdx === i ? "Copiado" : "Copiar"}
-                  </button>
-                  {!m.asiento?.fallo && (
+                  {m.content && (
+                    <button className="msg-act" onClick={() => handleCopy(m.content, i)}>
+                      <Icon name={copiedIdx === i ? "check" : "copy"} size={14} />
+                      {copiedIdx === i ? "Copiado" : "Copiar"}
+                    </button>
+                  )}
+                  {m.content && !m.asiento?.fallo && (
                     <button className="msg-act" onClick={() => abrirPieza(m.content, i)} title="Verla aparte, lista para copiar o descargar">
                       <Icon name="doc" size={14} /> Abrir como pieza
                     </button>
@@ -654,8 +802,9 @@ export default function Chat({ auth, convId, go }) {
         {lejos && conversando && (
           <button
             className="al-final"
-            onClick={() => endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" })}
+            onClick={irAlFinal}
             aria-label="Ir al último mensaje"
+            title="Ir al último mensaje"
           >
             <Icon name="arrowDown" size={17} />
           </button>
@@ -691,18 +840,26 @@ export default function Chat({ auth, convId, go }) {
             rows={1}
             placeholder={agent ? `Escribile a ${agent.name}` : "Escribí tu mensaje"}
             aria-label="Mensaje para Nova"
+            aria-describedby="composer-ayuda"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
+              // Con un IME (acentos compuestos, teclados asiáticos) Enter confirma
+              // la letra, no manda el mensaje.
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 send(input);
               }
             }}
           />
+          <span id="composer-ayuda" className="sr-only">
+            Enter manda, Shift más Enter hace un salto de línea y Escape detiene la respuesta.
+          </span>
           <div className="composer-row">
             <div className="picker">
               <button
+                ref={pickerBtnRef}
                 className={"picker-btn m-" + (COLOR_MODELO[modeloActual.key] || "oro")}
                 onClick={() => setPickerOpen((v) => !v)}
                 disabled={busy}
@@ -721,10 +878,10 @@ export default function Chat({ auth, convId, go }) {
                     className="picker-menu"
                     role="listbox"
                     aria-label="Elegir modelo"
-                    onKeyDown={(e) => e.key === "Escape" && setPickerOpen(false)}
+                    onKeyDown={navegarPicker}
                   >
                     {listaModelos.map((m) => (
-                      <li key={m.key}>
+                      <li key={m.key} role="none">
                         <button
                           role="option"
                           aria-selected={m.key === modelKey}
@@ -756,7 +913,7 @@ export default function Chat({ auth, convId, go }) {
               <span className="picker-aviso">Te queda {100 - modeloActual.pct}% de este modelo</span>
             )}
             {busy ? (
-              <button className="send-btn stop" onClick={detener} aria-label="Detener la respuesta" title="Detener (Esc)">
+              <button className="send-btn stop" onClick={detener} aria-label="Detener la respuesta (Escape)" title="Detener (Esc)">
                 <Icon name="stop" size={16} />
               </button>
             ) : (
@@ -765,6 +922,7 @@ export default function Chat({ auth, convId, go }) {
                 disabled={!input.trim()}
                 onClick={() => send(input)}
                 aria-label="Enviar mensaje"
+                title="Enviar (Enter)"
               >
                 <Icon name="send" size={17} />
               </button>

@@ -4,7 +4,7 @@
 // Desde una vista previa o un alias, rebota a la dirección canónica con
 // ?volver=<origen>: ahí están los secretos y la URI que Google tiene registrada.
 
-import { origenCanonico, origenPermitido } from "../../../_lib/oauth.js";
+import { origenCanonico, origenPermitido, pkceVerifier, pkceChallenge } from "../../../_lib/oauth.js";
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
@@ -51,6 +51,11 @@ export async function onRequestGet({ request, env }) {
   authUrl.searchParams.set("scope", "openid email profile");
   authUrl.searchParams.set("state", state);
   authUrl.searchParams.set("prompt", "select_account");
+  if (env.GOOGLE_CLIENT_SECRET) {
+    const verifier = await pkceVerifier(state, env.GOOGLE_CLIENT_SECRET);
+    authUrl.searchParams.set("code_challenge", await pkceChallenge(verifier));
+    authUrl.searchParams.set("code_challenge_method", "S256");
+  }
 
   return Response.redirect(authUrl.toString(), 302);
 }

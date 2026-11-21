@@ -15,23 +15,44 @@ export const LARGOS = [
   { id: "detallado", label: "Detallado", hint: "todo, con ejemplos", maxTokens: 4096 },
 ];
 
+// Modelo con el que arranca el chat. Las claves coinciden con las del selector
+// del composer; el saldo real de cada uno se ve en Uso.
+export const MODELOS = [
+  { id: "flash", label: "Nova Flash", hint: "el de saldo más grande" },
+  { id: "pro", label: "Nova Pro", hint: "saldo medio, texto y código" },
+  { id: "pro31", label: "Nova Pro 3.1", hint: "saldo corto, para lo importante" },
+];
+
 export const DEFAULTS = { idioma: "ar", largo: "breve", modelo: "flash" };
+
+export const esValido = (lista, id) => lista.some((x) => x.id === id);
+
+
+// Un valor viejo o tocado a mano en el storage vuelve al default en vez de
+// dejar un control sin ninguna opción marcada.
+function sanear(raw) {
+  const p = { ...DEFAULTS, ...(raw && typeof raw === "object" ? raw : {}) };
+  if (!esValido(IDIOMAS, p.idioma)) p.idioma = DEFAULTS.idioma;
+  if (!esValido(LARGOS, p.largo)) p.largo = DEFAULTS.largo;
+  if (!esValido(MODELOS, p.modelo)) p.modelo = DEFAULTS.modelo;
+  return p;
+}
 
 export function leerPrefs() {
   try {
-    const raw = JSON.parse(localStorage.getItem(PREFS_KEY) || "null");
-    return { ...DEFAULTS, ...(raw || {}) };
+    return sanear(JSON.parse(localStorage.getItem(PREFS_KEY) || "null"));
   } catch {
     return { ...DEFAULTS };
   }
 }
 
+// Devuelve false si el navegador no deja guardar (modo privado, storage lleno):
+// la interfaz lo avisa en vez de mostrar "guardado" de mentira.
 export function escribirPrefs(p) {
   try {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(p));
+    localStorage.setItem(PREFS_KEY, JSON.stringify(sanear(p)));
+    return true;
   } catch {
-    /* sin storage, la sesión igual funciona con los defaults */
+    return false;
   }
 }
-
-export const esValido = (lista, id) => lista.some((x) => x.id === id);

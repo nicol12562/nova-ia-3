@@ -41,6 +41,16 @@ export function cookieLimpiar(request) {
 
 // Crea la fila y devuelve el Set-Cookie listo para responder.
 export async function crearSesion(env, userId, request) {
+  // Anti fijación/acumulación: si el navegador ya traía una sesión, se tira
+  // antes de emitir la nueva. El token siempre es nuevo y aleatorio.
+  const previo = request ? tokenDeCookie(request) : null;
+  if (previo) {
+    await env.DB
+      .prepare("DELETE FROM sessions WHERE kind = 'session' AND token = ?")
+      .bind(previo)
+      .run()
+      .catch(() => {});
+  }
   const token = randomToken();
   await env.DB.prepare(
     `INSERT INTO sessions (kind, token, user_id, expires_at)
@@ -113,6 +123,10 @@ function tokenDeCookie(request) {
 // pero un navegador viejo o un subdominio compromise pueden. Si el origen no
 // coincide, la sesión no se usa.
 export function mismoOrigen(request) {
+  // Fetch Metadata: los navegadores modernos marcan los pedidos cross-site
+  // aunque no manden Origin.
+  const sitio = request.headers.get("Sec-Fetch-Site");
+  if (sitio === "cross-site" || sitio === "same-site") return false;
   const origen = request.headers.get("Origin");
   if (!origen) return true;
   try {

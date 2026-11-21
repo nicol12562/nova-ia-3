@@ -23,10 +23,23 @@ export function json(data, status = 200) {
 // null si el pedido puede seguir.
 export function puerta(request, env) {
   if (!env.ADMIN_KEY) return json({ error: "Falta el secreto ADMIN_KEY en el servidor." }, 503);
-  if (request.headers.get("x-admin-key") !== env.ADMIN_KEY) {
+  if (!claveIgual(request.headers.get("x-admin-key"), env.ADMIN_KEY)) {
     return json({ error: "Clave de administración incorrecta." }, 401);
   }
   return null;
+}
+
+// Comparación en tiempo constante: con `!==` el tiempo de respuesta delata
+// cuántos caracteres del principio coinciden. Se comparan los bytes en UTF-8 y
+// se recorre siempre el largo del secreto, sin cortar en el primer distinto.
+export function claveIgual(dada, secreto) {
+  if (typeof dada !== "string" || typeof secreto !== "string" || !secreto) return false;
+  const enc = new TextEncoder();
+  const a = enc.encode(dada);
+  const b = enc.encode(secreto);
+  let dif = a.length ^ b.length;
+  for (let i = 0; i < b.length; i++) dif |= (a[i % (a.length || 1)] ?? 0) ^ b[i];
+  return dif === 0;
 }
 
 export async function actorDe(request, env) {
@@ -44,6 +57,9 @@ export async function modeloActual(env) {
 export async function describir(env, kind, payload) {
   if (kind === "plan") {
     const userId = Number(payload?.user_id);
+    if (payload?.plan != null && typeof payload.plan !== "string") {
+      return { error: "Plan inválido: usá gratis, plus o pro.", status: 400 };
+    }
     const plan = String(payload?.plan || "").toLowerCase();
     if (!Number.isInteger(userId) || userId <= 0) return { error: "Usuario inválido.", status: 400 };
     if (!PLANES.includes(plan)) return { error: "Plan inválido: usá gratis, plus o pro.", status: 400 };
@@ -54,6 +70,9 @@ export async function describir(env, kind, payload) {
   }
 
   if (kind === "model") {
+    if (payload?.model != null && typeof payload.model !== "string") {
+      return { error: "Nombre de modelo inválido.", status: 400 };
+    }
     const model = String(payload?.model ?? "").trim();
     if (model.length > LARGO_MODELO || /[\x00-\x1f\s]/.test(model)) {
       return { error: "Nombre de modelo inválido.", status: 400 };

@@ -34,6 +34,18 @@ const NAV = [
   { key: "planes", label: "Planes", icon: "crown" },
 ];
 
+// Título de la pestaña por pantalla. Inicio conserva el de index.html,
+// que es el que leen buscadores y vistas previas al compartir.
+const TITULO_BASE = "Nova IA — IA en español, precios en pesos";
+const TITULO_EXTRA = { login: "Iniciar sesión", google: "Entrando con Google" };
+const tituloDe = (base, chatTitulo) => {
+  if (!base) return TITULO_BASE;
+  if (base === "chat") return `${chatTitulo || "Nuevo chat"} · Nova IA`;
+  const t = TITULO_EXTRA[base] || VIEWS.find((v) => v.key === base)?.title;
+  return t ? `${t} · Nova IA` : TITULO_BASE;
+};
+const ESCRITORIO = "(min-width: 861px)";
+
 const QUOTA_FALLBACK = 1000000; // solo mientras responde el backend
 const fmt = (n) => Math.round(n).toLocaleString("es-AR");
 const esMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
@@ -67,9 +79,19 @@ export default function App() {
   const [chats, setChats] = useState([]);
   const [helpOpen, setHelpOpen] = useState(false);
   const [userMenu, setUserMenu] = useState(false);
+  const mainRef = useRef(null);
+  const menuBtnRef = useRef(null);
+  const userBtnRef = useRef(null);
+  const userMenuRef = useRef(null);
+  const rutaPrevia = useRef(null);
 
   useEffect(() => {
-    const onHash = () => setRoute((location.hash || "#/").replace(/^#\//, ""));
+    const onHash = () => {
+      setRoute((location.hash || "#/").replace(/^#\//, ""));
+      // Atrás/adelante del navegador con el cajón o el menú abiertos: se cierran.
+      setMenuOpen(false);
+      setUserMenu(false);
+    };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
@@ -92,6 +114,49 @@ export default function App() {
       document.body.style.overflow = previous;
     };
   }, [menuOpen]);
+
+  // Si la ventana crece a escritorio con el cajón abierto, el cajón deja de ser
+  // diálogo: se cierra para no dejar el scroll bloqueado ni el foco atrapado.
+  useEffect(() => {
+    if (!menuOpen || typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia(ESCRITORIO);
+    const onCambio = () => mq.matches && setMenuOpen(false);
+    onCambio();
+    mq.addEventListener?.("change", onCambio);
+    return () => mq.removeEventListener?.("change", onCambio);
+  }, [menuOpen]);
+
+  // Menú de usuario: entra con el foco en la primera opción, flechas para
+  // moverse, Escape y Tab lo cierran y el foco vuelve al botón que lo abrió.
+  useEffect(() => {
+    if (!userMenu) return;
+    const caja = userMenuRef.current;
+    const items = () => [...(caja?.querySelectorAll('[role="menuitem"]') || [])];
+    items()[0]?.focus();
+    const cerrar = (volver) => {
+      setUserMenu(false);
+      if (volver) userBtnRef.current?.focus();
+    };
+    const onKey = (e) => {
+      const lista = items();
+      const i = lista.indexOf(document.activeElement);
+      if (e.key === "Escape") {
+        e.preventDefault();
+        cerrar(true);
+      } else if (e.key === "Tab") {
+        cerrar(false);
+      } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const paso = e.key === "ArrowDown" ? 1 : -1;
+        lista[(i + paso + lista.length) % lista.length]?.focus();
+      } else if (e.key === "Home" || e.key === "End") {
+        e.preventDefault();
+        lista[e.key === "Home" ? 0 : lista.length - 1]?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [userMenu]);
 
   // Cambio de tema con View Transitions (transitions.dev)
   const toggleTheme = () => {
@@ -259,6 +324,36 @@ export default function App() {
   };
 
   const [base, param] = route.split("/");
+  const chatTitulo = base === "chat" && param ? chats.find((c) => String(c.id) === param)?.title : null;
+
+  // Título de la pestaña: dice en qué pantalla estás (y qué charla).
+  useEffect(() => {
+    document.title = tituloDe(base, chatTitulo);
+  }, [base, chatTitulo]);
+
+  // Al cambiar de pantalla, el foco va al título de la nueva (o al contenido),
+  // así el lector de pantalla la anuncia y Tab sigue desde ahí, no desde el
+  // botón de la barra que ya no importa. En la carga inicial no se toca nada,
+  // y si la pantalla ya enfocó algo propio (el composer del chat), se respeta.
+  useEffect(() => {
+    const previa = rutaPrevia.current;
+    rutaPrevia.current = route;
+    if (previa === null || previa === route) return;
+    const main = mainRef.current;
+    if (!main || main.contains(document.activeElement)) return;
+    const destino = main.querySelector("h1") || main;
+    if (destino !== main && !destino.hasAttribute("tabindex")) destino.setAttribute("tabindex", "-1");
+    destino.focus({ preventScroll: true });
+  }, [route]);
+
+  const saltarAlContenido = (e) => {
+    e.preventDefault();
+    // Con enrutado por hash, un href="#contenido" cambiaría de pantalla.
+    const main = mainRef.current;
+    if (!main) return;
+    main.focus({ preventScroll: false });
+    main.scrollIntoView({ block: "start" });
+  };
 
   // El login es una pantalla completa, sin barra lateral.
   if (base === "login")
@@ -298,8 +393,18 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="topbar">
-        <button className="icon-btn" aria-label="Abrir menú" onClick={() => setMenuOpen(true)}>
+      <a className="skip-link" href="#contenido" onClick={saltarAlContenido}>
+        Saltar al contenido
+      </a>
+      <header className="topbar" {...(menuOpen ? { inert: "" } : {})}>
+        <button
+          className="icon-btn"
+          ref={menuBtnRef}
+          aria-label="Abrir menú"
+          aria-expanded={menuOpen}
+          aria-controls="barra-lateral"
+          onClick={() => setMenuOpen(true)}
+        >
           <Icon name="menu" size={20} />
         </button>
         <button className="wordmark" onClick={() => go("")} aria-label="Nova IA, ir al inicio">novaia</button>
@@ -311,9 +416,10 @@ export default function App() {
       {menuOpen && <button className="side-scrim" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)} tabIndex={-1} />}
 
       <aside
+        id="barra-lateral"
         className={"side" + (menuOpen ? " open" : "")}
         ref={sheetRef}
-        aria-label="Navegación"
+        aria-label={menuOpen ? "Menú" : "Barra lateral"}
         {...(menuOpen ? { role: "dialog", "aria-modal": "true", tabIndex: -1 } : {})}
       >
         <div className="side-head">
@@ -408,6 +514,7 @@ export default function App() {
             <div className={"user-wrap" + (userMenu ? " open" : "")}>
               <button
                 className="user-btn"
+                ref={userBtnRef}
                 onClick={() => (auth ? setUserMenu((v) => !v) : go("login"))}
                 aria-expanded={auth ? userMenu : undefined}
                 aria-haspopup={auth ? "menu" : undefined}
@@ -421,7 +528,7 @@ export default function App() {
               {userMenu && auth && (
                 <>
                   <button className="user-scrim" onClick={() => setUserMenu(false)} tabIndex={-1} aria-label="Cerrar menú de usuario" />
-                  <div className="user-menu" role="menu">
+                  <div className="user-menu" role="menu" aria-label="Tu cuenta" ref={userMenuRef}>
                     <button role="menuitem" onClick={() => go("ajustes")}>
                       <Icon name="sliders" size={15} /> Ajustes
                     </button>
@@ -450,8 +557,13 @@ export default function App() {
         </div>
       </aside>
 
-      <div className="content">
-        <main className={"main" + (base === "chat" ? " main-chat" : "") + (base === "admin" ? " main-wide" : "")}>
+      <div className="content" {...(menuOpen ? { inert: "" } : {})}>
+        <main
+          id="contenido"
+          ref={mainRef}
+          tabIndex={-1}
+          className={"main" + (base === "chat" ? " main-chat" : "") + (base === "admin" ? " main-wide" : "")}
+        >
           <ErrorBoundary key={base + "/" + (param || "")}>
             {base === "chat" ? (
               <Chat key={param || "nuevo"} go={go} auth={auth} setAuth={setAuth} convId={param || null} />

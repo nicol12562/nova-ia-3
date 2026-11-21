@@ -2,8 +2,8 @@
    Mesa de control (#/admin)
    La cola de aprobación es la superficie principal: arriba, con banda propia.
    Lo demás (modelo global, salud de upstreams, cuentas) son bloques reglados
-   debajo. La variante "resumen de cuenta" vive en ledger.css, detrás de
-   body.mundo-ledger, como el resto de la app.
+   debajo. Se apoya en los alias de variables al final de :root en nova.css.
+   Sin mayúsculas forzadas ni cifras tabulares (ver DESIGN.md).
    ===================================================================== */
 
 .adm { display: flex; flex-direction: column; gap: 22px; }
@@ -31,7 +31,7 @@
   white-space: nowrap;
   transition: background .14s, border-color .14s, color .14s;
 }
-.adm-btn:hover:not(:disabled) { background: var(--surface); border-color: var(--border-strong); }
+.adm-btn:hover:not(:disabled) { background: var(--sunk); border-color: var(--border-strong); }
 .adm-btn:disabled { opacity: .5; cursor: default; }
 .adm-btn.firme { background: var(--accent-solid); border-color: var(--accent-solid); color: var(--on-accent); }
 .adm-btn.firme:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
@@ -67,7 +67,7 @@
 }
 .adm-chip:hover:not(:disabled) { color: var(--text); border-color: var(--border-strong); }
 .adm-chip.on { background: var(--accent-solid); border-color: var(--accent-solid); color: var(--on-accent); }
-.adm-chip b { font-size: 11px; font-variant-numeric: tabular-nums; opacity: .8; font-weight: 600; }
+.adm-chip b { font-size: 11px; opacity: .8; font-weight: 600; }
 .adm-chip:disabled { opacity: .5; cursor: default; }
 
 .adm input, .adm select {
@@ -83,13 +83,44 @@
 .adm select { cursor: pointer; padding: 6px 8px; }
 .adm select:disabled { opacity: .55; cursor: default; }
 
-.adm-label { display: block; font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+.adm-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 7px; }
 .adm-nota { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
 .adm-nota b { color: var(--text); font-weight: 600; }
-.adm-sub { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.adm-sub { font-size: 12px; color: var(--muted); }
+.adm-sub.alto { color: var(--danger); font-weight: 600; }
 .adm-error { font-size: 13px; color: var(--danger); margin: 8px 0 0; }
-.adm-vacio { font-size: 13px; color: var(--muted); margin: 0; padding: 16px 2px; }
-.adm-conteo { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.adm input[aria-invalid="true"] { border-color: var(--danger); }
+.adm-vacio { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin: 0; padding: 16px 2px; }
+.adm-vacio .adm-link { font-size: 13px; }
+
+/* Falla de carga: dice qué pasó y deja reintentar sin perder lo que se veía. */
+.adm-falla {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--border));
+  background: color-mix(in srgb, var(--danger) 7%, var(--panel));
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  color: var(--text);
+}
+.adm-falla span { flex: 1 1 240px; }
+
+/* Carga inicial: la forma del panel, no un texto suelto. */
+.adm-cargando { display: flex; flex-direction: column; gap: 22px; }
+.adm-skel {
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--sunk), var(--panel), var(--sunk));
+  background-size: 200% 100%;
+  animation: adm-brillo 1.3s infinite linear;
+}
+.adm-skel.cifras { height: 76px; border-radius: 0; }
+.adm-skel.cola { height: 150px; }
+.adm-skel.tabla { height: 320px; }
+@keyframes adm-brillo { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.adm-conteo { font-size: 12px; color: var(--muted); }
 
 /* ---------------------------------------------------------------------- puerta */
 
@@ -133,7 +164,7 @@
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
+ 
   color: var(--text);
 }
 .adm-cifra span { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
@@ -172,7 +203,7 @@
 }
 .adm-tab:hover { color: #fff; background: rgba(255, 255, 255, .12); }
 .adm-tab.on { background: var(--on-accent); border-color: transparent; color: var(--accent-solid); font-weight: 650; }
-.adm-tab b { font-variant-numeric: tabular-nums; font-size: 11.5px; }
+.adm-tab b { font-size: 11.5px; }
 
 .adm-cola > .adm-vacio { padding: 18px 16px; }
 .adm-lista { list-style: none; margin: 0; padding: 0; max-height: 340px; overflow-y: auto; }
@@ -186,32 +217,30 @@
   animation: adm-entra .22s ease-out both;
 }
 .adm-item:last-child { border-bottom: 0; }
-.adm-item:hover { background: var(--surface); }
+.adm-item:hover { background: var(--sunk); }
 .adm-item.local { opacity: .6; }
 .adm-tipo { display: inline-flex; color: var(--muted); }
 .adm-que { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .adm-que strong { font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
-.adm-diff { display: inline-flex; align-items: baseline; gap: 7px; font-size: 12.5px; font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.adm-diff { display: inline-flex; align-items: baseline; gap: 7px; font-size: 12.5px; flex-wrap: wrap; }
 .adm-diff .antes { color: var(--muted); }
 .adm-diff .flecha { color: var(--muted); }
 .adm-diff .despues { color: var(--accent); font-weight: 600; overflow-wrap: anywhere; }
 .adm-detalle { font-size: 12px; color: var(--danger); }
-.adm-cuando { font-size: 11.5px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.adm-cuando { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
 .adm-acciones { display: flex; gap: 6px; }
 
 .adm-sello {
   justify-self: start;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  padding: 3px 7px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   color: var(--muted);
   white-space: nowrap;
 }
-.adm-item.estado-applied .adm-sello { color: var(--accent); border-color: var(--accent); }
+.adm-item.estado-applied .adm-sello { color: var(--verde-ink); border-color: var(--verde-ink); }
 .adm-item.estado-stale .adm-sello { color: var(--danger); border-color: var(--danger); }
 .adm-lista.registro .adm-item { grid-template-columns: 92px minmax(0, 1fr) auto auto; }
 .adm-lista.registro .adm-diff .despues { color: var(--text); }
@@ -275,7 +304,7 @@
 }
 .adm-planos li:last-child { border-bottom: 0; }
 .adm-planos code { font-size: 11.5px; min-width: 0; overflow-wrap: anywhere; color: var(--text); }
-.adm-planos span { color: var(--muted); min-width: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.adm-planos span { color: var(--muted); min-width: 0; white-space: nowrap; }
 .adm-planos li.ok code { color: var(--accent); }
 .adm-planos li.malo code, .adm-planos li.malo span { color: var(--danger); }
 
@@ -302,13 +331,14 @@
 }
 .adm-buscar input { border: 0; background: none; padding: 8px 0; flex: 1 1 auto; min-width: 0; }
 .adm-buscar input:focus-visible { outline: none; }
-.adm-buscar:focus-within { border-color: var(--accent); }
+.adm-buscar input::-webkit-search-cancel-button { display: none; }
+.adm-buscar:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .adm-x { display: inline-flex; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 2px; border-radius: var(--radius-sm); }
-.adm-x:hover { color: var(--text); background: var(--surface); }
+.adm-x:hover { color: var(--text); background: var(--sunk); }
 .adm-x.grande { position: absolute; top: 14px; right: 14px; padding: 6px; }
 
 .adm-tabla-wrap { max-height: 560px; overflow: auto; border-top: 1px solid var(--border); }
-.adm-tabla { width: 100%; border-collapse: collapse; }
+.adm-tabla { width: 100%; min-width: 760px; border-collapse: collapse; }
 .adm-tabla th {
   position: sticky;
   top: 0;
@@ -327,34 +357,39 @@
   border: 0;
   background: none;
   font: inherit;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--muted);
   padding: 9px 12px;
   cursor: pointer;
+  white-space: nowrap;
 }
-.adm-orden:hover { color: var(--text); }
+.adm-orden:hover, .adm-orden.on { color: var(--text); }
+.adm-orden:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; border-radius: var(--radius-sm); }
 .adm-orden svg { transition: transform .16s; flex: none; }
-.adm-tabla td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.adm-tabla td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .adm-tabla td.num { text-align: right; }
-.adm-tabla tbody tr:hover { background: var(--surface); }
+.adm-tabla tbody tr:hover { background: var(--sunk); }
 .adm-tabla tbody tr.con-propuesta { background: var(--accent-soft); }
-.adm-tabla .adm-num { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.adm-tabla .plan-bar.mini { height: 4px; max-width: 96px; margin: 5px 0 4px; margin-left: auto; }
+.adm-tabla tbody tr.con-propuesta:hover { background: color-mix(in srgb, var(--accent-soft) 100%, var(--sunk)); }
+.adm-tabla .adm-num { font-size: 13px; font-weight: 600; }
 
-.adm-quien { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 0; font: inherit; color: var(--text); cursor: pointer; text-align: left; }
+/* Consumo del mes. Celeste = foco del panel; rojo solo cuando está por agotarse. */
+.adm-barra { display: block; height: 4px; width: 96px; margin: 5px 0 4px auto; border-radius: 999px; background: var(--sunk); overflow: hidden; }
+.adm-barra > span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.adm-barra.alto > span { background: var(--rojo); }
+.adm-barra.grande { width: 100%; height: 6px; margin: 2px 0 6px; }
+
+.adm-quien { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 2px; margin: -2px; border-radius: var(--radius-sm); font: inherit; color: var(--text); cursor: pointer; text-align: left; min-width: 0; }
+.adm-quien .avatar, .adm-drawer .avatar { background: var(--sunk); color: var(--ink-2); width: 30px; height: 30px; font-size: 13px; }
 .adm-quien .t { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .adm-quien .t strong { font-size: 13.5px; font-weight: 600; }
-.adm-quien:hover .t strong { color: var(--accent); }
+.adm-quien:hover .t strong { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 .adm-quien .avatar { flex: none; }
 .adm-rol {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
   border-radius: var(--radius-sm);
   background: var(--accent-solid);
   color: var(--on-accent);
@@ -432,12 +467,26 @@
 @keyframes adm-lado { from { transform: translateX(16px); opacity: 0; } to { transform: none; opacity: 1; } }
 .adm-scrim:has(.adm-drawer) { justify-content: flex-end; padding: 0; }
 .adm-drawer .avatar.grande { width: 46px; height: 46px; font-size: 19px; }
+.adm-drawer .adm-x.grande:focus-visible, .adm-x:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 .adm-drawer h2 { font-size: 19px; font-weight: 700; margin: 12px 0 2px; letter-spacing: -0.01em; overflow-wrap: anywhere; }
-.adm-drawer h3 { font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin: 24px 0 0; }
+.adm-drawer h3 { font-size: 14px; font-weight: 650; color: var(--text); margin: 26px 0 0; }
+.adm-drawer h3 label { cursor: default; }
+.adm-drawer .adm-sub { margin: 0; }
+/* El cajón vive en un portal, fuera de .adm: sus controles necesitan estilo propio. */
+.adm-drawer select {
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  cursor: pointer;
+}
 .adm-datos { margin: 18px 0 10px; padding: 0; border-top: 1px solid var(--border); }
 .adm-datos > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .adm-datos dt { font-size: 12.5px; color: var(--muted); }
-.adm-datos dd { margin: 0; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.adm-datos dd { margin: 0; font-size: 13px; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
 
 /* ------------------------------------------------- barras de desplazamiento */
 
@@ -489,6 +538,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .adm-item, .adm-scrim, .adm-dialogo, .adm-drawer { animation: none; }
+  .adm-item, .adm-scrim, .adm-dialogo, .adm-drawer, .adm-skel { animation: none; }
   .adm-orden svg { transition: none; }
 }

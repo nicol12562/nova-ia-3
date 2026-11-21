@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useDeferredValue, useMemo } from "react";
 import { Icon } from "./icons.jsx";
 import Md from "./md.jsx";
 import { copyText, showToast } from "./ui.jsx";
@@ -31,7 +31,17 @@ export default function Canvas({ pieza, titulo, indice, total, vivo, onAnterior,
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  const lineas = pieza.body.split("\n").length;
+  // Mientras Nova escribe, el cuerpo cambia en cada token. Diferirlo deja que el
+  // chat y el composer respondan primero y el panel se pone al día después.
+  const cuerpo = useDeferredValue(pieza.body);
+  const meta = useMemo(() => {
+    if (pieza.kind === "code") {
+      const n = cuerpo.split("\n").length;
+      return `${n} ${n === 1 ? "línea" : "líneas"}`;
+    }
+    const n = wordCount(cuerpo).length;
+    return `${n.toLocaleString("es-AR")} ${n === 1 ? "palabra" : "palabras"}`;
+  }, [cuerpo, pieza.kind]);
 
   return (
     <aside className="canvas-panel" aria-label="Pieza generada por Nova">
@@ -63,17 +73,17 @@ export default function Canvas({ pieza, titulo, indice, total, vivo, onAnterior,
       <div className="cv-body">
         {pieza.kind === "code" ? (
           <pre className="cv-code">
-            <code>{pieza.body}</code>
+            <code>{cuerpo}</code>
           </pre>
         ) : (
-          <Md text={pieza.body} streaming={vivo} />
+          <Md text={cuerpo} streaming={vivo} />
         )}
-        {vivo && <span className="cv-live" aria-label="Nova está escribiendo">escribiendo…</span>}
+        {vivo && <span className="cv-live" role="status">Nova está escribiendo…</span>}
       </div>
 
       <footer className="cv-foot">
         <span className="cv-meta">
-          {pieza.kind === "code" ? `${lineas} líneas` : `${wordCount(pieza.body).length} palabras`}
+          {meta}
         </span>
         <div className="cv-actions">
           <button className="btn btn-ghost btn-sm" onClick={descargar}>
