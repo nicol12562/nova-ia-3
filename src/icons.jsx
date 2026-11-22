@@ -39,6 +39,9 @@ const PATHS = {
   bulb: <><path d="M9 17.5h6M10 20.5h4" /><path d="M12 3.5a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2v1h5v-1c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3.5z" /></>,
   languages: <><path d="M4 6h9M8.5 4v2M6 6c.8 3 2.8 5.5 5.5 6.8M11 6c-.8 3-3 5.8-6.5 7.5" /><path d="M13 20l3.5-8 3.5 8M14.2 17.5h4.6" /></>,
   list: <><path d="M9 7h11M9 12h11M9 17h11" /><circle cx="5" cy="7" r="1" fill="currentColor" stroke="none" /><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="5" cy="17" r="1" fill="currentColor" stroke="none" /></>,
+  edit: <><path d="M11 4.5H7A2.5 2.5 0 0 0 4.5 7v10A2.5 2.5 0 0 0 7 19.5h10a2.5 2.5 0 0 0 2.5-2.5v-4" /><path d="M17.6 3.9a1.9 1.9 0 0 1 2.7 2.7L12.5 14.4 9 15l.6-3.5z" /></>,
+  message: <><path d="M4.5 6.5A2.5 2.5 0 0 1 7 4h10a2.5 2.5 0 0 1 2.5 2.5v8A2.5 2.5 0 0 1 17 17h-6.5L6 20.5V17H7" /><path d="M8.5 9h7M8.5 12.5h4.5" /></>,
+  spark: <path d="M12 3.5l1.9 5.2a2 2 0 0 0 1.2 1.2l5.2 1.9-5.2 1.9a2 2 0 0 0-1.2 1.2L12 20.1l-1.9-5.2a2 2 0 0 0-1.2-1.2L3.7 11.8l5.2-1.9a2 2 0 0 0 1.2-1.2z" />,
   google: null,
 };
 

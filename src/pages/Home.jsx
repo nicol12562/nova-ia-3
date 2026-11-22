@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../icons.jsx";
 import { AGENTS } from "../data/agents.js";
 import { DRAFT_KEY } from "./Chat.jsx";
-import Filete from "../filete.jsx";
 
 const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
 
@@ -76,8 +75,7 @@ export default function Home({ go, auth, racha = 0 }) {
   return (
     <section className="home">
       <header className="home-hero">
-        <Filete className="home-filete" />
-        <h1 className="letrero">
+        <h1 className="home-title">
           {nombre ? <>Hola, {nombre}.</> : <>Preguntá en criollo.</>}
         </h1>
         <p className="home-lede">
