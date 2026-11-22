@@ -1,0 +1,751 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-22T23:23:42+00:00",
+  "title": "Design System: Nova IA",
+  "extensions": {
+    "themes": {
+      "default": "dark",
+      "darkSelector": "body.dark",
+      "lightSelector": ":root",
+      "note": "Los valores de frontmatter son los del tema oscuro; colorMeta.*.light guarda los del tema claro. Los tokens side-* no cambian."
+    },
+    "colorMeta": {
+      "side": {
+        "role": "neutral",
+        "displayName": "Riel nocturno",
+        "canonical": "#08090a",
+        "light": "#08090a",
+        "cssVar": "--side",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#242526",
+          "#414243",
+          "#606163",
+          "#818284",
+          "#a3a5a7",
+          "#c8c9ca",
+          "#edeef0"
+        ]
+      },
+      "side-ink": {
+        "role": "neutral",
+        "displayName": "Tinta del riel",
+        "canonical": "#eceef1",
+        "light": "#eceef1",
+        "cssVar": "--side-ink",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#242526",
+          "#414244",
+          "#606164",
+          "#818285",
+          "#a3a5a8",
+          "#c8c9cb",
+          "#edeef0"
+        ]
+      },
+      "side-dim": {
+        "role": "neutral",
+        "displayName": "Riel tenue",
+        "canonical": "#8f949c",
+        "light": "#8f949c",
+        "cssVar": "--side-dim",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#232529",
+          "#3f4248",
+          "#5d6169",
+          "#7e838a",
+          "#a0a5ad",
+          "#c5c9d0",
+          "#ebeff4"
+        ]
+      },
+      "side-on": {
+        "role": "neutral",
+        "displayName": "Riel activo",
+        "canonical": "#17191c",
+        "light": "#17191c",
+        "cssVar": "--side-on",
+        "tonalRamp": [
+          "#0a0b0c",
+          "#242527",
+          "#404245",
+          "#5f6165",
+          "#808286",
+          "#a2a5a9",
+          "#c7c9cd",
+          "#edeef1"
+        ]
+      },
+      "side-field": {
+        "role": "neutral",
+        "displayName": "Campo del riel",
+        "canonical": "#141618",
+        "light": "#141618",
+        "cssVar": "--side-field",
+        "tonalRamp": [
+          "#0a0b0c",
+          "#242527",
+          "#404244",
+          "#5f6164",
+          "#808385",
+          "#a3a5a8",
+          "#c7c9cc",
+          "#edeff0"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Grafito",
+        "canonical": "#111316",
+        "light": "#f4f5f7",
+        "cssVar": "--ground",
+        "tonalRamp": [
+          "#0a0b0c",
+          "#242527",
+          "#404245",
+          "#5f6165",
+          "#808286",
+          "#a2a5a9",
+          "#c7c9cd",
+          "#edeff1"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Superficie",
+        "canonical": "#1a1d21",
+        "light": "#ffffff",
+        "cssVar": "--surface",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232528",
+          "#3f4246",
+          "#5e6266",
+          "#7f8388",
+          "#a1a5ab",
+          "#c6c9ce",
+          "#eceff2"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Elevada",
+        "canonical": "#1f2226",
+        "light": "#ffffff",
+        "cssVar": "--raised",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232528",
+          "#3f4246",
+          "#5e6166",
+          "#7f8388",
+          "#a1a5ab",
+          "#c6c9ce",
+          "#eceff2"
+        ]
+      },
+      "sunk": {
+        "role": "neutral",
+        "displayName": "Hundida",
+        "canonical": "#222529",
+        "light": "#eaecf0",
+        "cssVar": "--sunk",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232528",
+          "#3f4246",
+          "#5e6166",
+          "#7f8388",
+          "#a1a5aa",
+          "#c6c9ce",
+          "#eceff2"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#e9eaec",
+        "light": "#15171a",
+        "cssVar": "--ink",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#252526",
+          "#414243",
+          "#606163",
+          "#818284",
+          "#a4a5a7",
+          "#c8c9cb",
+          "#eeeef0"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Tinta 2",
+        "canonical": "#b4b8bf",
+        "light": "#4a4f57",
+        "cssVar": "--ink-2",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232529",
+          "#3f4247",
+          "#5e6168",
+          "#7f8289",
+          "#a1a5ac",
+          "#c6c9cf",
+          "#eceff3"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Tinta 3",
+        "canonical": "#8b9098",
+        "light": "#6b717b",
+        "cssVar": "--ink-3",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#232529",
+          "#3f4248",
+          "#5d6169",
+          "#7e838a",
+          "#a0a5ae",
+          "#c5c9d0",
+          "#ebeff4"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Línea",
+        "canonical": "#24272c",
+        "light": "#e1e4e9",
+        "cssVar": "--line",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232528",
+          "#3f4247",
+          "#5e6167",
+          "#7f8289",
+          "#a1a5ac",
+          "#c6c9cf",
+          "#eceff3"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Línea fuerte",
+        "canonical": "#33373d",
+        "light": "#c9ced6",
+        "cssVar": "--line-strong",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232529",
+          "#3f4247",
+          "#5d6268",
+          "#7e838a",
+          "#a1a5ad",
+          "#c5c9cf",
+          "#ebeff3"
+        ]
+      },
+      "azul": {
+        "role": "primary",
+        "displayName": "Azul de acción",
+        "canonical": "#3d8bff",
+        "light": "#2f7bf0",
+        "cssVar": "--azul",
+        "tonalRamp": [
+          "#00062e",
+          "#001f5e",
+          "#003b93",
+          "#005ac9",
+          "#2f7ef1",
+          "#54a3ff",
+          "#8acaff",
+          "#bff1ff"
+        ]
+      },
+      "azul-ink": {
+        "role": "primary",
+        "displayName": "Azul tinta",
+        "canonical": "#6aa8ff",
+        "light": "#1f63cf",
+        "cssVar": "--azul-ink",
+        "tonalRamp": [
+          "#000925",
+          "#012350",
+          "#0f407f",
+          "#235fb0",
+          "#4682d6",
+          "#68a6fd",
+          "#99ccff",
+          "#c9f1ff"
+        ]
+      },
+      "on-azul": {
+        "role": "primary",
+        "displayName": "Sobre azul",
+        "canonical": "#ffffff",
+        "light": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "oro": {
+        "role": "secondary",
+        "displayName": "Oro · Nova Flash",
+        "canonical": "#f2b705",
+        "light": "#e8ad00",
+        "cssVar": "--oro",
+        "tonalRamp": [
+          "#190600",
+          "#3c1d00",
+          "#623700",
+          "#8b5400",
+          "#af7700",
+          "#d49a00",
+          "#f1c258",
+          "#ffea9e"
+        ]
+      },
+      "oro-ink": {
+        "role": "secondary",
+        "displayName": "Oro tinta",
+        "canonical": "#f5c63c",
+        "light": "#7f5c00",
+        "cssVar": "--oro-ink",
+        "tonalRamp": [
+          "#170700",
+          "#381f00",
+          "#5d3b00",
+          "#845900",
+          "#a87b00",
+          "#cc9e00",
+          "#eac562",
+          "#ffeca3"
+        ]
+      },
+      "celeste": {
+        "role": "secondary",
+        "displayName": "Celeste · Nova Pro",
+        "canonical": "#5cc2f2",
+        "light": "#2fa9e6",
+        "cssVar": "--celeste",
+        "tonalRamp": [
+          "#000e1d",
+          "#002a42",
+          "#00496c",
+          "#006b97",
+          "#1a8ebb",
+          "#4ab2e1",
+          "#87d5fc",
+          "#bef8ff"
+        ]
+      },
+      "celeste-ink": {
+        "role": "secondary",
+        "displayName": "Celeste tinta",
+        "canonical": "#86d2f6",
+        "light": "#12709f",
+        "cssVar": "--celeste-ink",
+        "tonalRamp": [
+          "#000e19",
+          "#002a3b",
+          "#004962",
+          "#166a8a",
+          "#408cae",
+          "#65b0d3",
+          "#97d3f0",
+          "#c9f6ff"
+        ]
+      },
+      "verde": {
+        "role": "secondary",
+        "displayName": "Verde · Nova Pro 3.1",
+        "canonical": "#2fc48c",
+        "light": "#18a36f",
+        "cssVar": "--verde",
+        "tonalRamp": [
+          "#001304",
+          "#003216",
+          "#00542d",
+          "#007947",
+          "#009c67",
+          "#2bc189",
+          "#7ae1b2",
+          "#b6ffdd"
+        ]
+      },
+      "verde-ink": {
+        "role": "secondary",
+        "displayName": "Verde tinta",
+        "canonical": "#5ad6a6",
+        "light": "#0d6a47",
+        "cssVar": "--verde-ink",
+        "tonalRamp": [
+          "#001205",
+          "#00311a",
+          "#005333",
+          "#00774e",
+          "#009a6e",
+          "#3fbf90",
+          "#82dfb8",
+          "#bbffe1"
+        ]
+      },
+      "rojo": {
+        "role": "secondary",
+        "displayName": "Rojo · error o agotado",
+        "canonical": "#f0485d",
+        "light": "#e0364b",
+        "cssVar": "--rojo",
+        "tonalRamp": [
+          "#260000",
+          "#53000a",
+          "#85001c",
+          "#b90032",
+          "#e23952",
+          "#ff6373",
+          "#ff99a0",
+          "#ffcccf"
+        ]
+      },
+      "rojo-ink": {
+        "role": "secondary",
+        "displayName": "Rojo tinta",
+        "canonical": "#ff8595",
+        "light": "#b81d33",
+        "cssVar": "--rojo-ink",
+        "tonalRamp": [
+          "#200004",
+          "#480717",
+          "#751b2f",
+          "#a43249",
+          "#cb5669",
+          "#f27a8a",
+          "#ffa8b3",
+          "#ffd6dd"
+        ]
+      },
+      "primary": {
+        "role": "neutral",
+        "displayName": "Primario (tinta invertida)",
+        "canonical": "#e9eaec",
+        "light": "#15171a",
+        "cssVar": "--primary",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#252526",
+          "#414243",
+          "#606163",
+          "#818284",
+          "#a4a5a7",
+          "#c8c9cb",
+          "#eeeef0"
+        ]
+      },
+      "on-primary": {
+        "role": "neutral",
+        "displayName": "Sobre primario",
+        "canonical": "#111316",
+        "light": "#ffffff",
+        "cssVar": "--on-primary",
+        "tonalRamp": [
+          "#0a0b0c",
+          "#242527",
+          "#404245",
+          "#5f6165",
+          "#808286",
+          "#a2a5a9",
+          "#c7c9cd",
+          "#edeff1"
+        ]
+      }
+    },
+    "colorExtras": [
+      {
+        "name": "wash",
+        "dark": "rgba(64, 118, 196, 0.16)",
+        "light": "rgba(61, 139, 255, 0.07)",
+        "purpose": "Lavado radial 900x620 px anclado arriba a la derecha del área de trabajo."
+      },
+      {
+        "name": "side-hover",
+        "value": "rgba(255, 255, 255, 0.05)",
+        "purpose": "Hover de enlaces y chats en la barra lateral."
+      },
+      {
+        "name": "side-line",
+        "value": "rgba(255, 255, 255, 0.07)",
+        "purpose": "Bordes y separadores sobre el riel."
+      },
+      {
+        "name": "accent-soft",
+        "dark": "rgba(61, 139, 255, 0.16)",
+        "light": "rgba(61, 139, 255, 0.12)",
+        "purpose": "Hover del botón de enviar."
+      },
+      {
+        "name": "focus",
+        "value": "#3d8bff",
+        "purpose": "Contorno de foco de 2 px."
+      },
+      {
+        "name": "primary-hover",
+        "dark": "#ffffff",
+        "light": "#2a2d32",
+        "purpose": "Hover del botón primario."
+      }
+    ],
+    "typographyMeta": {
+      "wordmark": {
+        "displayName": "Logotipo",
+        "purpose": "Solo el logotipo novaia, con sombra dura oro y rojo, siempre sobre el riel."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "Título de Inicio; el login usa clamp(40px, 4.6vw, 60px) con -0.04em."
+      },
+      "headline": {
+        "displayName": "Titular",
+        "purpose": "Títulos de página y saludo del chat vacío."
+      },
+      "title": {
+        "displayName": "Título",
+        "purpose": "Secciones; 19 px en tarjetas, 23 px en modales."
+      },
+      "body": {
+        "displayName": "Cuerpo",
+        "purpose": "Interfaz general."
+      },
+      "body-answer": {
+        "displayName": "Respuesta",
+        "purpose": "Respuestas de la IA, texto plano a ancho de columna."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Píldora de saldo, selector de modelo."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Asiento bajo cada respuesta, notas, pistas, en tinta 3."
+      },
+      "code": {
+        "displayName": "Código",
+        "purpose": "Bloques de código y la pieza (canvas)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow",
+        "value": "0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 16px 40px -18px rgba(0, 0, 0, 0.8)",
+        "light": "0 1px 2px rgba(15, 17, 20, 0.06), 0 12px 32px -16px rgba(15, 17, 20, 0.25)",
+        "purpose": "Reposo: composer, caja de pregunta, tarjeta de cuenta."
+      },
+      {
+        "name": "shadow-pop",
+        "value": "0 28px 70px -20px rgba(0, 0, 0, 0.85)",
+        "light": "0 24px 60px -20px rgba(10, 12, 16, 0.45)",
+        "purpose": "Emergente: selector de modelo, paleta, modales."
+      },
+      {
+        "name": "inset-line",
+        "value": "inset 0 0 0 1px var(--line-strong)",
+        "purpose": "Contorno interno en hover de sugerencias y botón al final."
+      },
+      {
+        "name": "wordmark",
+        "value": "2px 2px 0 var(--oro), 4px 4px 0 var(--rojo)",
+        "purpose": "text-shadow del logotipo; única sombra dura del sistema."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state",
+        "value": "0.15s",
+        "purpose": "Transiciones de color, fondo, borde y opacidad."
+      },
+      {
+        "name": "press",
+        "value": "transform 0.1s; translateY(1px)",
+        "purpose": "Botones al presionar."
+      },
+      {
+        "name": "entrada",
+        "value": "0.7s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Única entrada orquestada (subir: opacidad, 10 px, blur 4 px) en Inicio y Login; el composer con 0.08 s de retraso."
+      },
+      {
+        "name": "cajon",
+        "value": "0.24s cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Cajón lateral móvil y entrada de la pieza (0.25 s)."
+      },
+      {
+        "name": "abrir",
+        "value": "0.16s-0.2s ease-out",
+        "purpose": "Paleta, modales y avisos (translateY -6 px, escala 0.99)."
+      },
+      {
+        "name": "barra",
+        "value": "width 0.5s cubic-bezier(0.2, 0.7, 0.2, 1)",
+        "purpose": "Relleno de barras de saldo."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "tablet",
+        "value": "1100px"
+      },
+      {
+        "name": "mobile",
+        "value": "860px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de modales y páginas: tinta clara invertida sobre grafito.",
+      "html": "<button class=\"ds-btn-primary\">Crear mi cuenta</button>",
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:0 18px; border:0; border-radius:10px; background:var(--primary,#e9eaec); color:var(--on-primary,#111316); font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; font-weight:600; font-size:15px; letter-spacing:-0.005em; cursor:pointer; transition:background-color .15s, transform .1s; } .ds-btn-primary:hover { background:var(--primary-hover,#ffffff); } .ds-btn-primary:active { transform:translateY(1px); } .ds-btn-primary:focus-visible { outline:2px solid var(--focus,#3d8bff); outline-offset:2px; }"
+    },
+    {
+      "name": "Botón azul",
+      "kind": "button",
+      "refersTo": "button-azul",
+      "description": "Preguntar o enviar: el único botón cromático.",
+      "html": "<button class=\"ds-btn-azul\">Preguntar</button>",
+      "css": ".ds-btn-azul { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:0 18px; border:0; border-radius:10px; background:var(--azul,#3d8bff); color:#fff; font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; font-weight:600; font-size:15px; cursor:pointer; transition:background-color .15s, transform .1s; } .ds-btn-azul:hover { background:#2f7bf0; } .ds-btn-azul:active { transform:translateY(1px); } .ds-btn-azul:focus-visible { outline:2px solid var(--focus,#3d8bff); outline-offset:2px; }"
+    },
+    {
+      "name": "Botón quieto",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Acción secundaria sobre relleno hundido; el borde aparece al pasar.",
+      "html": "<button class=\"ds-btn-quiet\">Descargar</button>",
+      "css": ".ds-btn-quiet { display:inline-flex; align-items:center; min-height:42px; padding:0 18px; border:1px solid transparent; border-radius:10px; background:var(--sunk,#222529); color:var(--ink,#e9eaec); font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; font-weight:600; font-size:15px; cursor:pointer; transition:border-color .15s; } .ds-btn-quiet:hover { border-color:var(--line-strong,#33373d); } .ds-btn-quiet:focus-visible { outline:2px solid var(--focus,#3d8bff); outline-offset:2px; }"
+    },
+    {
+      "name": "Composer",
+      "kind": "input",
+      "refersTo": "composer",
+      "description": "Una franja: selector de modelo con su punto, texto, enviar en azul.",
+      "html": "<form class=\"ds-composer\"><button type=\"button\" class=\"ds-picker\"><span class=\"ds-dot\"></span>Nova Flash <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M7 10l5 5 5-5\"/></svg></button><textarea rows=\"1\" placeholder=\"Preguntá lo que quieras\"></textarea><button type=\"submit\" class=\"ds-send\" aria-label=\"Enviar\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linejoin=\"round\"><path d=\"M4.5 11.5L20 4.5l-6.5 15.5-2.6-6.4z\"/></svg></button></form>",
+      "css": ".ds-composer { display:flex; align-items:center; gap:8px; width:520px; max-width:100%; padding:8px; background:var(--surface,#1a1d21); border-radius:14px; box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 16px 40px -18px rgba(0,0,0,.8); outline:1px solid transparent; transition:outline-color .15s; font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; } .ds-composer:focus-within { outline-color:var(--line-strong,#33373d); } .ds-composer textarea { flex:1; border:0; outline:0; resize:none; background:transparent; color:var(--ink,#e9eaec); font:inherit; font-size:15.5px; line-height:1.5; padding:7px 4px; } .ds-composer textarea::placeholder { color:var(--ink-3,#8b9098); } .ds-picker { display:inline-flex; align-items:center; gap:8px; min-height:38px; padding:0 8px 0 10px; border:0; border-radius:10px; background:transparent; color:var(--ink-2,#b4b8bf); font:inherit; font-size:13.5px; font-weight:500; cursor:pointer; transition:background-color .15s, color .15s; } .ds-picker:hover { background:var(--sunk,#222529); color:var(--ink,#e9eaec); } .ds-dot { width:8px; height:8px; border-radius:50%; background:var(--oro,#f2b705); } .ds-send { display:grid; place-items:center; width:38px; height:38px; border:0; border-radius:10px; background:transparent; color:var(--azul,#3d8bff); cursor:pointer; transition:background-color .15s; } .ds-send:hover { background:rgba(61,139,255,.16); } .ds-send:focus-visible, .ds-picker:focus-visible { outline:2px solid var(--focus,#3d8bff); outline-offset:2px; }"
+    },
+    {
+      "name": "Mensaje con asiento",
+      "kind": "custom",
+      "refersTo": "bubble-user",
+      "description": "Burbuja grafito del usuario a la derecha; respuesta en texto plano con el asiento del modelo debajo.",
+      "html": "<div class=\"ds-thread\"><div class=\"ds-user\">¿Cómo le contesto a un cliente que pide descuento?</div><div class=\"ds-ai\"><p>Agradecé la consulta, explicá qué incluye el precio y ofrecé una alternativa concreta.</p><div class=\"ds-asiento\"><span class=\"ds-modelo\">Nova Pro</span><span>NVIDIA</span><span>412 tokens</span></div><div class=\"ds-acts\"><button class=\"ds-act\" aria-label=\"Copiar\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><rect x=\"8.5\" y=\"8.5\" width=\"12\" height=\"12\" rx=\"2.5\"/><path d=\"M15.5 8.5V6A2.5 2.5 0 0 0 13 3.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5\"/></svg></button></div></div></div>",
+      "css": ".ds-thread { display:flex; flex-direction:column; gap:32px; width:560px; max-width:100%; font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; color:var(--ink,#e9eaec); } .ds-user { align-self:flex-end; max-width:76%; background:var(--surface,#1a1d21); border-radius:12px; padding:11px 16px; font-size:15px; } .ds-ai p { margin:0; font-size:15.5px; line-height:1.7; } .ds-asiento { display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:12px; font-size:12.5px; color:var(--ink-3,#8b9098); } .ds-modelo { display:inline-flex; align-items:center; gap:6px; font-weight:500; color:var(--ink-2,#b4b8bf); } .ds-modelo::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--celeste,#5cc2f2); } .ds-acts { margin:6px 0 0 -7px; } .ds-act { display:inline-grid; place-items:center; width:32px; height:32px; border:0; border-radius:8px; background:transparent; color:var(--ink-3,#8b9098); cursor:pointer; transition:color .15s, background-color .15s; } .ds-act:hover { color:var(--ink,#e9eaec); background:var(--sunk,#222529); } .ds-act:focus-visible { outline:2px solid var(--focus,#3d8bff); outline-offset:2px; }"
+    },
+    {
+      "name": "Píldora de saldo",
+      "kind": "chip",
+      "refersTo": "saldo-pill",
+      "description": "Saldo del modelo activo, arriba a la derecha del chat; rojo cuando se agota.",
+      "html": "<span class=\"ds-saldo\"><span class=\"ds-saldo-dot\"></span>812.400 tokens</span> <span class=\"ds-saldo ds-vacio\"><span class=\"ds-saldo-dot\"></span>Agotado</span>",
+      "css": ".ds-saldo { display:inline-flex; align-items:center; gap:8px; min-height:34px; padding:0 14px 0 12px; border:1px solid var(--line-strong,#33373d); border-radius:99px; font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; font-size:13.5px; font-weight:500; color:var(--ink,#e9eaec); } .ds-saldo-dot { width:8px; height:8px; border-radius:50%; background:var(--verde,#2fc48c); } .ds-vacio { color:var(--rojo-ink,#ff8595); border-color:var(--rojo-ink,#ff8595); }"
+    },
+    {
+      "name": "Barra lateral",
+      "kind": "nav",
+      "refersTo": "side-link",
+      "description": "Riel nocturno con logotipo, enlaces de 40 px y el activo en riel activo.",
+      "html": "<nav class=\"ds-side\"><div class=\"ds-wordmark\">novaia</div><a class=\"ds-link ds-on\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linejoin=\"round\"><path d=\"M4.5 7A3.5 3.5 0 0 1 8 3.5h8A3.5 3.5 0 0 1 19.5 7v6a3.5 3.5 0 0 1-3.5 3.5H9.5L5 20.5z\"/></svg><span>Nuevo chat</span></a><a class=\"ds-link\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 7.5V12l3 2\"/></svg><span>Historial</span></a></nav>",
+      "css": ".ds-side { display:flex; flex-direction:column; gap:2px; width:272px; padding:20px 14px 14px; background:var(--side,#08090a); color:var(--side-ink,#eceef1); font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; } .ds-wordmark { font-family:'Shrikhand', Georgia, serif; font-size:27px; line-height:1; color:var(--side-ink,#eceef1); text-shadow:2px 2px 0 var(--oro,#f2b705), 4px 4px 0 var(--rojo,#f0485d); padding:2px 6px 18px 8px; } .ds-link { display:flex; align-items:center; gap:12px; min-height:40px; padding:0 12px; border-radius:12px; color:var(--side-ink,#eceef1); opacity:.82; font-size:14.5px; font-weight:500; text-decoration:none; transition:background-color .15s, opacity .15s; } .ds-link svg { color:var(--side-dim,#8f949c); flex:none; } .ds-link:hover { background:rgba(255,255,255,.05); opacity:1; } .ds-on { background:var(--side-on,#17191c); opacity:1; } .ds-on svg { color:var(--side-ink,#eceef1); } .ds-link:focus-visible { outline:2px solid var(--azul,#3d8bff); outline-offset:2px; }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Campo de formulario con borde fuerte; el foco es un contorno azul.",
+      "html": "<label class=\"ds-field\"><span>Email</span><input type=\"email\" placeholder=\"vos@ejemplo.com\"></label>",
+      "css": ".ds-field { display:flex; flex-direction:column; gap:6px; width:320px; font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; } .ds-field span { font-size:14px; font-weight:600; color:var(--ink-2,#b4b8bf); } .ds-field input { min-height:42px; padding:0 12px; border:1px solid var(--line-strong,#33373d); border-radius:10px; background:var(--surface,#1a1d21); color:var(--ink,#e9eaec); font:inherit; font-size:15.5px; } .ds-field input:focus { outline:2px solid var(--focus,#3d8bff); outline-offset:0; border-color:transparent; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Grafito",
+    "overview": "Un chat de trabajo oscuro y silencioso. Barra lateral casi negra, área de trabajo grafito con un lavado azul frío arriba a la derecha, superficies sin borde que se separan del fondo solo por tono, y un único azul cromático para la acción. Lo que habla es el contenido y el asiento debajo de cada respuesta (modelo, proveedor, tokens, saldo); la interfaz se mantiene en negro, grafito y gris.\n\nEl sistema nació guiado por una interfaz de referencia (`.impeccable/reference/voxa-ref.png`), de la que toma la tipografía, la barra oscura, la burbuja grafito del usuario, las respuestas en texto plano y la cita con barra clara. Del mundo anterior sobrevive un solo elemento: el logotipo `novaia` en Shrikhand con sombra dura oro y rojo. Es un activo de identidad, no un recurso del sistema.\n\nEl tema oscuro es el de inicio (`body.dark`); el claro existe como opción y redefine los mismos tokens en `:root` (valores en el sidecar, `colorMeta.*.light`). La barra lateral queda oscura en ambos temas.",
+    "keyCharacteristics": [
+      "Barra lateral `side` fija de 272 px, idéntica en tema claro y oscuro.",
+      "Fondo grafito con un solo gradiente radial azul (`--wash`) anclado arriba a la derecha.",
+      "Superficies sin borde en el flujo principal; profundidad por tono.",
+      "Un azul de acción; los demás colores son puntos con significado fijo.",
+      "Una sola familia de interfaz (Space Grotesk), pesos 400–600.",
+      "Radio de 12 px como forma por defecto; píldoras para estado."
+    ],
+    "rules": [
+      {
+        "name": "The One Blue Rule",
+        "body": "El azul es el único color cromático de acción. Nada que no sea enviar, enlazar, enfocar o señalar algo en curso se pinta de azul.",
+        "section": "colors"
+      },
+      {
+        "name": "The Fixed Dot Rule",
+        "body": "Oro, celeste y verde nombran modelos; rojo nombra error o agotamiento. Aparecen como puntos de 7 a 9 px junto al nombre del modelo (selector, píldora de saldo, asiento, tarjetas de modelo, bolsas de Uso), nunca como relleno de superficie ni borde de tarjeta.",
+        "section": "colors"
+      },
+      {
+        "name": "The Night Rail Rule",
+        "body": "Los tokens `side-*` no cambian con el tema. La barra lateral es `side` también en tema claro.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Face Rule",
+        "body": "Space Grotesk para toda la interfaz. Shrikhand existe solo en el logotipo; JetBrains Mono solo en código.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight Ceiling Rule",
+        "body": "Los títulos llegan a 600, no más. La jerarquía crece por tamaño y tracking negativo, no por negritas pesadas.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Etiquetas, encabezados de grupo y títulos en minúscula de oración, sin mayúsculas sostenidas ni tracking positivo.",
+        "section": "typography"
+      },
+      {
+        "name": "The Borderless Flow Rule",
+        "body": "En el chat y en Inicio, las superficies no llevan borde. El borde de 1 px aparece solo en menús flotantes, campos de formulario, tablas, tarjetas de Ajustes y la comparación de planes.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Focus Outline Rule",
+        "body": "El foco visible es un contorno de 2 px en `--focus` (azul) con 2 px de separación; los campos de formulario lo pegan al borde.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** separar superficies del grafito por tono (`ground` → `surface` → `raised`) antes de pensar en un borde.",
+      "**Do** pintar de azul solo enviar, enlaces, foco y lo que está en curso (streaming, escribiendo, saldo).",
+      "**Do** mostrar el modelo con su punto de 7 a 9 px leyendo `--m` desde `.m-oro`, `.m-celeste` o `.m-verde`.",
+      "**Do** dejar la barra lateral en `side` en ambos temas.",
+      "**Do** usar 12 px como radio por defecto y píldora para estado.",
+      "**Do** dibujar los íconos con `src/icons.jsx` (trazo de línea, viewBox 24, `currentColor`).",
+      "**Do** respetar `prefers-reduced-motion`: una sola entrada orquestada (título y composer suben juntos, 0.7 s) y transiciones de estado de 0.15 s."
+    ],
+    "donts": [
+      "**Don't** usar oro, celeste o verde para nada que no sea su modelo, ni rojo para nada que no sea error o agotamiento.",
+      "**Don't** rellenar superficies ni bordear tarjetas con el color de un modelo.",
+      "**Don't** usar Shrikhand ni sombras duras desplazadas fuera del logotipo.",
+      "**Don't** usar otra familia en la interfaz; JetBrains Mono queda para código.",
+      "**Don't** poner etiquetas en mayúsculas, eyebrows ni kickers sobre los títulos.",
+      "**Don't** poner barras laterales gruesas en tarjetas o avisos; la barra de 3 px es exclusiva de la cita.",
+      "**Don't** usar caracteres (✓ ✕ ★ →) como íconos.",
+      "**Don't** pasar de peso 600 en títulos."
+    ]
+  }
+}

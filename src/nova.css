@@ -39,8 +39,10 @@
   --celeste-ink: #12709f;
   --verde-ink: #0d6a47;
 
-  --primary: #15171a;
-  --primary-hover: #2a2d32;
+  /* Un solo azul de acción. El botón usa un tono más profundo que el ícono
+     de enviar para que el texto blanco pase AA. */
+  --primary: #2563eb;
+  --primary-hover: #1d4fd0;
   --on-primary: #ffffff;
   --focus: #3d8bff;
   --shadow: 0 1px 2px rgba(15, 17, 20, 0.06), 0 12px 32px -16px rgba(15, 17, 20, 0.25);
@@ -96,9 +98,9 @@ body.dark {
   --celeste-ink: #86d2f6;
   --verde-ink: #5ad6a6;
 
-  --primary: #e9eaec;
-  --primary-hover: #ffffff;
-  --on-primary: #111316;
+  --primary: #2563eb;
+  --primary-hover: #3570f0;
+  --on-primary: #ffffff;
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 16px 40px -18px rgba(0, 0, 0, 0.8);
   --shadow-pop: 0 28px 70px -20px rgba(0, 0, 0, 0.85);
 
@@ -156,6 +158,10 @@ kbd {
   color: var(--ink-2);
   margin-left: 3px;
 }
+
+/* Cifras tabulares donde se comparan saldos y topes. */
+.saldo-t b, .saldo-pill, .pm-saldo, .asiento, .bolsa-nums, .resumen-total b, .resumen-partes dd,
+.tabla td, .plan-box .lim, .price-big, .tokens-sub { font-variant-numeric: tabular-nums; }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -229,8 +235,7 @@ kbd {
 }
 .btn-quiet:hover:not(:disabled),
 .btn-ghost:hover:not(:disabled) { border-color: var(--line-strong); }
-.btn-azul { background: var(--azul); color: #fff; }
-.btn-azul:hover:not(:disabled) { background: #2f7bf0; }
+
 .btn-danger { color: var(--rojo-ink); }
 .btn-sm { min-height: 34px; padding: 0 12px; font-size: 14px; border-radius: 8px; }
 .btn-block { width: 100%; }
@@ -550,8 +555,6 @@ kbd {
 .ask textarea::placeholder { color: var(--ink-3); }
 .ask-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
 .ask-hint { font-size: 13px; color: var(--ink-3); }
-.ask .btn-primary { background: var(--azul); color: #fff; }
-.ask .btn-primary:hover:not(:disabled) { background: #2f7bf0; }
 .ask .btn-primary:disabled { background: var(--sunk); color: var(--ink-3); opacity: 1; }
 
 .arranques { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -570,20 +573,23 @@ kbd {
 .sec-head h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.025em; }
 .sec-head p { margin-top: 8px; color: var(--ink-2); }
 
-.modelos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+/* Los saldos como asiento: una fila por modelo, la cifra alineada a la derecha. */
+.modelos { list-style: none; margin: 0; padding: 4px 20px; border-radius: 14px; background: var(--surface); }
 .modelos > .modelo {
-  background: var(--surface);
-  border-radius: 14px;
-  padding: 18px 18px 16px;
-  display: flex; flex-direction: column; gap: 6px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 24px;
+  align-items: baseline;
+  padding: 16px 0;
 }
-.modelo-nombre { font-size: 16.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 9px; }
-.modelo-nombre::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--m); }
-.modelo-desc { color: var(--ink-2); font-size: 14.5px; flex: 1; }
-.modelo-cifra { display: flex; flex-direction: column; font-size: 13px; color: var(--ink-3); margin-top: 10px; }
-.modelo-cifra b { font-size: 24px; font-weight: 600; color: var(--ink); letter-spacing: -0.02em; }
-.modelo-up { font-size: 13px; color: var(--m-ink); font-weight: 500; }
-.modelos > .modelo-cargando { grid-column: 1 / -1; color: var(--ink-3); }
+.modelos > .modelo + .modelo { border-top: 1px solid var(--line); }
+.modelo-nombre { grid-column: 1; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 9px; }
+.modelo-nombre::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--m); align-self: center; }
+.modelo-desc { grid-column: 1; color: var(--ink-2); font-size: 14.5px; padding-left: 17px; }
+.modelo-up { grid-column: 1; font-size: 13px; color: var(--ink-3); padding-left: 17px; margin-top: 2px; }
+.modelo-cifra { grid-column: 2; grid-row: 1 / span 3; align-self: center; display: flex; flex-direction: column; align-items: flex-end; font-size: 12.5px; color: var(--ink-3); }
+.modelo-cifra b { font-size: 22px; font-weight: 600; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.modelos > .modelo-cargando { display: block; color: var(--ink-3); }
 
 .agentes-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
 .agentes-lista button {
@@ -612,8 +618,6 @@ kbd {
 }
 .home-cuenta h2 { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
 .home-cuenta p { color: var(--ink-2); margin-top: 6px; max-width: 54ch; }
-.home-cuenta .btn-primary { background: var(--azul); color: #fff; }
-.home-cuenta .btn-primary:hover { background: #2f7bf0; }
 
 /* ----------------------------------------------------------------- chat */
 
@@ -1368,6 +1372,7 @@ body.dark .toast { background: var(--surface); color: var(--ink); border: 1px so
 
 @media (max-width: 1100px) {
   .main { padding: 44px 32px 60px; }
+  .main-chat { padding: 0; }
   .plans-grid, .edge-grid, .demo-grid { grid-template-columns: 1fr; }
   .plans-grid { max-width: 520px; }
   .canvas-panel { width: min(560px, 100vw); }
@@ -1401,12 +1406,15 @@ body.dark .toast { background: var(--surface); color: var(--ink); border: 1px so
   .content { margin-left: 0; min-height: calc(100vh - 58px); }
 
   .main { padding: 32px 16px 48px; }
+  .main-chat { padding: 0; }
   .footer { width: calc(100% - 32px); padding: 18px 0 24px; }
   .chat { padding: 0 16px; min-height: calc(100vh - 58px); }
   .chat-head { top: 58px; }
   .chat-intro { padding-top: 6vh; }
   .chat-intro h1 { font-size: 30px; }
   .sugerencias { grid-template-columns: 1fr; }
+  .chat-head { padding: 8px 0; }
+  .chat-head::before { inset: -1px -100vw 0; -webkit-mask-image: none; mask-image: none; background: var(--ground); -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: 1px solid var(--line); }
   .composer textarea { order: -1; flex-basis: 100%; padding: 6px 6px 2px; }
   .picker { margin-right: auto; }
   .agente { grid-template-columns: 20px 1fr; gap: 12px; }
