@@ -271,7 +271,7 @@ kbd {
   background: var(--sunk);
   color: var(--ink-2);
 }
-.chip-plan { background: var(--primary); color: var(--on-primary); }
+.chip-plan { background: var(--ink); color: var(--ground); }
 
 .spinner {
   width: 15px; height: 15px;
