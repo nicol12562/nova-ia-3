@@ -418,7 +418,7 @@ export default function App() {
                 aria-expanded={auth ? userMenu : undefined}
                 aria-haspopup={auth ? "menu" : undefined}
               >
-                <span className="avatar">{inicial}</span>
+                <span className="avatar" aria-hidden="true">{auth ? inicial : <Icon name="user" size={16} />}</span>
                 <span className="user-t">
                   <strong>{auth ? auth.name || auth.email : "Iniciar sesión"}</strong>
                   <span>{auth ? (racha >= 2 ? `${racha} días seguidos` : auth.email) : "o creá tu cuenta"}</span>

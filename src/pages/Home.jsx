@@ -129,12 +129,12 @@ export default function Home({ go, auth, racha = 0 }) {
         </div>
         <ul className="modelos">
           {(modelos.length ? modelos : []).map((m) => (
-            <li key={m.key} className={"modelo m-" + (COLOR_MODELO[m.key] || "oro")}>
+            <li key={m.key} className={"modelo m-" + (COLOR_MODELO[m.key] || "oro") + (auth && m.agotado ? " agotado" : "")}>
               <span className="modelo-nombre">{m.label}</span>
               <span className="modelo-desc">{m.desc}</span>
               <span className="modelo-cifra">
-                <b>{fmt(auth ? m.restantes : m.techo)}</b>
-                {auth ? "tokens te quedan" : "tokens por mes, gratis"}
+                <b>{auth && m.agotado ? "Agotado" : fmt(auth ? m.restantes : m.techo)}</b>
+                {auth ? (m.agotado ? "se renueva el mes que viene" : "tokens te quedan") : "tokens por mes, gratis"}
               </span>
               {m.upstream && <span className="modelo-up">{m.upstream}</span>}
             </li>

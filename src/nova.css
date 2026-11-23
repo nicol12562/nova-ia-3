@@ -590,6 +590,7 @@ kbd {
 .modelo-cifra { grid-column: 2; grid-row: 1 / span 3; align-self: center; display: flex; flex-direction: column; align-items: flex-end; font-size: 12.5px; color: var(--ink-3); }
 .modelo-cifra b { font-size: 22px; font-weight: 600; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .modelos > .modelo-cargando { display: block; color: var(--ink-3); }
+.modelo.agotado .modelo-cifra b { color: var(--rojo-ink); font-size: 18px; }
 
 .agentes-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
 .agentes-lista button {
@@ -880,8 +881,8 @@ kbd {
 @keyframes entrarDer { from { transform: translateX(24px); opacity: 0; } }
 .cv-scrim { display: none; }
 .cv-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 12px 22px; border-bottom: 1px solid var(--line); }
-.cv-title { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-.cv-kicker { font-size: 13px; color: var(--ink-3); }
+.cv-title { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.cv-title > svg { flex: none; color: var(--ink-3); }
 .cv-title strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cv-tools { display: flex; align-items: center; gap: 2px; }
 .cv-step { font-size: 13.5px; color: var(--ink-3); padding: 0 4px; }
@@ -1084,6 +1085,7 @@ body.dark .toast { background: var(--surface); color: var(--ink); border: 1px so
 .search-clear:hover { background: var(--sunk); color: var(--ink); }
 .history-count { font-size: 14px; color: var(--ink-3); margin-bottom: 8px; }
 .history-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.history-list:empty { display: none; }
 .history-list li { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--line); padding-right: 4px; }
 .history-item {
   flex: 1; min-width: 0;
@@ -1094,11 +1096,11 @@ body.dark .toast { background: var(--surface); color: var(--ink); border: 1px so
 }
 .history-item strong { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 16px; }
 .history-item strong span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.history-item strong svg { color: var(--oro-ink); flex: none; }
+.history-item strong svg { color: var(--ink-2); flex: none; }
 .history-item:hover strong span { text-decoration: underline; text-underline-offset: 3px; }
 .hi-extracto { font-size: 14px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .history-item .meta { font-size: 13.5px; color: var(--ink-3); }
-.history-list .icon-btn.fijada { color: var(--oro-ink); }
+.history-list .icon-btn.fijada { color: var(--ink); }
 .skeleton-list { display: flex; flex-direction: column; gap: 8px; }
 .skeleton { height: 58px; border-radius: 10px; background: linear-gradient(90deg, var(--sunk), var(--surface), var(--sunk)); background-size: 200% 100%; animation: brillo 1.2s infinite linear; }
 @keyframes brillo { to { background-position: -200% 0; } }
@@ -1124,7 +1126,7 @@ body.dark .toast { background: var(--surface); color: var(--ink); border: 1px so
   gap: 16px;
   align-items: start;
   width: 100%;
-  padding: 20px 4px;
+  padding: 20px 12px;
   text-align: left;
 }
 .agente > svg { margin-top: 2px; color: var(--ink-2); }
@@ -1138,14 +1140,16 @@ body.dark .toast { background: var(--surface); color: var(--ink); border: 1px so
   min-height: 34px;
   padding: 0 14px;
   border-radius: 8px;
-  border: 1px solid var(--line-strong);
+  background: var(--sunk);
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
+  transition: background-color 0.15s, color 0.15s;
 }
-.agente-acc.bloqueado { border-color: transparent; color: var(--ink-3); padding: 0; }
-.agente:hover strong { text-decoration: underline; text-underline-offset: 3px; }
-.agente:hover .agente-acc:not(.bloqueado) { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.agente-acc.bloqueado { background: transparent; color: var(--ink-3); padding: 0; }
+.agente { border-radius: var(--r); transition: background-color 0.15s; }
+.agente:hover { background: var(--surface); }
+.agente:hover .agente-acc:not(.bloqueado) { background: var(--primary); color: var(--on-primary); }
 
 /* --------------------------------------------------------------- uso */
 
