@@ -27,7 +27,7 @@ colors:
   rojo: "#f0485d"
   rojo-ink: "#ff8595"
   primary: "#2563eb"
-  primary-hover: "#3570f0"
+  primary-hover: "#1d4fd0"
   on-primary: "#ffffff"
 typography:
   wordmark:
@@ -198,7 +198,7 @@ El tema oscuro es el de inicio (`body.dark`); el claro existe como opción y red
 Negro, grafito y gris, con un azul de acción y cuatro puntos de color que significan siempre lo mismo.
 
 ### Primary
-- **Azul primario** (`primary`, hover `primary-hover`): relleno de todo botón primario, siempre con texto blanco (`on-primary`). Es más profundo que `azul` para que el texto blanco pase AA (5.2:1). En tema claro el hover baja a un azul más oscuro (en el sidecar).
+- **Azul primario** (`primary`, hover `primary-hover`): relleno de todo botón primario, siempre con texto blanco (`on-primary`). Es más profundo que `azul` para que el texto blanco pase AA (5.2:1). En los dos temas el hover baja a `#1d4fd0`, que mantiene el texto blanco por encima de AA.
 - **Azul de señal** (`azul`): el ícono de enviar del composer, el cursor de texto, el cursor de escritura en streaming, los puntos de "escribiendo", el ícono y la barra de la tarjeta de saldo, las marcas de la lista del login. Nunca lleva texto blanco encima: no alcanza contraste.
 - **Azul tinta** (`azul-ink`): enlaces y texto azul sobre grafito, donde `azul` no alcanza contraste.
 
