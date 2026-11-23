@@ -528,6 +528,16 @@ export default function Chat({ auth, convId, go }) {
         <header className="chat-head">
           <h1 title={titulo}>{titulo || "Conversación"}</h1>
           <div className="chat-tools">
+            {auth && modelos.length > 0 && (
+              <span
+                className={"saldo-pill m-" + (COLOR_MODELO[modeloActual.key] || "oro") + (modeloActual.agotado ? " vacio" : "")}
+                title={`Tokens que te quedan de ${modeloActual.label} este mes`}
+              >
+                <span className="dot" aria-hidden="true" />
+                {modeloActual.agotado ? "Agotado" : fmt(modeloActual.restantes)}
+                <span className="sr-only"> tokens de {modeloActual.label}</span>
+              </span>
+            )}
             {piezas.length > 0 && !canvasAbierto && (
               <button className="btn btn-quiet btn-sm" onClick={() => setCanvasAbierto(true)}>
                 <Icon name="doc" size={15} /> {piezas.length === 1 ? "Ver la pieza" : `Ver las ${piezas.length} piezas`}
@@ -615,13 +625,22 @@ export default function Chat({ auth, convId, go }) {
               )}
               {!isUser && !streaming && m.content && (
                 <div className="msg-actions">
-                  <button className="msg-act" onClick={() => handleCopy(m.content, i)}>
-                    <Icon name={copiedIdx === i ? "check" : "copy"} size={14} />
-                    {copiedIdx === i ? "Copiado" : "Copiar"}
+                  <button
+                    className="msg-act msg-act-ico"
+                    onClick={() => handleCopy(m.content, i)}
+                    title={copiedIdx === i ? "Copiado" : "Copiar"}
+                    aria-label={copiedIdx === i ? "Copiado" : "Copiar la respuesta"}
+                  >
+                    <Icon name={copiedIdx === i ? "check" : "copy"} size={17} />
                   </button>
                   {!m.asiento?.fallo && (
-                    <button className="msg-act" onClick={() => abrirPieza(m.content, i)} title="Verla aparte, lista para copiar o descargar">
-                      <Icon name="doc" size={14} /> Abrir como pieza
+                    <button
+                      className="msg-act msg-act-ico"
+                      onClick={() => abrirPieza(m.content, i)}
+                      title="Abrir como pieza: verla aparte, lista para copiar o descargar"
+                      aria-label="Abrir como pieza"
+                    >
+                      <Icon name="doc" size={17} />
                     </button>
                   )}
                   {puedeReintentar && i === msgs.length - 1 && (

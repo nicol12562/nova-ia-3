@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../icons.jsx";
 import { AGENTS } from "../data/agents.js";
 import { DRAFT_KEY } from "./Chat.jsx";
-import Filete from "../filete.jsx";
 
 const fmt = (n) => Math.round(n || 0).toLocaleString("es-AR");
 
@@ -76,8 +75,7 @@ export default function Home({ go, auth, racha = 0 }) {
   return (
     <section className="home">
       <header className="home-hero">
-        <Filete className="home-filete" />
-        <h1 className="letrero">
+        <h1 className="home-title">
           {nombre ? <>Hola, {nombre}.</> : <>Preguntá en criollo.</>}
         </h1>
         <p className="home-lede">
@@ -131,12 +129,12 @@ export default function Home({ go, auth, racha = 0 }) {
         </div>
         <ul className="modelos">
           {(modelos.length ? modelos : []).map((m) => (
-            <li key={m.key} className={"modelo m-" + (COLOR_MODELO[m.key] || "oro")}>
+            <li key={m.key} className={"modelo m-" + (COLOR_MODELO[m.key] || "oro") + (auth && m.agotado ? " agotado" : "")}>
               <span className="modelo-nombre">{m.label}</span>
               <span className="modelo-desc">{m.desc}</span>
               <span className="modelo-cifra">
-                <b>{fmt(auth ? m.restantes : m.techo)}</b>
-                {auth ? "tokens te quedan" : "tokens por mes, gratis"}
+                <b>{auth && m.agotado ? "Agotado" : fmt(auth ? m.restantes : m.techo)}</b>
+                {auth ? (m.agotado ? "se renueva el mes que viene" : "tokens te quedan") : "tokens por mes, gratis"}
               </span>
               {m.upstream && <span className="modelo-up">{m.upstream}</span>}
             </li>

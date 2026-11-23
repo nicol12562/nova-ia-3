@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Icon } from "../icons.jsx";
 import { showToast } from "../ui.jsx";
-import Filete from "../filete.jsx";
 
 export default function Login({ go, setAuth }) {
   const [mode, setMode] = useState("login"); // "login" | "register"
@@ -41,8 +40,7 @@ export default function Login({ go, setAuth }) {
       <div className="login-left">
         <button className="wordmark" onClick={() => go("")} aria-label="Nova IA, ir al inicio">novaia</button>
         <div className="login-center">
-          <Filete className="login-filete" />
-          <h1 className="letrero">Preguntá en criollo.</h1>
+          <h1 className="login-title">Preguntá en criollo.</h1>
           <ul className="login-feats">
             <li>Responde en español rioplatense, con voseo y sin vueltas.</li>
             <li>Cada respuesta dice qué modelo contestó y cuánto saldo te queda.</li>

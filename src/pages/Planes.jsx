@@ -159,8 +159,9 @@ export default function Planes({ go, auth }) {
               })}
             </ul>
             {p.id === "gratis" ? (
-              <button className="btn btn-primary btn-block" onClick={() => go("chat")}>
-                {p.cta}
+              // Con un plan pago, "Empezar gratis" sería engañoso: queda como acceso secundario al chat.
+              <button className={"btn btn-block " + (auth && auth.plan !== "gratis" && auth.plan ? "btn-quiet" : "btn-primary")} onClick={() => go("chat")}>
+                {auth && auth.plan !== "gratis" && auth.plan ? "Ir al chat" : p.cta}
               </button>
             ) : !auth ? (
               <button

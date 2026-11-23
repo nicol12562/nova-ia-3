@@ -62,7 +62,7 @@ Mecanismo que un vecino no puede copiar sin cambiar su producto:
 - "Hecho en Argentina" y "Hecho por una persona" son afirmaciones deliberadas de la marca.
 - Precios siempre en ARS.
 - **Regla vinculante del dueño: no inventar certificados, usuarios, estadísticas, garantías, memoria persistente ni capacidades que no estén implementadas.**
-- Sistema visual vigente: "Filete" (ver `DESIGN.md`): porcelana, tinta índigo y los cuatro colores del fileteado porteño, cada uno con un significado fijo.
+- Sistema visual vigente: "Grafito" (ver `DESIGN.md`): chat oscuro casi negro con un solo azul de acción; del fileteado queda el logotipo `novaia`. Los colores de los modelos mantienen su significado fijo.
 
 ## Evidence on Hand
 

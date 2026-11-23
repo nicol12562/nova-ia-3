@@ -37,8 +37,11 @@ export default function Canvas({ pieza, titulo, indice, total, vivo, onAnterior,
     <aside className="canvas-panel" aria-label="Pieza generada por Nova">
       <header className="cv-head">
         <div className="cv-title">
-          <span className="cv-kicker">{pieza.kind === "code" ? "Código" : "Pieza"}</span>
-          <strong title={titulo || ""}>{(titulo || "Sin título").slice(0, 54)}</strong>
+          <Icon name={pieza.kind === "code" ? "cpu" : "doc"} size={18} />
+          <strong title={titulo || ""}>
+            <span className="sr-only">{pieza.kind === "code" ? "Código: " : "Pieza: "}</span>
+            {(titulo || "Sin título").slice(0, 54)}
+          </strong>
         </div>
         <div className="cv-tools">
           {total > 1 && (

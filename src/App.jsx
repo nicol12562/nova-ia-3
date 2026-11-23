@@ -50,9 +50,9 @@ export default function App() {
   });
   const [dark, setDark] = useState(() => {
     try {
-      return localStorage.getItem("novaia_theme") === "dark";
+      return localStorage.getItem("novaia_theme") !== "light";
     } catch {
-      return false;
+      return true;
     }
   });
   const [used, setUsed] = useState(null);
@@ -318,20 +318,26 @@ export default function App() {
       >
         <div className="side-head">
           <button className="wordmark" onClick={() => go("")} aria-label="Nova IA, ir al inicio">novaia</button>
-          <button className="icon-btn side-close" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)}>
-            <Icon name="x" size={18} />
-          </button>
+          <span className="side-head-tools">
+            <button className="icon-btn" title={`Nuevo chat (${MOD} ⇧ O)`} aria-label="Nuevo chat" onClick={() => go("chat")}>
+              <Icon name="edit" size={18} />
+            </button>
+            <button className="icon-btn side-close" aria-label="Cerrar menú" onClick={() => setMenuOpen(false)}>
+              <Icon name="x" size={18} />
+            </button>
+          </span>
         </div>
 
-        <button className="side-new" onClick={() => go("chat")}>
-          <Icon name="plusSq" size={17} /> Nuevo chat
-        </button>
         <button className="side-search" onClick={() => { setMenuOpen(false); setPaletaOpen(true); }}>
-          <Icon name="search" size={16} /> Buscar
+          <Icon name="search" size={17} /> Buscar
           <kbd>{MOD} K</kbd>
         </button>
 
         <nav className="side-nav" aria-label="Secciones">
+          <h2 className="side-h">Secciones</h2>
+          <button className={"side-link" + (base === "chat" && !param ? " on" : "")} aria-current={base === "chat" && !param ? "page" : undefined} onClick={() => go("chat")}>
+            <Icon name="chat" size={18} /> Nuevo chat
+          </button>
           {NAV.map((n) => (
             <button
               key={n.key}
@@ -339,7 +345,7 @@ export default function App() {
               aria-current={base === n.key ? "page" : undefined}
               onClick={() => go(n.key)}
             >
-              <Icon name={n.icon} size={17} /> {n.label}
+              <Icon name={n.icon} size={18} /> {n.label}
             </button>
           ))}
         </nav>
@@ -360,7 +366,7 @@ export default function App() {
                         onClick={() => go(`chat/${c.id}`)}
                         title={c.title}
                       >
-                        {!!c.pinned && <Icon name="pin" size={13} />}
+                        <Icon name={c.pinned ? "pin" : "message"} size={17} />
                         <span>{c.title || "Sin título"}</span>
                       </button>
                     </li>
@@ -384,23 +390,23 @@ export default function App() {
             onClick={() => go(auth ? "uso-tokens" : "planes")}
             title={auth ? "Ver el uso del mes" : "Ver planes y límites"}
           >
+            <span className="saldo-ico" aria-hidden="true"><Icon name="spark" size={17} /></span>
             {auth ? (
-              <>
+              <span className="saldo-c">
                 <span className="saldo-t">
                   <b>{restantes}</b> tokens
-                  <em>Plan {planName}</em>
+                  <em>{planName}</em>
                 </span>
                 <span className="saldo-bar" aria-hidden="true"><i style={{ width: 100 - pct + "%" }} /></span>
                 <span className="saldo-sub">quedan de {fmt(quota)} este mes</span>
-              </>
+              </span>
             ) : (
-              <>
+              <span className="saldo-c">
                 <span className="saldo-t">
                   <b>{GUEST_LIMIT}</b> mensajes por día
-                  <em>Sin cuenta</em>
                 </span>
                 <span className="saldo-sub">Con cuenta gratis: {fmt(QUOTA_FALLBACK)} tokens por mes</span>
-              </>
+              </span>
             )}
           </button>
 
@@ -412,7 +418,7 @@ export default function App() {
                 aria-expanded={auth ? userMenu : undefined}
                 aria-haspopup={auth ? "menu" : undefined}
               >
-                <span className="avatar">{inicial}</span>
+                <span className="avatar" aria-hidden="true">{auth ? inicial : <Icon name="user" size={16} />}</span>
                 <span className="user-t">
                   <strong>{auth ? auth.name || auth.email : "Iniciar sesión"}</strong>
                   <span>{auth ? (racha >= 2 ? `${racha} días seguidos` : auth.email) : "o creá tu cuenta"}</span>
