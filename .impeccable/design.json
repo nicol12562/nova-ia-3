@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-22T23:23:42+00:00",
+  "generatedAt": "2026-11-23T02:59:20+00:00",
   "title": "Design System: Nova IA",
   "extensions": {
     "themes": {
@@ -282,22 +282,6 @@
           "#c9f1ff"
         ]
       },
-      "on-azul": {
-        "role": "primary",
-        "displayName": "Sobre azul",
-        "canonical": "#ffffff",
-        "light": "#ffffff",
-        "tonalRamp": [
-          "#0b0b0b",
-          "#252525",
-          "#424242",
-          "#616161",
-          "#828282",
-          "#a5a5a5",
-          "#c9c9c9",
-          "#eeeeee"
-        ]
-      },
       "oro": {
         "role": "secondary",
         "displayName": "Oro · Nova Flash",
@@ -435,37 +419,54 @@
         ]
       },
       "primary": {
-        "role": "neutral",
-        "displayName": "Primario (tinta invertida)",
-        "canonical": "#e9eaec",
-        "light": "#15171a",
+        "role": "primary",
+        "displayName": "Azul primario",
+        "canonical": "#2563eb",
+        "light": "#2563eb",
         "cssVar": "--primary",
         "tonalRamp": [
-          "#0b0b0c",
-          "#252526",
-          "#414243",
-          "#606163",
-          "#818284",
-          "#a4a5a7",
-          "#c8c9cb",
-          "#eeeef0"
+          "#000233",
+          "#001966",
+          "#04349f",
+          "#1451d8",
+          "#3777ff",
+          "#599dff",
+          "#8cc6ff",
+          "#bfeeff"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Azul primario al pasar",
+        "canonical": "#3570f0",
+        "light": "#1d4fd0",
+        "cssVar": "--primary-hover",
+        "tonalRamp": [
+          "#000330",
+          "#011b62",
+          "#0a3699",
+          "#1c54d2",
+          "#3d79f9",
+          "#5e9eff",
+          "#90c7ff",
+          "#c2eeff"
         ]
       },
       "on-primary": {
-        "role": "neutral",
+        "role": "primary",
         "displayName": "Sobre primario",
-        "canonical": "#111316",
+        "canonical": "#ffffff",
         "light": "#ffffff",
         "cssVar": "--on-primary",
         "tonalRamp": [
-          "#0a0b0c",
-          "#242527",
-          "#404245",
-          "#5f6165",
-          "#808286",
-          "#a2a5a9",
-          "#c7c9cd",
-          "#edeff1"
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
         ]
       }
     },
@@ -498,10 +499,9 @@
         "purpose": "Contorno de foco de 2 px."
       },
       {
-        "name": "primary-hover",
-        "dark": "#ffffff",
-        "light": "#2a2d32",
-        "purpose": "Hover del botón primario."
+        "name": "accent",
+        "value": "var(--azul-ink)",
+        "purpose": "Alias de admin.css."
       }
     ],
     "typographyMeta": {
@@ -605,7 +605,8 @@
       },
       {
         "name": "mobile",
-        "value": "860px"
+        "value": "860px",
+        "purpose": "Barra superior de 58 px, cajón lateral, encabezado del chat como franja sólida ground con línea inferior de 1 px."
       }
     ]
   },
@@ -614,17 +615,9 @@
       "name": "Botón primario",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Acción principal de modales y páginas: tinta clara invertida sobre grafito.",
+      "description": "Todo botón primario: azul profundo con texto blanco (AA 5.2:1).",
       "html": "<button class=\"ds-btn-primary\">Crear mi cuenta</button>",
-      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:0 18px; border:0; border-radius:10px; background:var(--primary,#e9eaec); color:var(--on-primary,#111316); font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; font-weight:600; font-size:15px; letter-spacing:-0.005em; cursor:pointer; transition:background-color .15s, transform .1s; } .ds-btn-primary:hover { background:var(--primary-hover,#ffffff); } .ds-btn-primary:active { transform:translateY(1px); } .ds-btn-primary:focus-visible { outline:2px solid var(--focus,#3d8bff); outline-offset:2px; }"
-    },
-    {
-      "name": "Botón azul",
-      "kind": "button",
-      "refersTo": "button-azul",
-      "description": "Preguntar o enviar: el único botón cromático.",
-      "html": "<button class=\"ds-btn-azul\">Preguntar</button>",
-      "css": ".ds-btn-azul { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:0 18px; border:0; border-radius:10px; background:var(--azul,#3d8bff); color:#fff; font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; font-weight:600; font-size:15px; cursor:pointer; transition:background-color .15s, transform .1s; } .ds-btn-azul:hover { background:#2f7bf0; } .ds-btn-azul:active { transform:translateY(1px); } .ds-btn-azul:focus-visible { outline:2px solid var(--focus,#3d8bff); outline-offset:2px; }"
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:0 18px; border:0; border-radius:10px; background:var(--primary,#2563eb); color:var(--on-primary,#ffffff); font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; font-weight:600; font-size:15px; letter-spacing:-0.005em; cursor:pointer; transition:background-color .15s, transform .1s; } .ds-btn-primary:hover { background:var(--primary-hover,#3570f0); } .ds-btn-primary:active { transform:translateY(1px); } .ds-btn-primary:focus-visible { outline:2px solid var(--focus,#3d8bff); outline-offset:2px; }"
     },
     {
       "name": "Botón quieto",
@@ -656,7 +649,15 @@
       "refersTo": "saldo-pill",
       "description": "Saldo del modelo activo, arriba a la derecha del chat; rojo cuando se agota.",
       "html": "<span class=\"ds-saldo\"><span class=\"ds-saldo-dot\"></span>812.400 tokens</span> <span class=\"ds-saldo ds-vacio\"><span class=\"ds-saldo-dot\"></span>Agotado</span>",
-      "css": ".ds-saldo { display:inline-flex; align-items:center; gap:8px; min-height:34px; padding:0 14px 0 12px; border:1px solid var(--line-strong,#33373d); border-radius:99px; font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; font-size:13.5px; font-weight:500; color:var(--ink,#e9eaec); } .ds-saldo-dot { width:8px; height:8px; border-radius:50%; background:var(--verde,#2fc48c); } .ds-vacio { color:var(--rojo-ink,#ff8595); border-color:var(--rojo-ink,#ff8595); }"
+      "css": ".ds-saldo { display:inline-flex; align-items:center; gap:8px; min-height:34px; padding:0 14px 0 12px; border:1px solid var(--line-strong,#33373d); border-radius:99px; font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; font-size:13.5px; font-weight:500; font-variant-numeric:tabular-nums; color:var(--ink,#e9eaec); } .ds-saldo-dot { width:8px; height:8px; border-radius:50%; background:var(--verde,#2fc48c); } .ds-vacio { color:var(--rojo-ink,#ff8595); border-color:var(--rojo-ink,#ff8595); }"
+    },
+    {
+      "name": "Libro de saldos",
+      "kind": "card",
+      "refersTo": "ledger-modelos",
+      "description": "Inicio: una superficie con una fila por modelo, punto de color, proveedor en tinta 3 y cifra tabular a la derecha.",
+      "html": "<ul class=\"ds-ledger\"><li><span class=\"ds-ln\" style=\"--m:#f2b705\">Nova Flash</span><span class=\"ds-ld\">Rápido para el día a día</span><span class=\"ds-lu\">DeepSeek</span><span class=\"ds-lc\"><b>1.000.000</b>tokens este mes</span></li><li><span class=\"ds-ln\" style=\"--m:#5cc2f2\">Nova Pro</span><span class=\"ds-ld\">Razona pasos largos</span><span class=\"ds-lu\">NVIDIA</span><span class=\"ds-lc\"><b>250.000</b>tokens este mes</span></li></ul>",
+      "css": ".ds-ledger { list-style:none; margin:0; padding:4px 20px; width:560px; max-width:100%; border-radius:14px; background:var(--surface,#1a1d21); font-family:'Space Grotesk', 'Segoe UI', system-ui, sans-serif; color:var(--ink,#e9eaec); } .ds-ledger li { display:grid; grid-template-columns:1fr auto; column-gap:24px; padding:16px 0; } .ds-ledger li + li { border-top:1px solid var(--line,#24272c); } .ds-ln { grid-column:1; display:inline-flex; align-items:center; gap:9px; font-size:16px; font-weight:600; } .ds-ln::before { content:''; width:8px; height:8px; border-radius:50%; background:var(--m); } .ds-ld { grid-column:1; padding-left:17px; font-size:14.5px; color:var(--ink-2,#b4b8bf); } .ds-lu { grid-column:1; padding-left:17px; margin-top:2px; font-size:13px; color:var(--ink-3,#8b9098); } .ds-lc { grid-column:2; grid-row:1 / span 3; align-self:center; display:flex; flex-direction:column; align-items:flex-end; font-size:12.5px; color:var(--ink-3,#8b9098); } .ds-lc b { font-size:22px; font-weight:600; letter-spacing:-0.02em; color:var(--ink,#e9eaec); font-variant-numeric:tabular-nums; }"
     },
     {
       "name": "Barra lateral",
@@ -682,19 +683,19 @@
       "Barra lateral `side` fija de 272 px, idéntica en tema claro y oscuro.",
       "Fondo grafito con un solo gradiente radial azul (`--wash`) anclado arriba a la derecha.",
       "Superficies sin borde en el flujo principal; profundidad por tono.",
-      "Un azul de acción; los demás colores son puntos con significado fijo.",
+      "Un azul de acción (dos tonos: `primary` para botones con texto, `azul` para íconos y señales); los demás colores son puntos con significado fijo.",
       "Una sola familia de interfaz (Space Grotesk), pesos 400–600.",
       "Radio de 12 px como forma por defecto; píldoras para estado."
     ],
     "rules": [
       {
         "name": "The One Blue Rule",
-        "body": "El azul es el único color cromático de acción. Nada que no sea enviar, enlazar, enfocar o señalar algo en curso se pinta de azul.",
+        "body": "El azul es el único color cromático de acción. Todo botón primario es `primary` con texto blanco; `azul` queda para íconos, foco y lo que está en curso. Nada que no sea actuar, enlazar, enfocar o señalar algo en curso se pinta de azul.",
         "section": "colors"
       },
       {
         "name": "The Fixed Dot Rule",
-        "body": "Oro, celeste y verde nombran modelos; rojo nombra error o agotamiento. Aparecen como puntos de 7 a 9 px junto al nombre del modelo (selector, píldora de saldo, asiento, tarjetas de modelo, bolsas de Uso), nunca como relleno de superficie ni borde de tarjeta.",
+        "body": "Oro, celeste y verde nombran modelos; rojo nombra error o agotamiento. Aparecen como puntos de 7 a 9 px junto al nombre del modelo (selector, píldora de saldo, asiento, libro de saldos de Inicio, bolsas de Uso), nunca como relleno de superficie ni borde de tarjeta.",
         "section": "colors"
       },
       {
@@ -718,6 +719,11 @@
         "section": "typography"
       },
       {
+        "name": "The Tabular Figures Rule",
+        "body": "Toda cifra que se compara lleva `font-variant-numeric: tabular-nums`: saldo de la barra, píldora de saldo, saldos del selector, asiento, cifras de los modelos en Inicio, cifras y tablas de Uso, topes y precios de planes.",
+        "section": "typography"
+      },
+      {
         "name": "The Borderless Flow Rule",
         "body": "En el chat y en Inicio, las superficies no llevan borde. El borde de 1 px aparece solo en menús flotantes, campos de formulario, tablas, tarjetas de Ajustes y la comparación de planes.",
         "section": "elevation"
@@ -730,7 +736,9 @@
     ],
     "dos": [
       "**Do** separar superficies del grafito por tono (`ground` → `surface` → `raised`) antes de pensar en un borde.",
-      "**Do** pintar de azul solo enviar, enlaces, foco y lo que está en curso (streaming, escribiendo, saldo).",
+      "**Do** rellenar todo botón primario con `primary` y texto blanco; dejar `azul` para íconos, enlaces, foco y lo que está en curso (streaming, escribiendo, saldo).",
+      "**Do** usar cifras tabulares en saldos, topes, precios y tablas.",
+      "**Do** mostrar saldos comparables como filas regladas en una sola superficie, con la cifra a la derecha.",
       "**Do** mostrar el modelo con su punto de 7 a 9 px leyendo `--m` desde `.m-oro`, `.m-celeste` o `.m-verde`.",
       "**Do** dejar la barra lateral en `side` en ambos temas.",
       "**Do** usar 12 px como radio por defecto y píldora para estado.",
@@ -739,7 +747,8 @@
     ],
     "donts": [
       "**Don't** usar oro, celeste o verde para nada que no sea su modelo, ni rojo para nada que no sea error o agotamiento.",
-      "**Don't** rellenar superficies ni bordear tarjetas con el color de un modelo.",
+      "**Don't** rellenar superficies, bordear tarjetas ni teñir texto (proveedor, descripción) con el color de un modelo.",
+      "**Don't** poner texto blanco sobre `azul`: no pasa AA.",
       "**Don't** usar Shrikhand ni sombras duras desplazadas fuera del logotipo.",
       "**Don't** usar otra familia en la interfaz; JetBrains Mono queda para código.",
       "**Don't** poner etiquetas en mayúsculas, eyebrows ni kickers sobre los títulos.",

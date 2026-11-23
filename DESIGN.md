@@ -18,7 +18,6 @@ colors:
   line-strong: "#33373d"
   azul: "#3d8bff"
   azul-ink: "#6aa8ff"
-  on-azul: "#ffffff"
   oro: "#f2b705"
   oro-ink: "#f5c63c"
   celeste: "#5cc2f2"
@@ -27,8 +26,9 @@ colors:
   verde-ink: "#5ad6a6"
   rojo: "#f0485d"
   rojo-ink: "#ff8595"
-  primary: "#e9eaec"
-  on-primary: "#111316"
+  primary: "#2563eb"
+  primary-hover: "#3570f0"
+  on-primary: "#ffffff"
 typography:
   wordmark:
     fontFamily: "Shrikhand, Georgia, serif"
@@ -105,13 +105,7 @@ components:
     padding: "0 18px"
     height: "42px"
   button-primary-hover:
-    backgroundColor: "#ffffff"
-  button-azul:
-    backgroundColor: "{colors.azul}"
-    textColor: "{colors.on-azul}"
-    rounded: "{rounded.md}"
-    padding: "0 18px"
-    height: "42px"
+    backgroundColor: "{colors.primary-hover}"
   button-quiet:
     backgroundColor: "{colors.sunk}"
     textColor: "{colors.ink}"
@@ -171,6 +165,10 @@ components:
     backgroundColor: "{colors.surface}"
     rounded: "{rounded.lg}"
     padding: "18px 18px 16px"
+  ledger-modelos:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.lg}"
+    padding: "4px 20px"
 ---
 
 # Design System: Nova IA
@@ -191,7 +189,7 @@ El tema oscuro es el de inicio (`body.dark`); el claro existe como opción y red
 - Barra lateral `side` fija de 272 px, idéntica en tema claro y oscuro.
 - Fondo grafito con un solo gradiente radial azul (`--wash`) anclado arriba a la derecha.
 - Superficies sin borde en el flujo principal; profundidad por tono.
-- Un azul de acción; los demás colores son puntos con significado fijo.
+- Un azul de acción (dos tonos: `primary` para botones con texto, `azul` para íconos y señales); los demás colores son puntos con significado fijo.
 - Una sola familia de interfaz (Space Grotesk), pesos 400–600.
 - Radio de 12 px como forma por defecto; píldoras para estado.
 
@@ -200,7 +198,8 @@ El tema oscuro es el de inicio (`body.dark`); el claro existe como opción y red
 Negro, grafito y gris, con un azul de acción y cuatro puntos de color que significan siempre lo mismo.
 
 ### Primary
-- **Azul de acción** (`azul`): enviar en el composer, el botón de enviar pregunta en Inicio y la tarjeta de cuenta, el cursor de texto, el cursor de escritura en streaming, los puntos de "escribiendo", el ícono y la barra de la tarjeta de saldo, las marcas de la lista del login. Es el único color cromático que pide una acción o señala algo vivo.
+- **Azul primario** (`primary`, hover `primary-hover`): relleno de todo botón primario, siempre con texto blanco (`on-primary`). Es más profundo que `azul` para que el texto blanco pase AA (5.2:1). En tema claro el hover baja a un azul más oscuro (en el sidecar).
+- **Azul de señal** (`azul`): el ícono de enviar del composer, el cursor de texto, el cursor de escritura en streaming, los puntos de "escribiendo", el ícono y la barra de la tarjeta de saldo, las marcas de la lista del login. Nunca lleva texto blanco encima: no alcanza contraste.
 - **Azul tinta** (`azul-ink`): enlaces y texto azul sobre grafito, donde `azul` no alcanza contraste.
 
 ### Secondary (puntos de modelo)
@@ -217,16 +216,16 @@ El mapa modelo → color vive en `COLOR_MODELO` (`src/pages/Home.jsx`) y se apli
 - **Riel activo** (`side-on`): fondo del enlace o chat seleccionado.
 - **Campo del riel** (`side-field`): buscador y tarjeta de saldo dentro de la barra.
 - **Grafito** (`ground`): fondo de página y del área de trabajo.
-- **Superficie** (`surface`): composer, burbuja del usuario, sugerencias, tarjetas de modelo, modales, paleta.
+- **Superficie** (`surface`): composer, burbuja del usuario, sugerencias, libro de saldos, modales, paleta.
 - **Elevada** (`raised`): menú del selector de modelo, hover de sugerencias, botón "al final".
 - **Hundida** (`sunk`): hover de botones e íconos, botón quieto, chips, pistas de barras, código en línea.
 - **Tinta** (`ink`), **tinta 2** (`ink-2`), **tinta 3** (`ink-3`): texto principal, secundario, metadatos y placeholders.
 - **Línea** (`line`) y **línea fuerte** (`line-strong`): separadores de listas regladas, tablas, bordes de menús y campos.
 
 ### Named Rules
-**The One Blue Rule.** El azul es el único color cromático de acción. Nada que no sea enviar, enlazar, enfocar o señalar algo en curso se pinta de azul.
+**The One Blue Rule.** El azul es el único color cromático de acción. Todo botón primario es `primary` con texto blanco; `azul` queda para íconos, foco y lo que está en curso. Nada que no sea actuar, enlazar, enfocar o señalar algo en curso se pinta de azul.
 
-**The Fixed Dot Rule.** Oro, celeste y verde nombran modelos; rojo nombra error o agotamiento. Aparecen como puntos de 7 a 9 px junto al nombre del modelo (selector, píldora de saldo, asiento, tarjetas de modelo, bolsas de Uso), nunca como relleno de superficie ni borde de tarjeta.
+**The Fixed Dot Rule.** Oro, celeste y verde nombran modelos; rojo nombra error o agotamiento. Aparecen como puntos de 7 a 9 px junto al nombre del modelo (selector, píldora de saldo, asiento, libro de saldos de Inicio, bolsas de Uso), nunca como relleno de superficie ni borde de tarjeta.
 
 **The Night Rail Rule.** Los tokens `side-*` no cambian con el tema. La barra lateral es `side` también en tema claro.
 
@@ -255,10 +254,12 @@ El mapa modelo → color vive en `COLOR_MODELO` (`src/pages/Home.jsx`) y se apli
 
 **The Sentence Case Rule.** Etiquetas, encabezados de grupo y títulos en minúscula de oración, sin mayúsculas sostenidas ni tracking positivo.
 
+**The Tabular Figures Rule.** Toda cifra que se compara lleva `font-variant-numeric: tabular-nums`: saldo de la barra, píldora de saldo, saldos del selector, asiento, cifras de los modelos en Inicio, cifras y tablas de Uso, topes y precios de planes.
+
 ## Layout
 
 - **Escritorio:** barra lateral fija de 272 px (logotipo y nuevo chat, buscar con ⌘K, Secciones, Recientes, tarjeta de saldo, usuario). El contenido ocupa el resto con `main` de hasta 1040 px (1280 px en vistas anchas), relleno 56 / 48 / 72 px.
-- **Chat:** columna de 792 px con 16 px de relleno lateral (760 px de texto). Encabezado pegajoso sin caja: título tenue a la izquierda, píldora de saldo a la derecha, fondo desenfocado a todo el ancho que se desvanece hacia abajo. Mensajes separados por 32 px. Composer pegajoso abajo, sobre un degradé al grafito. En chat vacío el saludo y el composer suben al centro (14vh de aire).
+- **Chat:** columna de 792 px con 16 px de relleno lateral (760 px de texto). Encabezado pegajoso sin caja: título tenue a la izquierda, píldora de saldo a la derecha, fondo desenfocado a todo el ancho que se desvanece hacia abajo. Mensajes separados por 32 px. En ≤ 860 px el velo desenfocado se reemplaza por una franja sólida `ground` con una línea inferior de 1 px `line`, pegada debajo de la barra superior. Composer pegajoso abajo, sobre un degradé al grafito. En chat vacío el saludo y el composer suben al centro (14vh de aire).
 - **Ritmo:** pasos de 4, 8, 12, 16, 24, 32 px dentro de componentes; 56 a 80 px entre secciones de página.
 - **≤ 1100 px:** grillas de planes y comparación a una columna; la pieza ocupa hasta el ancho total con velo.
 - **≤ 860 px:** barra superior de 58 px en `side`; la barra lateral pasa a cajón de min(320 px, 86vw) con velo; `main` a 16 px de margen; sugerencias, modelos y bolsas a una columna; el texto del composer pasa a ocupar una fila propia sobre el selector y enviar.
@@ -279,7 +280,7 @@ Híbrido con preferencia por el tono. Las superficies del flujo principal se sep
 
 ## Shapes
 
-Esquinas suaves y consistentes. 12 px (`r`) es el radio por defecto para superficies, enlaces de la barra, burbuja, sugerencias y bloques de código. Los controles bajan a 10 px (botones, campos, selector, enviar) y 8 px (botones chicos, acciones de mensaje). Lo que contiene escritura o compara sube: composer y tarjetas de modelo 14 px, caja de pregunta, vacíos, tarjetas y paleta 16 px, modales 18 px. Estado e identidad van en píldora (99 px): píldora de saldo, chips, arranques, chip de agente. Avatar, ícono de saldo, puntos de modelo y botón "al final" son círculos.
+Esquinas suaves y consistentes. 12 px (`r`) es el radio por defecto para superficies, enlaces de la barra, burbuja, sugerencias y bloques de código. Los controles bajan a 10 px (botones, campos, selector, enviar) y 8 px (botones chicos, acciones de mensaje). Lo que contiene escritura o compara sube: composer y libro de saldos 14 px, caja de pregunta, vacíos, tarjetas y paleta 16 px, modales 18 px. Estado e identidad van en píldora (99 px): píldora de saldo, chips, arranques, chip de agente. Avatar, ícono de saldo, puntos de modelo y botón "al final" son círculos.
 
 La única barra lateral gruesa es la de la cita en Markdown: 3 px en `ink`, con el texto de la cita en `ink` y peso 600, tomada de la referencia. No se traslada a tarjetas ni avisos.
 
@@ -288,14 +289,13 @@ La única barra lateral gruesa es la de la cita en Markdown: 3 px en `ink`, con 
 ### Buttons
 Discretos y firmes; un empuje de 1 px al presionar.
 - **Shape:** esquinas suaves (10 px), alto mínimo 42 px, peso 600.
-- **Primary:** relleno `primary` (la tinta clara) con texto `on-primary`; se aclara a blanco al pasar. Es el botón de los modales, crear cuenta y acciones de página.
-- **Azul:** relleno `azul` con texto blanco. Se usa donde la acción es preguntar o enviar: la caja de Inicio, la tarjeta de cuenta y `.btn-azul`.
+- **Primary:** relleno `primary` (azul profundo) con texto blanco; al pasar cambia a `primary-hover`. Es el único botón relleno de color: preguntar en Inicio, crear cuenta, modales y acciones de página. No hay variantes azules aparte.
 - **Quiet / Ghost:** relleno `sunk`, borde transparente que pasa a `line-strong` al pasar.
 - **Small:** 34 px, radio 8 px. **Disabled:** opacidad 0.45; el enviar de Inicio deshabilitado pasa a `sunk` con texto `ink-3`.
 - **Icon button:** 36 × 36 px, radio 9 px, ícono `ink-2` que pasa a `ink` sobre `sunk`.
 
 ### Chips
-- **Style:** píldora `sunk` con texto `ink-2`, 13 px, peso 600. El chip de plan se invierte a `primary`.
+- **Style:** píldora `sunk` con texto `ink-2`, 13 px, peso 600. El chip de plan ("Tu plan") es neutro: fondo `ink` con texto `ground`. Es un estado, no una acción, y por eso no va en azul.
 - **Arranques y chip de agente:** píldora `surface`, sin borde; los arranques pasan a `sunk` al pasar.
 
 ### Cards / Containers
@@ -305,6 +305,9 @@ Discretos y firmes; un empuje de 1 px al presionar.
 - **Border:** ninguno en Inicio y chat; 1 px `line` en Ajustes, planes y la nota de agentes.
 - **Internal Padding:** 18 a 26 px.
 - Las listas de agentes, historial y agentes de Inicio son filas regladas por `line`, no tarjetas.
+
+### Libro de saldos (Inicio)
+Los tres modelos no son tres tarjetas: una sola superficie `surface` de radio 14 px con una fila por modelo separada por 1 px `line`. A la izquierda, punto y nombre del modelo (16 px, 600), descripción en `ink-2` y proveedor en `ink-3`; a la derecha, la cifra de saldo a 22 px en cifras tabulares, alineada al borde. El color del modelo vive solo en el punto; el proveedor nunca se tiñe.
 
 ### Inputs / Fields
 - **Style:** borde 1 px `line-strong`, fondo `surface`, radio 10 px, alto 42 px (46 px en login).
@@ -325,7 +328,7 @@ Una sola franja: selector de modelo a la izquierda, texto en el medio, enviar a 
 El usuario habla en una burbuja `surface` de radio 12 px alineada a la derecha (hasta 560 px). La IA responde en texto plano a ancho completo, interlineado 1.7. Debajo, el asiento en 12.5 px `ink-3`: punto y nombre del modelo, proveedor, tokens y cargo; un fallo se escribe en `rojo-ink`. Las acciones (copiar, reintentar, recordar) son íconos de 32 px en `ink-3`; en el mensaje del usuario aparecen al pasar.
 
 ### Píldora de saldo
-Arriba a la derecha del chat: píldora de 34 px con borde `line-strong`, punto del modelo y saldo en 13.5 px. Agotada, texto y borde pasan a `rojo-ink`.
+Arriba a la derecha del chat: píldora de 34 px con borde `line-strong`, punto del modelo y saldo en 13.5 px con cifras tabulares. Agotada, texto y borde pasan a `rojo-ink`.
 
 ### Logotipo
 `novaia` en Shrikhand 27 px, color `side-ink`, con sombra dura `2px 2px 0 oro, 4px 4px 0 rojo`. Siempre sobre `side`. Es la única sombra dura y el único uso de Shrikhand.
@@ -334,7 +337,9 @@ Arriba a la derecha del chat: píldora de 34 px con borde `line-strong`, punto d
 
 ### Do:
 - **Do** separar superficies del grafito por tono (`ground` → `surface` → `raised`) antes de pensar en un borde.
-- **Do** pintar de azul solo enviar, enlaces, foco y lo que está en curso (streaming, escribiendo, saldo).
+- **Do** rellenar todo botón primario con `primary` y texto blanco; dejar `azul` para íconos, enlaces, foco y lo que está en curso (streaming, escribiendo, saldo).
+- **Do** usar cifras tabulares en saldos, topes, precios y tablas.
+- **Do** mostrar saldos comparables como filas regladas en una sola superficie, con la cifra a la derecha.
 - **Do** mostrar el modelo con su punto de 7 a 9 px leyendo `--m` desde `.m-oro`, `.m-celeste` o `.m-verde`.
 - **Do** dejar la barra lateral en `side` en ambos temas.
 - **Do** usar 12 px como radio por defecto y píldora para estado.
@@ -343,7 +348,8 @@ Arriba a la derecha del chat: píldora de 34 px con borde `line-strong`, punto d
 
 ### Don't:
 - **Don't** usar oro, celeste o verde para nada que no sea su modelo, ni rojo para nada que no sea error o agotamiento.
-- **Don't** rellenar superficies ni bordear tarjetas con el color de un modelo.
+- **Don't** rellenar superficies, bordear tarjetas ni teñir texto (proveedor, descripción) con el color de un modelo.
+- **Don't** poner texto blanco sobre `azul`: no pasa AA.
 - **Don't** usar Shrikhand ni sombras duras desplazadas fuera del logotipo.
 - **Don't** usar otra familia en la interfaz; JetBrains Mono queda para código.
 - **Don't** poner etiquetas en mayúsculas, eyebrows ni kickers sobre los títulos.
